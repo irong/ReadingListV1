@@ -77,6 +77,16 @@ class Organise: UITableViewController {
         ]
     }
 
+    @IBAction private func addWasTapped(_ sender: UIBarButtonItem) {
+        present(AddToList.newListAlertController([]) { [unowned self] list in
+            guard let indexPath = self.resultsController.indexPath(forObject: list) else {
+                assertionFailure()
+                return
+            }
+            self.tableView.scrollToRow(at: indexPath, at: .top, animated: true)
+        }, animated: true)
+    }
+
     func deleteList(forRowAt indexPath: IndexPath) {
         let confirmDelete = UIAlertController(title: "Confirm delete", message: nil, preferredStyle: .actionSheet)
 

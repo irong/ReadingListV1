@@ -179,7 +179,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         optionsAlert.addAction(UIAlertAction(title: "Add to List", style: .default) { _ in
             let books = selectedRows.map(self.resultsController.object)
 
-            self.present(AddToList.getAppropriateVcForAddingBooksToList(books) {
+            self.present(AddToList.getAppropriateVcForAddingBooksToList(books) { _ in
                 self.setEditing(false, animated: true)
                 UserEngagement.logEvent(.bulkAddBookToList)
                 UserEngagement.onReviewTrigger()

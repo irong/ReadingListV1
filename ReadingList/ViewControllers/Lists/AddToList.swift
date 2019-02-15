@@ -20,14 +20,14 @@ class AddToList: UITableViewController {
     private let addNewListSectionIndex = 0
 
     // When the add-to-list operation is complete, this callback will be called
-    var onCompletion: (() -> Void)?
+    var onCompletion: ((List) -> Void)?
 
     /*
      Returns the appropriate View Controller for adding a book (or books) to a list.
      If there are no lists, this will be a UIAlertController; if there are lists, this will be a UINavigationController.
      The completion action will run at the end of a list addition if a UIAlertController was returned.
     */
-    static func getAppropriateVcForAddingBooksToList(_ booksToAdd: [Book], completion: (() -> Void)? = nil) -> UIViewController {
+    static func getAppropriateVcForAddingBooksToList(_ booksToAdd: [Book], completion: ((List) -> Void)? = nil) -> UIViewController {
         let listCount = NSManagedObject.fetchRequest(List.self, limit: 1)
         if try! PersistentStoreManager.container.viewContext.count(for: listCount) > 0 {
             let rootAddToList = UIStoryboard.AddToList.instantiateRoot(withStyle: .formSheet) as! UINavigationController
@@ -40,7 +40,7 @@ class AddToList: UITableViewController {
         }
     }
 
-    static func newListAlertController(_ books: [Book], completion: (() -> Void)? = nil) -> UIAlertController {
+    static func newListAlertController(_ books: [Book], completion: ((List) -> Void)? = nil) -> UIAlertController {
         let existingListNames = List.names(fromContext: PersistentStoreManager.container.viewContext)
 
         func textValidator(listName: String?) -> Bool {
@@ -53,7 +53,7 @@ class AddToList: UITableViewController {
             let createdList = List(context: PersistentStoreManager.container.viewContext, name: title!)
             createdList.books = NSOrderedSet(array: books)
             PersistentStoreManager.container.viewContext.saveAndLogIfErrored()
-            completion?()
+            completion?(createdList)
         }
     }
 
@@ -121,8 +121,10 @@ class AddToList: UITableViewController {
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if indexPath.section == addNewListSectionIndex {
-            present(AddToList.newListAlertController(books) {
-                self.navigationController!.dismiss(animated: true, completion: self.onCompletion)
+            present(AddToList.newListAlertController(books) { [unowned self] list in
+                self.navigationController?.dismiss(animated: true) { [unowned self] in
+                    self.onCompletion?(list)
+                }
             }, animated: true)
         } else {
             // Append the books to the end of the selected list
@@ -131,7 +133,9 @@ class AddToList: UITableViewController {
                 list.addBooks(NSOrderedSet(array: self.books))
             }
 
-            navigationController!.dismiss(animated: true, completion: onCompletion)
+            navigationController?.dismiss(animated: true) { [unowned self] in
+                self.onCompletion?(list)
+            }
         }
     }
 }
