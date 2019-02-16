@@ -18,15 +18,15 @@ class ListBookTable: UITableViewController {
         return "\(list.name)⌄"
     }
 
-    @IBOutlet private weak var sortButton: UIBarButtonItem!
-    @IBOutlet private weak var editButton: UIBarButtonItem!
-
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView.register(UINib(BookTableViewCell.self), forCellReuseIdentifier: String(describing: BookTableViewCell.self))
 
         cachedListNames = List.names(fromContext: PersistentStoreManager.container.viewContext)
         navigationItem.title = list.name
+
+        let orderButton = UIBarButtonItem(image: #imageLiteral(resourceName: "SortIcon"), style: .plain, target: self, action: #selector(sortTapped(_:)))
+        navigationItem.rightBarButtonItems = [editButtonItem, orderButton]
 
         tableView.emptyDataSetSource = self
         tableView.emptyDataSetDelegate = self
@@ -65,7 +65,7 @@ class ListBookTable: UITableViewController {
         if let popover = alert.popoverPresentationController {
             popover.barButtonItem = sender
         }
-        for listOrder in BookSort.allCases {
+        for listOrder in BookSort.listSorts {
             let title = list.order == listOrder ? "  \(listOrder) ✓" : listOrder.description
             alert.addAction(UIAlertAction(title: title, style: .default) { _ in
                 if self.list.order != listOrder {
@@ -107,23 +107,25 @@ class ListBookTable: UITableViewController {
             }
             listNameField.endEditing(true)
         }
-        toggleTitleView()
+        toggleTitleView(editing: editing)
     }
 
-    private func toggleTitleView() {
-        if navigationItem.titleView != nil {
-            navigationItem.titleView = nil
-            navigationItem.title = list.name
-        } else {
+    private func toggleTitleView(editing: Bool) {
+        if editing {
             navigationItem.titleView = listTextField()
             navigationItem.title = nil
+        } else {
+            navigationItem.titleView = nil
+            navigationItem.title = list.name
         }
     }
 
     @objc private func configureBarButtons() {
+        guard let buttons = navigationItem.rightBarButtonItems, let editButton = buttons[safe: 0], let sortButton = buttons[safe: 1] else {
+            assertionFailure()
+            return
+        }
         sortButton.isEnabled = list.books.count != 0 && !isEditing //swiftlint:disable:this empty_count
-        editButton.style = isEditing ? .done : .plain
-        editButton.title = isEditing ? "Done" : "Edit"
         editButton.isEnabled = {
             if let listNameField = listNameField {
                 if !listNameField.isEditing { return true }

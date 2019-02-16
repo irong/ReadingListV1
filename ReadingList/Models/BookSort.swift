@@ -18,15 +18,13 @@ import ReadingList_Foundation
         }
     }
 
-    var canSortLists: Bool {
-        return true
-    }
+    static var listSorts = [BookSort.custom, .title, .author, .startDate, .finishDate]
 
-    func canSortBooks(ofState state: BookReadState) -> Bool {
+    static func bookSorts(forState state: BookReadState) -> [BookSort] {
         switch state {
-        case .toRead: return [BookSort.custom, .title, .author].contains(self)
-        case .reading: return [BookSort.custom, .startDate, .title, .author].contains(self)
-        case .finished: return [BookSort.custom, .startDate, .finishDate, .title, .author].contains(self)
+        case .toRead: return [BookSort.custom, .title, .author]
+        case .reading: return [BookSort.startDate, .title, .author]
+        case .finished: return [BookSort.startDate, .finishDate, .title, .author]
         }
     }
 
