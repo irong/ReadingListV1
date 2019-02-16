@@ -7,6 +7,7 @@ import ReadingList_Foundation
 class Organise: UITableViewController {
 
     var resultsController: NSFetchedResultsController<List>!
+    var searchController: UISearchController!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -15,6 +16,10 @@ class Organise: UITableViewController {
 
         tableView.emptyDataSetSource = self
         tableView.emptyDataSetDelegate = self
+
+        searchController = UISearchController(filterPlaceholderText: "Your Lists")
+        searchController.searchResultsUpdater = self
+        navigationItem.searchController = searchController
 
         let fetchRequest = NSManagedObject.fetchRequest(List.self, batch: 25)
         fetchRequest.sortDescriptors = [NSSortDescriptor(\List.name)]
@@ -126,37 +131,60 @@ class Organise: UITableViewController {
     }
 }
 
-extension Organise: DZNEmptyDataSetSource {
-
-    func title(forEmptyDataSet scrollView: UIScrollView!) -> NSAttributedString! {
-        return StandardEmptyDataset.title(withText: "🗂️ Organise")
+extension Organise: UISearchResultsUpdating {
+    func predicate(forSearchText searchText: String?) -> NSPredicate {
+        if let searchText = searchText, !searchText.isEmptyOrWhitespace && searchText.trimming().count >= 2 {
+            return NSPredicate(fieldName: #keyPath(List.name), containsSubstring: searchText)
+        }
+        return NSPredicate(boolean: true) // If we cannot filter with the search text, we should return all results
     }
 
-    func description(forEmptyDataSet scrollView: UIScrollView!) -> NSAttributedString! {
-        return StandardEmptyDataset.description(withMarkdownText: """
-            Create your own lists to organise your books.
+    func updateSearchResults(for searchController: UISearchController) {
+        let searchTextPredicate = self.predicate(forSearchText: searchController.searchBar.text)
 
-            To create a new list, tap **Add To List** when viewing a book.
-            """)
-    }
-
-    func verticalOffset(forEmptyDataSet scrollView: UIScrollView!) -> CGFloat {
-        // The large titles make the empty data set look weirdly low down. Adjust this,
-        // by - fairly randomly - the height of the nav bar
-        if navigationController!.navigationBar.prefersLargeTitles {
-            return -navigationController!.navigationBar.frame.height
-        } else {
-            return 0
+        if resultsController.fetchRequest.predicate != searchTextPredicate {
+            resultsController.fetchRequest.predicate = searchTextPredicate
+            try! resultsController.performFetch()
+            tableView.reloadData()
         }
     }
 }
 
-extension Organise: DZNEmptyDataSetDelegate {
-    func emptyDataSetDidAppear(_ scrollView: UIScrollView!) {
-        navigationItem.leftBarButtonItem = nil
+extension Organise: DZNEmptyDataSetSource {
+
+    func title(forEmptyDataSet scrollView: UIScrollView!) -> NSAttributedString! {
+        if searchController.hasActiveSearchTerms {
+            return StandardEmptyDataset.title(withText: "🔍 No Results")
+        }
+        return StandardEmptyDataset.title(withText: "🗂️ Organise")
     }
 
-    func emptyDataSetDidDisappear(_ scrollView: UIScrollView!) {
+    func verticalOffset(forEmptyDataSet scrollView: UIScrollView!) -> CGFloat {
+        return -30
+    }
+
+    func description(forEmptyDataSet scrollView: UIScrollView!) -> NSAttributedString! {
+        if searchController.hasActiveSearchTerms {
+            return StandardEmptyDataset.description(withMarkdownText: """
+                Try changing your search, or add a new list by tapping the **+** button above.
+                """)
+        }
+        return StandardEmptyDataset.description(withMarkdownText: """
+            Create your own lists to organise your books.
+
+            To create a new list, tap the **+** button above, or tap **Add To List** when viewing a book.
+            """)
+    }
+}
+
+extension Organise: DZNEmptyDataSetDelegate {
+    func emptyDataSetWillAppear(_ scrollView: UIScrollView!) {
+        navigationItem.leftBarButtonItem = nil
+        navigationItem.largeTitleDisplayMode = .never
+    }
+
+    func emptyDataSetWillDisappear(_ scrollView: UIScrollView!) {
         navigationItem.leftBarButtonItem = editButtonItem
+        navigationItem.largeTitleDisplayMode = .automatic
     }
 }

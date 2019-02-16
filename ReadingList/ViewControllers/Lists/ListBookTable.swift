@@ -14,6 +14,10 @@ class ListBookTable: UITableViewController {
         return navigationItem.titleView as? UITextField
     }
 
+    private var listNameFieldDefaultText: String {
+        return "\(list.name)⌄"
+    }
+
     @IBOutlet private weak var sortButton: UIBarButtonItem!
     @IBOutlet private weak var editButton: UIBarButtonItem!
 
@@ -43,10 +47,11 @@ class ListBookTable: UITableViewController {
     private func listTextField() -> UITextField {
         guard let navigationBar = navigationController?.navigationBar else { preconditionFailure() }
         let textField = UITextField(frame: navigationBar.frame.inset(by: UIEdgeInsets(top: 0, left: 115, bottom: 0, right: 115)))
-        textField.text = "\(list.name)⌄"
+        textField.text = listNameFieldDefaultText
         textField.textAlignment = .center
         textField.font = UIFont.systemFont(ofSize: 17.0, weight: .semibold)
         textField.textColor = UserDefaults.standard[.theme].titleTextColor
+        textField.enablesReturnKeyAutomatically = true
         textField.returnKeyType = .done
         textField.delegate = self
         textField.addTarget(self, action: #selector(self.configureBarButtons), for: .editingChanged)
@@ -288,7 +293,7 @@ extension ListBookTable: UITextFieldDelegate {
     }
 
     func textFieldDidEndEditing(_ textField: UITextField) {
-        textField.text = list.name
+        textField.text = listNameFieldDefaultText
     }
 
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
