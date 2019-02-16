@@ -6,35 +6,125 @@ import DZNEmptyDataSet
 class ListBookTable: UITableViewController {
 
     var list: List!
+    var cachedListNames: [String]!
     var ignoreNotifications = false
     var controller: NSFetchedResultsController<Book>?
 
+    private var listNameField: UITextField? {
+        return navigationItem.titleView as? UITextField
+    }
+
+    @IBOutlet private weak var sortButton: UIBarButtonItem!
+    @IBOutlet private weak var editButton: UIBarButtonItem!
+
     override func viewDidLoad() {
         super.viewDidLoad()
-
         tableView.register(UINib(BookTableViewCell.self), forCellReuseIdentifier: String(describing: BookTableViewCell.self))
 
+        cachedListNames = List.names(fromContext: PersistentStoreManager.container.viewContext)
         navigationItem.title = list.name
-        let reorder = UIBarButtonItem(title: "Order", style: .plain, target: self, action: #selector(orderButtonPressed(_:)))
-        navigationItem.rightBarButtonItems = [editButtonItem, reorder]
 
         tableView.emptyDataSetSource = self
         tableView.emptyDataSetDelegate = self
 
         NotificationCenter.default.addObserver(self, selector: #selector(managedObjectContextChanged(_:)), name: .NSManagedObjectContextObjectsDidChange,
                                                object: list.managedObjectContext!)
-        monitorThemeSetting()
-
         generateResultsControllerIfNecessary()
+        monitorThemeSetting()
+    }
+
+    override func initialise(withTheme theme: Theme) {
+        super.initialise(withTheme: theme)
+        if let listNameField = listNameField {
+            listNameField.textColor = theme.titleTextColor
+        }
+    }
+
+    private func listTextField() -> UITextField {
+        guard let navigationBar = navigationController?.navigationBar else { preconditionFailure() }
+        let textField = UITextField(frame: navigationBar.frame.inset(by: UIEdgeInsets(top: 0, left: 115, bottom: 0, right: 115)))
+        textField.text = "\(list.name)⌄"
+        textField.textAlignment = .center
+        textField.font = UIFont.systemFont(ofSize: 17.0, weight: .semibold)
+        textField.textColor = UserDefaults.standard[.theme].titleTextColor
+        textField.returnKeyType = .done
+        textField.delegate = self
+        textField.addTarget(self, action: #selector(self.configureBarButtons), for: .editingChanged)
+        return textField
+    }
+
+    @IBAction private func sortTapped(_ sender: UIBarButtonItem) {
+        let alert = UIAlertController(title: "Choose Order", message: nil, preferredStyle: .actionSheet)
+        if let popover = alert.popoverPresentationController {
+            popover.barButtonItem = sender
+        }
+        for listOrder in BookSort.allCases {
+            let title = list.order == listOrder ? "  \(listOrder) ✓" : listOrder.description
+            alert.addAction(UIAlertAction(title: title, style: .default) { _ in
+                if self.list.order != listOrder {
+                    self.list.order = listOrder
+                    self.list.managedObjectContext!.saveAndLogIfErrored()
+                    self.sortOrderChanged()
+                }
+            })
+        }
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        present(alert, animated: true, completion: nil)
+    }
+
+    @IBAction private func editTapped(_ sender: UIBarButtonItem) {
+        setEditing(!isEditing, animated: true)
+        configureBarButtons()
+    }
+
+    private func canUpdateListName(to name: String) -> Bool {
+        guard !name.isEmptyOrWhitespace else { return false }
+        return name == list.name || !cachedListNames.contains(name)
+    }
+
+    @discardableResult private func tryUpdateListName(to name: String) -> Bool {
+        if canUpdateListName(to: name) {
+            list.name = name
+            list.managedObjectContext!.saveAndLogIfErrored()
+            return true
+        } else {
+            return false
+        }
     }
 
     override func setEditing(_ editing: Bool, animated: Bool) {
-        guard let orderButton = navigationItem.rightBarButtonItems?[safe: 1] else {
-            assertionFailure()
-            return
-        }
-        orderButton.isEnabled = !editing
         super.setEditing(editing, animated: animated)
+        if !editing, let listNameField = listNameField, listNameField.isEditing {
+            if let proposedName = listNameField.text {
+                tryUpdateListName(to: proposedName)
+            }
+            listNameField.endEditing(true)
+        }
+        toggleTitleView()
+    }
+
+    private func toggleTitleView() {
+        if navigationItem.titleView != nil {
+            navigationItem.titleView = nil
+            navigationItem.title = list.name
+        } else {
+            navigationItem.titleView = listTextField()
+            navigationItem.title = nil
+        }
+    }
+
+    @objc private func configureBarButtons() {
+        sortButton.isEnabled = list.books.count != 0 && !isEditing //swiftlint:disable:this empty_count
+        editButton.style = isEditing ? .done : .plain
+        editButton.title = isEditing ? "Done" : "Edit"
+        editButton.isEnabled = {
+            if let listNameField = listNameField {
+                if !listNameField.isEditing { return true }
+                if let newName = listNameField.text, canUpdateListName(to: newName) { return true }
+                return false
+            }
+            return true
+        }()
     }
 
     private func generateResultsControllerIfNecessary() {
@@ -60,35 +150,18 @@ class ListBookTable: UITableViewController {
         tableView.scrollToRow(at: IndexPath(row: 0, section: 0), at: .middle, animated: false)
     }
 
-    @objc private func orderButtonPressed(_ sender: UIBarButtonItem) {
-        let alert = UIAlertController(title: "Choose Order", message: nil, preferredStyle: .actionSheet)
-        if let popover = alert.popoverPresentationController {
-            popover.barButtonItem = sender
-        }
-        for listOrder in BookSort.allCases {
-            let title = list.order == listOrder ? "  \(listOrder) ✓" : listOrder.description
-            alert.addAction(UIAlertAction(title: title, style: .default) { _ in
-                if self.list.order != listOrder {
-                    self.list.order = listOrder
-                    self.list.managedObjectContext!.saveAndLogIfErrored()
-                    self.sortOrderChanged()
-                }
-            })
-        }
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-        present(alert, animated: true, completion: nil)
-    }
-
     @objc private func managedObjectContextChanged(_ notification: Notification) {
         guard !ignoreNotifications else { return }
         guard let userInfo = notification.userInfo else { return }
 
-        let deletedObjects = userInfo[NSDeletedObjectsKey] as? NSSet ?? NSSet()
-        guard !deletedObjects.contains(list) else {
+        if (userInfo[NSDeletedObjectsKey] as? NSSet)?.contains(list) == true {
             // If the list was deleted, pop back. This can't happen through any normal means at the moment.
             navigationController?.popViewController(animated: false)
             return
         }
+
+        // Repopulate the list names cache
+        cachedListNames = List.names(fromContext: PersistentStoreManager.container.viewContext)
 
         // We are not using an NSFetchResultsControllerDelegate if the sort order is manual, so reload the table data.
         if controller?.delegate == nil {
@@ -166,7 +239,7 @@ class ListBookTable: UITableViewController {
     override func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
         guard sourceIndexPath != destinationIndexPath else { return }
         ignoringSaveNotifications {
-            var books = list.books.map { ($0 as! Book) }
+            var books = list.books.map { $0 as! Book }
             let movedBook = books.remove(at: sourceIndexPath.row)
             books.insert(movedBook, at: destinationIndexPath.row)
             list.books = NSOrderedSet(array: books)
@@ -201,10 +274,26 @@ extension ListBookTable: DZNEmptyDataSetSource {
 
 extension ListBookTable: DZNEmptyDataSetDelegate {
     func emptyDataSetWillAppear(_ scrollView: UIScrollView!) {
-        navigationItem.rightBarButtonItem = nil
+        configureBarButtons()
     }
 
     func emptyDataSetDidDisappear(_ scrollView: UIScrollView!) {
-        navigationItem.rightBarButtonItem = editButtonItem
+        configureBarButtons()
+    }
+}
+
+extension ListBookTable: UITextFieldDelegate {
+    func textFieldDidBeginEditing(_ textField: UITextField) {
+        textField.text = list.name
+    }
+
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        textField.text = list.name
+    }
+
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        guard let newText = textField.text, tryUpdateListName(to: newText) else { return false }
+        textField.resignFirstResponder()
+        return true
     }
 }
