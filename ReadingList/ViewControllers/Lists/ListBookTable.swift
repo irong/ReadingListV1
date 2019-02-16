@@ -111,11 +111,6 @@ class ListBookTable: UITableViewController {
         present(alert, animated: true, completion: nil)
     }
 
-    @IBAction private func editTapped(_ sender: UIBarButtonItem) {
-        setEditing(!isEditing, animated: true)
-        configureBarButtons()
-    }
-
     private func canUpdateListName(to name: String) -> Bool {
         guard !name.isEmptyOrWhitespace else { return false }
         return name == list.name || !cachedListNames.contains(name)
@@ -133,17 +128,22 @@ class ListBookTable: UITableViewController {
 
     override func setEditing(_ editing: Bool, animated: Bool) {
         super.setEditing(editing, animated: animated)
+
+        // If we go from editing to not editing, and we are (/were) editing the title text field, then
+        // save the update (if we can), and stop editing it.
         if !editing, let listNameField = listNameField, listNameField.isEditing {
             if let proposedName = listNameField.text {
                 tryUpdateListName(to: proposedName)
             }
             listNameField.endEditing(true)
         }
-        toggleTitleView(editing: editing)
+        configureTitleView()
+        configureBarButtons()
+        searchController.searchBar.isActive = !editing
     }
 
-    private func toggleTitleView(editing: Bool) {
-        if editing {
+    private func configureTitleView() {
+        if isEditing {
             navigationItem.titleView = listTextField()
             navigationItem.title = nil
         } else {
@@ -157,7 +157,7 @@ class ListBookTable: UITableViewController {
             assertionFailure()
             return
         }
-        sortButton.isEnabled = list.books.count != 0 && !isEditing //swiftlint:disable:this empty_count
+        sortButton.isEnabled = list.books.count > 1 && !isEditing //swiftlint:disable:this empty_count
         editButton.isEnabled = {
             if let listNameField = listNameField {
                 if !listNameField.isEditing { return true }
