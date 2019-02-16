@@ -46,11 +46,13 @@ class ListBookTable: UITableViewController {
 
     private func listTextField() -> UITextField {
         guard let navigationBar = navigationController?.navigationBar else { preconditionFailure() }
+        let theme = UserDefaults.standard[.theme]
         let textField = UITextField(frame: navigationBar.frame.inset(by: UIEdgeInsets(top: 0, left: 115, bottom: 0, right: 115)))
         textField.text = listNameFieldDefaultText
         textField.textAlignment = .center
         textField.font = UIFont.systemFont(ofSize: 17.0, weight: .semibold)
-        textField.textColor = UserDefaults.standard[.theme].titleTextColor
+        textField.textColor = theme.titleTextColor
+        textField.keyboardAppearance = theme.keyboardAppearance
         textField.enablesReturnKeyAutomatically = true
         textField.returnKeyType = .done
         textField.delegate = self
