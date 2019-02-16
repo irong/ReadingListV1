@@ -79,7 +79,7 @@
         <!--My List-->
         <scene sceneID="31O-I5-KfZ">
             <objects>
-                <tableViewController title="My List" extendedLayoutIncludesOpaqueBars="YES" id="ggN-hf-l8Q" customClass="ListBookTable" customModule="ReadingList" customModuleProvider="target" sceneMemberID="viewController">
+                <tableViewController title="My List" extendedLayoutIncludesOpaqueBars="YES" definesPresentationContext="YES" id="ggN-hf-l8Q" customClass="ListBookTable" customModule="ReadingList" customModuleProvider="target" sceneMemberID="viewController">
                     <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="grouped" separatorStyle="default" rowHeight="92" sectionHeaderHeight="18" sectionFooterHeight="18" id="gO0-S4-wGF">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>

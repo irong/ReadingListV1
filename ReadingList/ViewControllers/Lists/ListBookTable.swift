@@ -8,7 +8,18 @@ class ListBookTable: UITableViewController {
     var list: List!
     var cachedListNames: [String]!
     var ignoreNotifications = false
-    var controller: NSFetchedResultsController<Book>?
+    var controller: NSFetchedResultsController<Book>!
+    var searchController: UISearchController!
+    var readRelatedBooksDirectly = false
+
+    /**
+     In normal operation, what value should we set readRelatedBooksDirectly to? This is true when the list sort order is
+     custom (since we cannot easily use a fetched results controller with that ordering). We may want to ignore the value
+     of this in special cases (e.g. when searching).
+    */
+    private var shouldReadRelatedBooksDirectly: Bool {
+        return list.order == .listCustom
+    }
 
     private var listNameField: UITextField? {
         return navigationItem.titleView as? UITextField
@@ -16,6 +27,10 @@ class ListBookTable: UITableViewController {
 
     private var listNameFieldDefaultText: String {
         return "\(list.name)⌄"
+    }
+
+    private var defaultPredicate: NSPredicate {
+        return NSPredicate(format: "%@ IN %K", list, #keyPath(Book.lists))
     }
 
     override func viewDidLoad() {
@@ -31,9 +46,26 @@ class ListBookTable: UITableViewController {
         tableView.emptyDataSetSource = self
         tableView.emptyDataSetDelegate = self
 
+        // Build up the resultsController, even though it won't always be used. If the list's sort order is custom,
+        // we will just use the ordered set of books on the list. This is because the NSFetchedResultsController delegate
+        // does not behave well when the ordering is specified by the ordering in a relationship (specifically, changes
+        // cause an unhandled error).
+        let fetchRequest = NSManagedObject.fetchRequest(Book.self, batch: 50)
+        fetchRequest.predicate = defaultPredicate
+        fetchRequest.sortDescriptors = list.order.sortDescriptors
+        controller = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: PersistentStoreManager.container.viewContext, sectionNameKeyPath: nil, cacheName: nil)
+        readRelatedBooksDirectly = shouldReadRelatedBooksDirectly
+        if !readRelatedBooksDirectly {
+            controller.delegate = tableView
+            try! controller.performFetch()
+        }
+
+        searchController = UISearchController(filterPlaceholderText: "Filter List")
+        searchController.searchResultsUpdater = self
+        navigationItem.searchController = searchController
+
         NotificationCenter.default.addObserver(self, selector: #selector(managedObjectContextChanged(_:)), name: .NSManagedObjectContextObjectsDidChange,
                                                object: list.managedObjectContext!)
-        generateResultsControllerIfNecessary()
         monitorThemeSetting()
     }
 
@@ -136,25 +168,22 @@ class ListBookTable: UITableViewController {
         }()
     }
 
-    private func generateResultsControllerIfNecessary() {
-        if list.order == .custom {
-            // Custom order is determined by the ordering within the ordered relationship, and we can't
-            // use make the controller sort by that ordering.
-            controller = nil
-            return
-        }
-
-        let fetch = NSManagedObject.fetchRequest(Book.self, batch: 50)
-        fetch.predicate = NSPredicate(format: "%@ IN %K", list, #keyPath(Book.lists))
-        fetch.sortDescriptors = list.order.sortDescriptors
-        controller = NSFetchedResultsController(fetchRequest: fetch, managedObjectContext: PersistentStoreManager.container.viewContext, sectionNameKeyPath: nil, cacheName: nil)
-        try! controller!.performFetch()
-        controller!.delegate = tableView
-    }
-
     private func sortOrderChanged() {
-        generateResultsControllerIfNecessary()
+        if searchController.isActive {
+            // Belts and braces; if the sort order changes while a search is going on, just stop the search.
+            searchController.isActive = false
+        }
+        
+        // Keep the controller up-to-date, even if we are not using it. This might be helpful later if we start searching.
+        controller.fetchRequest.sortDescriptors = list.order.sortDescriptors
+
+        readRelatedBooksDirectly = shouldReadRelatedBooksDirectly
+        if !readRelatedBooksDirectly {
+            controller.delegate = tableView
+            try! controller.performFetch()
+        }
         tableView.reloadData()
+
         // Put the top row at the "middle", so that the top row is not right up at the top of the table
         tableView.scrollToRow(at: IndexPath(row: 0, section: 0), at: .middle, animated: false)
     }
@@ -172,8 +201,12 @@ class ListBookTable: UITableViewController {
         // Repopulate the list names cache
         cachedListNames = List.names(fromContext: PersistentStoreManager.container.viewContext)
 
-        // We are not using an NSFetchResultsControllerDelegate if the sort order is manual, so reload the table data.
-        if controller?.delegate == nil {
+        // There are some very specific use cases where we have a resultsController but it has no delegate. In that case,
+        // refetch and reload the table. If we don't have a resultsController at all, just reload the table.
+        if readRelatedBooksDirectly {
+            tableView.reloadData()
+        } else if controller.delegate == nil {
+            try! controller.performFetch()
             tableView.reloadData()
         }
     }
@@ -188,10 +221,10 @@ class ListBookTable: UITableViewController {
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         guard section == 0 else { return 0 }
-        if let controller = controller {
-            return controller.sections![0].numberOfObjects
-        } else {
+        if readRelatedBooksDirectly {
             return list.books.count
+        } else {
+            return controller.sections![0].numberOfObjects
         }
     }
 
@@ -199,10 +232,10 @@ class ListBookTable: UITableViewController {
         let cell = tableView.dequeueReusableCell(withIdentifier: String(describing: BookTableViewCell.self), for: indexPath) as! BookTableViewCell
 
         let book: Book
-        if let controller = controller {
-            book = controller.object(at: indexPath)
-        } else {
+        if readRelatedBooksDirectly {
             book = list.books.object(at: indexPath.row) as! Book
+        } else {
+            book = controller.object(at: indexPath)
         }
         cell.initialise(withTheme: UserDefaults.standard[.theme])
         cell.configureFrom(book, includeReadDates: false)
@@ -219,10 +252,10 @@ class ListBookTable: UITableViewController {
 
     private func removeBook(at indexPath: IndexPath) {
         let bookToRemove: Book
-        if let controller = controller {
-            bookToRemove = controller.object(at: indexPath)
-        } else {
+        if readRelatedBooksDirectly {
             bookToRemove = list.books[indexPath.row] as! Book
+        } else {
+            bookToRemove = controller.object(at: indexPath)
         }
         list.removeBooks(NSSet(object: bookToRemove))
         list.managedObjectContext!.saveAndLogIfErrored()
@@ -233,7 +266,7 @@ class ListBookTable: UITableViewController {
         return [UITableViewRowAction(style: .destructive, title: "Remove") { _, indexPath in
             self.ignoringSaveNotifications {
                 self.removeBook(at: indexPath)
-                if self.controller?.delegate == nil {
+                if self.controller.delegate == nil {
                     self.tableView.deleteRows(at: [indexPath], with: .automatic)
                 }
             }
@@ -242,7 +275,7 @@ class ListBookTable: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
-        return list.order == .custom && list.books.count > 1
+        return list.order == .listCustom && list.books.count > 1
     }
 
     override func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
@@ -261,22 +294,56 @@ class ListBookTable: UITableViewController {
         if let detailsViewController = (segue.destination as? UINavigationController)?.topViewController as? BookDetails {
             guard let senderIndex = sender as? IndexPath else { preconditionFailure() }
             let book: Book
-            if let controller = controller {
-                book = controller.object(at: senderIndex)
-            } else {
+            if readRelatedBooksDirectly {
                 book = list.books.object(at: senderIndex.row) as! Book
+            } else {
+                book = controller.object(at: senderIndex)
             }
             detailsViewController.book = book
         }
     }
 }
 
+extension ListBookTable: UISearchResultsUpdating {
+    func updateSearchResults(for searchController: UISearchController) {
+        if let searchText = searchController.searchBar.text, !searchText.isEmptyOrWhitespace && searchText.trimming().count >= 2 {
+            let newSearchPredicate = NSPredicate.wordsWithinFields(searchText, fieldNames: #keyPath(Book.title), #keyPath(Book.authorSort), "ANY \(#keyPath(Book.subjects)).name")
+
+            // Even if we are ordering by the custom order, and so not using a results controller for normal operation, we want
+            // to use a results controller to show the search results. It is correct to omit to set the delegate though, as this
+            // doesn't work with our chosen sort order.
+            readRelatedBooksDirectly = false
+            controller.fetchRequest.predicate = NSPredicate.and([defaultPredicate, newSearchPredicate])
+        } else {
+            readRelatedBooksDirectly = shouldReadRelatedBooksDirectly
+            controller.fetchRequest.predicate = defaultPredicate
+        }
+
+        if !readRelatedBooksDirectly {
+            try! controller.performFetch()
+        }
+        tableView.reloadData()
+    }
+}
+
 extension ListBookTable: DZNEmptyDataSetSource {
     func title(forEmptyDataSet scrollView: UIScrollView!) -> NSAttributedString! {
+        if searchController.hasActiveSearchTerms {
+            return StandardEmptyDataset.title(withText: "🔍 No Results")
+        }
         return StandardEmptyDataset.title(withText: "✨ Empty List")
     }
 
+    func verticalOffset(forEmptyDataSet scrollView: UIScrollView!) -> CGFloat {
+        return -30
+    }
+
     func description(forEmptyDataSet scrollView: UIScrollView!) -> NSAttributedString! {
+        if searchController.hasActiveSearchTerms {
+            return StandardEmptyDataset.description(withMarkdownText: """
+                Try changing your search, or add a new list by tapping the **+** button above.
+                """)
+        }
         return StandardEmptyDataset.description(withMarkdownText: "The list \"\(list.name)\" is currently empty.  To add a book to it, find a book and click **Add to List**.")
     }
 }

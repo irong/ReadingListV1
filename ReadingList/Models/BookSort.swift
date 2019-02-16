@@ -7,10 +7,11 @@ import ReadingList_Foundation
     case finishDate = 3
     case title = 4
     case author = 5
+    case listCustom = 6
 
     var description: String {
         switch self {
-        case .custom: return "Custom"
+        case .custom, .listCustom: return "Custom"
         case .startDate: return "Start Date"
         case .finishDate: return "Finish Date"
         case .title: return "Title"
@@ -18,7 +19,7 @@ import ReadingList_Foundation
         }
     }
 
-    static var listSorts = [BookSort.custom, .title, .author, .startDate, .finishDate]
+    static var listSorts = [BookSort.listCustom, .title, .author, .startDate, .finishDate]
 
     static func bookSorts(forState state: BookReadState) -> [BookSort] {
         switch state {
@@ -41,6 +42,7 @@ import ReadingList_Foundation
         case .custom: return [NSSortDescriptor(Book.Key.sort.rawValue),
                               NSSortDescriptor(\Book.googleBooksId),
                               NSSortDescriptor(\Book.manualBookId)]
+        case .listCustom: return [NSSortDescriptor(\Book.lists)]
         }
     }
 }
