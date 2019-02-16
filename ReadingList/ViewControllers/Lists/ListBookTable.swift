@@ -103,6 +103,7 @@ class ListBookTable: UITableViewController {
                 if self.list.order != listOrder {
                     self.list.order = listOrder
                     self.list.managedObjectContext!.saveAndLogIfErrored()
+                    UserEngagement.logEvent(.setListOrder)
                     self.sortOrderChanged()
                 }
             })
@@ -118,6 +119,7 @@ class ListBookTable: UITableViewController {
 
     @discardableResult private func tryUpdateListName(to name: String) -> Bool {
         if canUpdateListName(to: name) {
+            UserEngagement.logEvent(.renameList)
             list.name = name
             list.managedObjectContext!.saveAndLogIfErrored()
             return true
@@ -157,7 +159,7 @@ class ListBookTable: UITableViewController {
             assertionFailure()
             return
         }
-        sortButton.isEnabled = list.books.count > 1 && !isEditing //swiftlint:disable:this empty_count
+        sortButton.isEnabled = list.books.count > 1 && !isEditing
         editButton.isEnabled = {
             if let listNameField = listNameField {
                 if !listNameField.isEditing { return true }
@@ -173,7 +175,7 @@ class ListBookTable: UITableViewController {
             // Belts and braces; if the sort order changes while a search is going on, just stop the search.
             searchController.isActive = false
         }
-        
+
         // Keep the controller up-to-date, even if we are not using it. This might be helpful later if we start searching.
         controller.fetchRequest.sortDescriptors = list.order.sortDescriptors
 

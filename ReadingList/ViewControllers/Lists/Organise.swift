@@ -56,12 +56,14 @@ class Organise: UITableViewController {
         return cell
     }
 
-    override func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath) -> [UITableViewRowAction]? {
-        return [
-            UITableViewRowAction(style: .destructive, title: "Delete") { _, indexPath in
+    override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        return UISwipeActionsConfiguration(performFirstActionWithFullSwipe: false, actions: [
+            UIContextualAction(style: .destructive, title: "Delete") { _, _, callback in
                 self.deleteList(forRowAt: indexPath)
+                // We never perform the deletion right-away
+                callback(false)
             },
-            UITableViewRowAction(style: .normal, title: "Rename") { _, indexPath in
+            UIContextualAction(style: .normal, title: "Rename") { _, _, callback in
                 self.setEditing(false, animated: true)
                 let list = self.resultsController.object(at: indexPath)
 
@@ -71,6 +73,7 @@ class Organise: UITableViewController {
                         return listName == list.name || !existingListNames.contains(listName)
                     }, onOK: {
                         guard let listName = $0 else { return }
+                        UserEngagement.logEvent(.renameList)
                         list.managedObjectContext!.performAndSave {
                             list.name = listName
                         }
@@ -78,8 +81,9 @@ class Organise: UITableViewController {
                 )
 
                 self.present(renameListAlert, animated: true)
+                callback(true)
             }
-        ]
+        ])
     }
 
     @IBAction private func addWasTapped(_ sender: UIBarButtonItem) {
@@ -103,7 +107,6 @@ class Organise: UITableViewController {
             if self.tableView.numberOfRows(inSection: 0) == 0 {
                 self.tableView.reloadData()
             }
-            self.tableView.setEditing(false, animated: true)
         })
         confirmDelete.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
 
