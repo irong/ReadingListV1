@@ -34,7 +34,7 @@ class TabBarController: UITabBarController {
         let finished = UIStoryboard.BookTable.instantiateRoot() as! UISplitViewController
         (finished.masterNavigationRoot as! BookTable).readStates = [.finished]
 
-        viewControllers = [toRead, finished, UIStoryboard.Organise.instantiateRoot(), UIStoryboard.Settings.instantiateRoot()]
+        viewControllers = [toRead, finished, UIStoryboard.Organize.instantiateRoot(), UIStoryboard.Settings.instantiateRoot()]
 
         // Tabs 3 and 4 are already configured by the Organise and Settings storyboards
         tabBar.items![0].configure(tag: TabOption.toRead.rawValue, title: "To Read", image: #imageLiteral(resourceName: "courses"), selectedImage: #imageLiteral(resourceName: "courses-filled"))

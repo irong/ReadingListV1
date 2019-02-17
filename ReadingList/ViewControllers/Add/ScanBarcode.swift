@@ -97,7 +97,7 @@ class ScanBarcode: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
         session!.addOutput(output)
 
         // This line must be after session outputs are added
-        output.metadataObjectTypes = [AVMetadataObject.ObjectType.ean13]
+        output.metadataObjectTypes = [.ean13]
 
         // Begin the capture session.
         session!.startRunning()

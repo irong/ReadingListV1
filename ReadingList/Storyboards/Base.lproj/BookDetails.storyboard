@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14313.18" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="n9u-1T-KRj">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14460.31" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="n9u-1T-KRj">
     <device id="retina5_5" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14283.14"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14460.20"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -18,14 +18,14 @@
                         <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bTb-kP-Eva">
+                            <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="bTb-kP-Eva">
                                 <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
                                 <subviews>
-                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="qHr-le-Bwg" userLabel="Content View">
+                                    <view contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="qHr-le-Bwg" userLabel="Content View">
                                         <rect key="frame" x="0.0" y="0.0" width="414" height="1054.3333333333333"/>
                                         <subviews>
-                                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="12" translatesAutoresizingMaskIntoConstraints="NO" id="bhg-kb-dQx" userLabel="Main Stack View">
-                                                <rect key="frame" x="18" y="18.000000000000057" width="378" height="1018.3333333333335"/>
+                                            <stackView opaque="NO" contentMode="scaleToFill" ambiguous="YES" axis="vertical" spacing="12" translatesAutoresizingMaskIntoConstraints="NO" id="bhg-kb-dQx" userLabel="Main Stack View">
+                                                <rect key="frame" x="18" y="18" width="378" height="1018.3333333333335"/>
                                                 <subviews>
                                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="yhn-N0-bz4" userLabel="CoverAndTitle">
                                                         <rect key="frame" x="0.0" y="0.0" width="378" height="120"/>
@@ -73,7 +73,7 @@
                                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="xYF-nW-8G6" customClass="StartFinishButton" customModule="ReadingList" customModuleProvider="target">
                                                                 <rect key="frame" x="92" y="54.333333333333329" width="64" height="25"/>
                                                                 <constraints>
-                                                                    <constraint firstAttribute="width" constant="64" id="Zow-Kx-gcs"/>
+                                                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="64" id="Zow-Kx-gcs"/>
                                                                     <constraint firstAttribute="height" constant="25" id="p26-Nk-Wkh"/>
                                                                 </constraints>
                                                                 <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="12"/>
@@ -84,6 +84,7 @@
                                                             </button>
                                                         </subviews>
                                                         <constraints>
+                                                            <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="xYF-nW-8G6" secondAttribute="trailing" id="5Kf-UD-J7i"/>
                                                             <constraint firstItem="Idg-j1-qMK" firstAttribute="top" secondItem="yhn-N0-bz4" secondAttribute="top" id="Xr2-gy-4Zn"/>
                                                             <constraint firstAttribute="bottom" secondItem="3DD-HK-Aea" secondAttribute="bottom" priority="999" id="aS8-A4-d2d"/>
                                                             <constraint firstItem="3DD-HK-Aea" firstAttribute="top" secondItem="yhn-N0-bz4" secondAttribute="top" id="bXV-XI-H39"/>
@@ -104,7 +105,7 @@
                                                             <constraint firstAttribute="height" constant="1" id="ngb-Bt-YD4" customClass="HairlineConstraint" customModule="ReadingList_Foundation"/>
                                                         </constraints>
                                                     </view>
-                                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="G5L-nH-fCB" customClass="ExpandableLabel" customModule="ReadingList_Foundation">
+                                                    <view contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="G5L-nH-fCB" customClass="ExpandableLabel" customModule="ReadingList_Foundation">
                                                         <rect key="frame" x="0.0" y="145" width="378" height="81.333333333333314"/>
                                                         <userDefinedRuntimeAttributes>
                                                             <userDefinedRuntimeAttribute type="string" keyPath="text">
@@ -118,14 +119,14 @@
                                                             </userDefinedRuntimeAttribute>
                                                         </userDefinedRuntimeAttributes>
                                                     </view>
-                                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="VZx-ih-0hi" userLabel="Separator">
+                                                    <view contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="VZx-ih-0hi" userLabel="Separator">
                                                         <rect key="frame" x="0.0" y="238.33333333333331" width="378" height="1"/>
                                                         <color key="backgroundColor" white="0.75" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                                                         <constraints>
                                                             <constraint firstAttribute="height" constant="1" id="YQZ-Es-BVd" customClass="HairlineConstraint" customModule="ReadingList_Foundation"/>
                                                         </constraints>
                                                     </view>
-                                                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="dK7-Qi-TIg">
+                                                    <stackView opaque="NO" contentMode="scaleToFill" ambiguous="YES" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="dK7-Qi-TIg">
                                                         <rect key="frame" x="0.0" y="251.33333333333331" width="378" height="146"/>
                                                         <subviews>
                                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="KgY-4c-9LI" userLabel="ReadingLogTitle">
@@ -155,6 +156,7 @@
                                                                     <constraint firstAttribute="trailing" secondItem="k1X-lP-rpw" secondAttribute="trailing" id="FRQ-4R-WL5"/>
                                                                     <constraint firstAttribute="height" constant="30" placeholder="YES" id="NHF-eT-tuj"/>
                                                                     <constraint firstItem="k1X-lP-rpw" firstAttribute="top" secondItem="KgY-4c-9LI" secondAttribute="top" id="f9c-75-nTN"/>
+                                                                    <constraint firstItem="k1X-lP-rpw" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="6j3-21-YIa" secondAttribute="trailing" id="nDH-iS-vzq"/>
                                                                     <constraint firstAttribute="bottom" secondItem="6j3-21-YIa" secondAttribute="bottom" id="vqO-Br-49b"/>
                                                                     <constraint firstAttribute="bottom" secondItem="k1X-lP-rpw" secondAttribute="bottom" id="wGN-sS-Zcc"/>
                                                                 </constraints>
@@ -370,14 +372,14 @@
                                                             </view>
                                                         </subviews>
                                                     </stackView>
-                                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ldU-QI-O4q" userLabel="Separator">
+                                                    <view contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ldU-QI-O4q" userLabel="Separator">
                                                         <rect key="frame" x="0.0" y="409.33333333333331" width="378" height="1"/>
                                                         <color key="backgroundColor" white="0.75" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                                                         <constraints>
                                                             <constraint firstAttribute="height" constant="1" id="BtD-V8-1bx" customClass="HairlineConstraint" customModule="ReadingList_Foundation"/>
                                                         </constraints>
                                                     </view>
-                                                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="bza-Z5-QWk">
+                                                    <stackView opaque="NO" contentMode="scaleToFill" ambiguous="YES" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="bza-Z5-QWk">
                                                         <rect key="frame" x="0.0" y="422.33333333333326" width="378" height="188"/>
                                                         <subviews>
                                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="7hf-Cy-beu" userLabel="OrganiseTitle">
@@ -406,6 +408,7 @@
                                                                     <constraint firstItem="l1w-iY-3mz" firstAttribute="top" secondItem="7hf-Cy-beu" secondAttribute="top" id="OX9-aY-oF6"/>
                                                                     <constraint firstItem="0uQ-5z-XUr" firstAttribute="top" secondItem="7hf-Cy-beu" secondAttribute="top" id="Oey-ib-txx"/>
                                                                     <constraint firstAttribute="height" constant="30" placeholder="YES" id="QSM-wv-rBr"/>
+                                                                    <constraint firstItem="0uQ-5z-XUr" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="l1w-iY-3mz" secondAttribute="trailing" id="Rbu-7u-HkL"/>
                                                                     <constraint firstAttribute="bottom" secondItem="0uQ-5z-XUr" secondAttribute="bottom" id="bca-Tl-G4N"/>
                                                                     <constraint firstItem="l1w-iY-3mz" firstAttribute="leading" secondItem="7hf-Cy-beu" secondAttribute="leading" id="eym-kW-ELD"/>
                                                                     <constraint firstAttribute="bottom" secondItem="l1w-iY-3mz" secondAttribute="bottom" id="k7W-iu-qVW"/>
@@ -657,14 +660,14 @@
                                                             </view>
                                                         </subviews>
                                                     </stackView>
-                                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Vo9-bZ-62H" userLabel="Separator">
+                                                    <view contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Vo9-bZ-62H" userLabel="Separator">
                                                         <rect key="frame" x="0.0" y="622.33333333333337" width="378" height="1"/>
                                                         <color key="backgroundColor" white="0.75" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                                                         <constraints>
                                                             <constraint firstAttribute="height" constant="1" id="ZtI-Rq-Ofe" customClass="HairlineConstraint" customModule="ReadingList_Foundation"/>
                                                         </constraints>
                                                     </view>
-                                                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="FwS-uy-jCu">
+                                                    <stackView opaque="NO" contentMode="scaleToFill" ambiguous="YES" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="FwS-uy-jCu">
                                                         <rect key="frame" x="0.0" y="635.33333333333337" width="378" height="139"/>
                                                         <subviews>
                                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="xlI-AY-8l2" userLabel="NotesTItle">
@@ -695,6 +698,7 @@
                                                                     <constraint firstAttribute="height" constant="30" placeholder="YES" id="Yz8-KR-9PF"/>
                                                                     <constraint firstAttribute="bottom" secondItem="UCI-hy-ogj" secondAttribute="bottom" id="Zgk-f0-6Nx"/>
                                                                     <constraint firstItem="UCI-hy-ogj" firstAttribute="leading" secondItem="xlI-AY-8l2" secondAttribute="leading" id="bim-QT-VZ9"/>
+                                                                    <constraint firstItem="97p-gE-irs" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="UCI-hy-ogj" secondAttribute="trailing" id="f5c-ih-AS2"/>
                                                                     <constraint firstAttribute="trailing" secondItem="97p-gE-irs" secondAttribute="trailing" id="g1R-zn-tFP"/>
                                                                 </constraints>
                                                             </view>
@@ -798,21 +802,21 @@
                                                             </label>
                                                         </subviews>
                                                     </stackView>
-                                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="R8c-m8-a9Z" userLabel="Separator">
+                                                    <view contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="R8c-m8-a9Z" userLabel="Separator">
                                                         <rect key="frame" x="0.0" y="786.33333333333337" width="378" height="1"/>
                                                         <color key="backgroundColor" white="0.75" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                                                         <constraints>
                                                             <constraint firstAttribute="height" constant="1" id="Ibg-wa-qDP" customClass="HairlineConstraint" customModule="ReadingList_Foundation"/>
                                                         </constraints>
                                                     </view>
-                                                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="2Jl-qN-QRH">
+                                                    <stackView opaque="NO" contentMode="scaleToFill" ambiguous="YES" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="2Jl-qN-QRH">
                                                         <rect key="frame" x="0.0" y="799.33333333333337" width="378" height="219"/>
                                                         <subviews>
                                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="vmf-Me-0Kl" userLabel="OrganiseTitle">
                                                                 <rect key="frame" x="0.0" y="0.0" width="378" height="30"/>
                                                                 <subviews>
-                                                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Organise" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="N1v-kb-kYE">
-                                                                        <rect key="frame" x="0.0" y="0.0" width="58.666666666666664" height="30"/>
+                                                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Organize" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="N1v-kb-kYE">
+                                                                        <rect key="frame" x="0.0" y="0.0" width="59.333333333333336" height="30"/>
                                                                         <fontDescription key="fontDescription" name="GillSans" family="Gill Sans" pointSize="16"/>
                                                                         <nil key="textColor"/>
                                                                         <nil key="highlightedColor"/>
@@ -835,6 +839,7 @@
                                                                     <constraint firstAttribute="bottom" secondItem="5eR-3P-EAn" secondAttribute="bottom" id="IrH-G9-czL"/>
                                                                     <constraint firstItem="N1v-kb-kYE" firstAttribute="leading" secondItem="vmf-Me-0Kl" secondAttribute="leading" id="OdU-tr-O2i"/>
                                                                     <constraint firstAttribute="bottom" secondItem="N1v-kb-kYE" secondAttribute="bottom" id="Uiy-Ik-OTC"/>
+                                                                    <constraint firstItem="5eR-3P-EAn" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="N1v-kb-kYE" secondAttribute="trailing" id="WD3-Q6-nRZ"/>
                                                                     <constraint firstAttribute="height" constant="30" placeholder="YES" id="fJd-bV-a6k"/>
                                                                     <constraint firstAttribute="trailing" secondItem="5eR-3P-EAn" secondAttribute="trailing" id="zLn-gg-gDe"/>
                                                                 </constraints>

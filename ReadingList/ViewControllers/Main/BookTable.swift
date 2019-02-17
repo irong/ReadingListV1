@@ -362,32 +362,6 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         })
         return confirmDeleteAlert
     }
-}
-
-extension BookTable: UISearchResultsUpdating {
-    func predicate(forSearchText searchText: String?) -> NSPredicate {
-        if let searchText = searchText, !searchText.isEmptyOrWhitespace && searchText.trimming().count >= 2 {
-            return NSPredicate.wordsWithinFields(searchText, fieldNames: #keyPath(Book.title), #keyPath(Book.authorSort), "ANY \(#keyPath(Book.subjects)).name")
-        }
-        return NSPredicate(boolean: true) // If we cannot filter with the search text, we should return all results
-    }
-
-    func updateSearchResults(for searchController: UISearchController) {
-        let searchTextPredicate = self.predicate(forSearchText: searchController.searchBar.text)
-
-        var anyChangedPredicates = false
-        for (index, controller) in resultsController.controllers.enumerated() {
-            let thisSectionPredicate = NSPredicate.and([orderedDefaultPredicates[index].predicate, searchTextPredicate])
-            if controller.fetchRequest.predicate != thisSectionPredicate {
-                controller.fetchRequest.predicate = thisSectionPredicate
-                anyChangedPredicates = true
-            }
-        }
-        if anyChangedPredicates {
-            try! resultsController.performFetch()
-            tableView.reloadData()
-        }
-    }
 
     override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
         // Disable reorderng when searching, or when the sort order is not custom
@@ -489,6 +463,32 @@ extension BookTable: UISearchResultsUpdating {
     }
 }
 
+extension BookTable: UISearchResultsUpdating {
+    func predicate(forSearchText searchText: String?) -> NSPredicate {
+        if let searchText = searchText, !searchText.isEmptyOrWhitespace && searchText.trimming().count >= 2 {
+            return NSPredicate.wordsWithinFields(searchText, fieldNames: #keyPath(Book.title), #keyPath(Book.authorSort), "ANY \(#keyPath(Book.subjects)).name")
+        }
+        return NSPredicate(boolean: true) // If we cannot filter with the search text, we should return all results
+    }
+
+    func updateSearchResults(for searchController: UISearchController) {
+        let searchTextPredicate = self.predicate(forSearchText: searchController.searchBar.text)
+
+        var anyChangedPredicates = false
+        for (index, controller) in resultsController.controllers.enumerated() {
+            let thisSectionPredicate = NSPredicate.and([orderedDefaultPredicates[index].predicate, searchTextPredicate])
+            if controller.fetchRequest.predicate != thisSectionPredicate {
+                controller.fetchRequest.predicate = thisSectionPredicate
+                anyChangedPredicates = true
+            }
+        }
+        if anyChangedPredicates {
+            try! resultsController.performFetch()
+            tableView.reloadData()
+        }
+    }
+}
+
 extension BookTable: NSFetchedResultsControllerDelegate {
     func controllerWillChangeContent(_: NSFetchedResultsController<NSFetchRequestResult>) {
         tableView.beginUpdates()
@@ -546,18 +546,7 @@ extension BookTable: DZNEmptyDataSetSource {
     }
 
     func verticalOffset(forEmptyDataSet scrollView: UIScrollView!) -> CGFloat {
-        if searchController.hasActiveSearchTerms {
-            // Shift the "no search results" view up a bit, so the keyboard doesn't obscure it
-            return -(tableView.frame.height - 150) / 4
-        }
-
-        // The large titles make the empty data set look weirdly low down. Adjust this,
-        // by - fairly randomly - the height of the nav bar
-        if navigationController!.navigationBar.prefersLargeTitles {
-            return -navigationController!.navigationBar.frame.height
-        } else {
-            return 0
-        }
+        return -30
     }
 
     func description(forEmptyDataSet scrollView: UIScrollView!) -> NSAttributedString! {
@@ -584,20 +573,13 @@ extension BookTable: DZNEmptyDataSetSource {
 
 extension BookTable: DZNEmptyDataSetDelegate {
 
-    // We want to hide the Edit button when there are no items on the screen; show it when there are items on the screen.
-    // We want to hide the Search Bar when there are no items, but not due to a search filtering everything out.
-
-    func emptyDataSetDidAppear(_ scrollView: UIScrollView!) {
-        if !searchController.hasActiveSearchTerms {
-            // Deactivate the search controller so that clearing a search term cannot hide an active search bar
-            if searchController.isActive { searchController.isActive = false }
-            searchController.searchBar.isActive = false
-        }
+    func emptyDataSetWillAppear(_ scrollView: UIScrollView!) {
         navigationItem.leftBarButtonItem!.setHidden(true)
+        navigationItem.largeTitleDisplayMode = .never
     }
 
-    func emptyDataSetDidDisappear(_ scrollView: UIScrollView!) {
-        searchController.searchBar.isActive = true
+    func emptyDataSetWillDisappear(_ scrollView: UIScrollView!) {
         navigationItem.leftBarButtonItem!.setHidden(false)
+        navigationItem.largeTitleDisplayMode = .automatic
     }
 }

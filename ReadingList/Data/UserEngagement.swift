@@ -67,6 +67,8 @@ class UserEngagement {
         case removeBookFromList = "Remove_Book_From_List"
         case reorederList = "Reorder_List"
         case deleteList = "Delete_List"
+        case setListOrder = "Set_List_Order"
+        case renameList = "Rename_List"
 
         // Quick actions
         case searchOnlineQuickAction = "Quick_Action_Search_Online"

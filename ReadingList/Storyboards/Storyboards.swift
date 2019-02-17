@@ -22,8 +22,8 @@ extension UIStoryboard {
          return UIStoryboard(name: "BookDetails", bundle: Bundle.main)
     }
 
-    static var Organise: UIStoryboard {
-         return UIStoryboard(name: "Organise", bundle: Bundle.main)
+    static var Organize: UIStoryboard {
+         return UIStoryboard(name: "Organize", bundle: Bundle.main)
     }
 
     static var Settings: UIStoryboard {

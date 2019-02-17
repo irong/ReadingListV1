@@ -7,10 +7,11 @@ import ReadingList_Foundation
     case finishDate = 3
     case title = 4
     case author = 5
+    case listCustom = 6
 
     var description: String {
         switch self {
-        case .custom: return "Custom"
+        case .custom, .listCustom: return "Custom"
         case .startDate: return "Start Date"
         case .finishDate: return "Finish Date"
         case .title: return "Title"
@@ -18,15 +19,13 @@ import ReadingList_Foundation
         }
     }
 
-    var canSortLists: Bool {
-        return true
-    }
+    static var listSorts = [BookSort.listCustom, .title, .author, .startDate, .finishDate]
 
-    func canSortBooks(ofState state: BookReadState) -> Bool {
+    static func bookSorts(forState state: BookReadState) -> [BookSort] {
         switch state {
-        case .toRead: return [BookSort.custom, .title, .author].contains(self)
-        case .reading: return [BookSort.custom, .startDate, .title, .author].contains(self)
-        case .finished: return [BookSort.custom, .startDate, .finishDate, .title, .author].contains(self)
+        case .toRead: return [BookSort.custom, .title, .author]
+        case .reading: return [BookSort.startDate, .title, .author]
+        case .finished: return [BookSort.startDate, .finishDate, .title, .author]
         }
     }
 
@@ -43,6 +42,7 @@ import ReadingList_Foundation
         case .custom: return [NSSortDescriptor(Book.Key.sort.rawValue),
                               NSSortDescriptor(\Book.googleBooksId),
                               NSSortDescriptor(\Book.manualBookId)]
+        case .listCustom: return [NSSortDescriptor(\Book.lists)]
         }
     }
 }

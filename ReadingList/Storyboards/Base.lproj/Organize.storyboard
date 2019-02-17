@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14460.31" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="wWH-Ym-HSc">
-    <device id="retina4_7" orientation="portrait">
-        <adaptation id="fullscreen"/>
-    </device>
     <dependencies>
-        <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14460.20"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -17,31 +13,31 @@
             </objects>
             <point key="canvasLocation" x="-9288" y="2222"/>
         </scene>
-        <!--Organise-->
+        <!--Organize-->
         <scene sceneID="WvJ-QL-gyx">
             <objects>
-                <tableViewController extendedLayoutIncludesOpaqueBars="YES" clearsSelectionOnViewWillAppear="NO" id="RiX-qo-4E3" customClass="Organise" customModule="ReadingList" customModuleProvider="target" sceneMemberID="viewController">
+                <tableViewController extendedLayoutIncludesOpaqueBars="YES" definesPresentationContext="YES" clearsSelectionOnViewWillAppear="NO" id="RiX-qo-4E3" customClass="Organize" customModule="ReadingList" customModuleProvider="target" sceneMemberID="viewController">
                     <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="grouped" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="18" sectionFooterHeight="18" id="yuf-Gn-OLe">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
                         <prototypes>
                             <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" accessoryType="disclosureIndicator" indentationWidth="10" reuseIdentifier="ListCell" textLabel="RhS-Gr-Fnz" detailTextLabel="kCO-LL-KNN" style="IBUITableViewCellStyleSubtitle" id="7Oo-C0-bqu">
-                                <rect key="frame" x="0.0" y="55.5" width="375" height="44"/>
+                                <rect key="frame" x="0.0" y="55.5" width="600" height="44"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="7Oo-C0-bqu" id="gZx-cN-c1N">
-                                    <rect key="frame" x="0.0" y="0.0" width="341" height="43.5"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="562" height="43.5"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <subviews>
                                         <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" insetsLayoutMarginsFromSafeArea="NO" text="My Wish List" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" id="RhS-Gr-Fnz">
-                                            <rect key="frame" x="16" y="5" width="97.5" height="20.5"/>
+                                            <rect key="frame" x="20" y="5" width="97.5" height="20.5"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
                                             <nil key="textColor"/>
                                             <nil key="highlightedColor"/>
                                         </label>
                                         <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" insetsLayoutMarginsFromSafeArea="NO" text="12 books" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" id="kCO-LL-KNN">
-                                            <rect key="frame" x="16" y="25.5" width="50.5" height="14.5"/>
+                                            <rect key="frame" x="20" y="25.5" width="50.5" height="14.5"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <fontDescription key="fontDescription" style="UICTFontTextStyleCaption1"/>
                                             <nil key="textColor"/>
@@ -62,7 +58,7 @@
                             <outlet property="delegate" destination="RiX-qo-4E3" id="cg8-Np-mai"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" title="Organise" id="U1p-Q1-su7">
+                    <navigationItem key="navigationItem" title="Organize" id="U1p-Q1-su7">
                         <barButtonItem key="backBarButtonItem" title=" " id="5kO-5j-wCF"/>
                         <barButtonItem key="leftBarButtonItem" systemItem="edit" id="CFa-jF-OQJ"/>
                         <barButtonItem key="rightBarButtonItem" systemItem="add" id="WGn-Bx-0Kc">
@@ -79,9 +75,9 @@
         <!--My List-->
         <scene sceneID="31O-I5-KfZ">
             <objects>
-                <tableViewController title="My List" extendedLayoutIncludesOpaqueBars="YES" id="ggN-hf-l8Q" customClass="ListBookTable" customModule="ReadingList" customModuleProvider="target" sceneMemberID="viewController">
+                <tableViewController title="My List" extendedLayoutIncludesOpaqueBars="YES" definesPresentationContext="YES" id="ggN-hf-l8Q" customClass="ListBookTable" customModule="ReadingList" customModuleProvider="target" sceneMemberID="viewController">
                     <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="grouped" separatorStyle="default" rowHeight="92" sectionHeaderHeight="18" sectionFooterHeight="18" id="gO0-S4-wGF">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
                         <sections/>
@@ -90,23 +86,8 @@
                             <outlet property="delegate" destination="ggN-hf-l8Q" id="Yfx-2B-Ea9"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" title="List Title" largeTitleDisplayMode="never" id="jSI-Qd-fr4">
-                        <rightBarButtonItems>
-                            <barButtonItem title="Edit" id="I9i-oN-tUG">
-                                <connections>
-                                    <action selector="editTapped:" destination="ggN-hf-l8Q" id="GEJ-xy-Dg2"/>
-                                </connections>
-                            </barButtonItem>
-                            <barButtonItem title="Sort" image="SortIcon" id="KbO-oT-Xon">
-                                <connections>
-                                    <action selector="sortTapped:" destination="ggN-hf-l8Q" id="1rk-Td-lRH"/>
-                                </connections>
-                            </barButtonItem>
-                        </rightBarButtonItems>
-                    </navigationItem>
+                    <navigationItem key="navigationItem" title="List Title" largeTitleDisplayMode="never" id="jSI-Qd-fr4"/>
                     <connections>
-                        <outlet property="editButton" destination="I9i-oN-tUG" id="CNn-VG-2Lq"/>
-                        <outlet property="sortButton" destination="KbO-oT-Xon" id="diB-CO-jbe"/>
                         <segue destination="7z6-rj-KqQ" kind="showDetail" identifier="showDetail" id="C7a-WA-Ju3"/>
                     </connections>
                 </tableViewController>
@@ -130,11 +111,11 @@
             </objects>
             <point key="canvasLocation" x="-10130" y="1374"/>
         </scene>
-        <!--Organise-->
+        <!--Organize-->
         <scene sceneID="tj0-M4-c5I">
             <objects>
                 <splitViewController id="wWH-Ym-HSc" customClass="ThemedSplitViewController" customModule="ReadingList" customModuleProvider="target" sceneMemberID="viewController">
-                    <tabBarItem key="tabBarItem" tag="2" title="Organise" image="organise" selectedImage="organise-filled" id="ofv-YQ-PuH"/>
+                    <tabBarItem key="tabBarItem" tag="2" title="Organize" image="organise" selectedImage="organise-filled" id="ofv-YQ-PuH"/>
                     <connections>
                         <segue destination="WHn-Om-NYv" kind="relationship" relationship="masterViewController" id="vSL-Ob-iCW"/>
                         <segue destination="7z6-rj-KqQ" kind="relationship" relationship="detailViewController" id="xJE-Yc-3El"/>
@@ -146,12 +127,11 @@
         </scene>
     </scenes>
     <resources>
-        <image name="SortIcon" width="180" height="180"/>
         <image name="organise" width="40" height="40"/>
         <image name="organise-filled" width="40" height="40"/>
     </resources>
     <inferredMetricsTieBreakers>
         <segue reference="QZG-yd-ESl"/>
-        <segue reference="C7a-WA-Ju3"/>
+        <segue reference="xJE-Yc-3El"/>
     </inferredMetricsTieBreakers>
 </document>

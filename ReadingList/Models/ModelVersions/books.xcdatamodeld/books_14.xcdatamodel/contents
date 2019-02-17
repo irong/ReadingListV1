@@ -57,7 +57,7 @@
     </entity>
     <entity name="List" representedClassName="List" versionHashModifier="v11" syncable="YES">
         <attribute name="name" attributeType="String" syncable="YES"/>
-        <attribute name="order" attributeType="Integer 16" defaultValueString="1" usesScalarValueType="YES" syncable="YES"/>
+        <attribute name="order" attributeType="Integer 16" defaultValueString="6" usesScalarValueType="YES" syncable="YES"/>
         <relationship name="books" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="Book" inverseName="lists" inverseEntity="Book" syncable="YES"/>
         <fetchIndex name="name">
             <fetchIndexElement property="name" type="Binary" order="ascending"/>
