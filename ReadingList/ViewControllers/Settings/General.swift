@@ -15,9 +15,33 @@ class General: FormViewController {
                 UserEngagement.onReviewTrigger()
             }
         }
-        <<< themeRow(.normal, name: "Default")
-        <<< themeRow(.dark, name: "Dark")
-        <<< themeRow(.black, name: "Black")
+            <<< themeRow(.normal, name: "Default")
+            <<< themeRow(.dark, name: "Dark")
+            <<< themeRow(.black, name: "Black")
+
+            +++ Section(header: "Search Results", footer: """
+                By default, Reading List prioritises search results based on their language and your location. To instead
+                restrict search results to be of a specific language only, select a language above.
+                """)
+                <<< PickerInlineRow<LanguageSelection> {
+                    $0.title = "Language Restriction"
+                    $0.options = [.none] + Language.all.map { .some($0) }
+                    $0.value = {
+                        if let languageRestriction = UserDefaults.standard[.searchLanguageRestriction],
+                            let language = Language.byIsoCode[languageRestriction] {
+                            return .some(language)
+                        } else {
+                            return LanguageSelection.none
+                        }
+                    }()
+                    $0.onChange {
+                        if let languageSelection = $0.value, case let .some(language) = languageSelection {
+                            UserDefaults.standard[.searchLanguageRestriction] = language.isoCode
+                        } else {
+                            UserDefaults.standard[.searchLanguageRestriction] = nil
+                        }
+                    }
+                }
 
             +++ Section(header: "Analytics", footer: """
                 Crash reports can be automatically sent to help me detect and fix issues. Analytics can \
@@ -107,6 +131,18 @@ class General: FormViewController {
             completion(true)
         })
         present(alert, animated: true)
+    }
+}
+
+enum LanguageSelection: CustomStringConvertible, Equatable {
+    case none
+    case some(Language)
+
+    var description: String {
+        switch self {
+        case .none: return "None"
+        case let .some(language): return language.displayName
+        }
     }
 }
 

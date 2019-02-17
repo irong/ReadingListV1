@@ -11,7 +11,8 @@ class GoogleBooks {
      */
     static func search(_ text: String) -> Promise<[SearchResult]> {
         os_log("Searching for Google Books with query", type: .debug)
-        return URLSession.shared.json(url: GoogleBooksRequest.searchText(text).url)
+        let languageRestriction = UserDefaults.standard[.searchLanguageRestriction]
+        return URLSession.shared.json(url: GoogleBooksRequest.searchText(text, languageRestriction).url)
             .then(GoogleBooksParser.assertNoError)
             .then(GoogleBooksParser.parseSearchResults)
     }

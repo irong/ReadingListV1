@@ -2,7 +2,7 @@ import Foundation
 
 enum GoogleBooksRequest {
 
-    case searchText(String)
+    case searchText(String, String?)
     case searchIsbn(String)
     case fetch(String)
     case coverImage(String, CoverType)
@@ -53,9 +53,15 @@ enum GoogleBooksRequest {
 
     var queryString: String? {
         switch self {
-        case let .searchText(searchString):
+        case let .searchText(searchString, languageRestriction):
             let encodedQuery = searchString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!
-            return "q=\(encodedQuery)&maxResults=40&fields=\(GoogleBooksRequest.searchResultFields)"
+            let langQuery: String
+            if let languageCode = languageRestriction {
+                langQuery = "&langRestrict=\(languageCode)"
+            } else {
+                langQuery = ""
+            }
+            return "q=\(encodedQuery)&maxResults=40&fields=\(GoogleBooksRequest.searchResultFields)\(langQuery)"
         case let .searchIsbn(isbn):
             return "q=isbn:\(isbn)&maxResults=40&fields=\(GoogleBooksRequest.searchResultFields)"
         case .fetch:
