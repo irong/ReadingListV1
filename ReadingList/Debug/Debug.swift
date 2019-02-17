@@ -9,7 +9,6 @@ extension QuickAction: UserSettingType {}
 
 extension UserSettingsCollection {
     static let showSortNumber = UserSetting<Bool>("showSortNumber", defaultValue: false)
-    static let quickActionSimulation = UserSetting<QuickAction?>("shortcut-type-simulation")
 }
 
 class Debug {

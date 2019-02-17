@@ -19,6 +19,7 @@ class Book: NSManagedObject {
     @NSManaged var title: String
     @NSManaged private(set) var authorSort: String
     @NSManaged var publicationDate: Date?
+    @NSManaged var publisher: String?
     @NSManaged var bookDescription: String?
     @NSManaged var coverImage: Data?
     @NSManaged var notes: String?
@@ -154,16 +155,9 @@ extension Book {
         coverImage = fetchResult.coverImage
         pageCount = fetchResult.pageCount
         publicationDate = fetchResult.publishedDate
+        publisher = fetchResult.publisher
         isbn13 = fetchResult.isbn13?.int
         languageCode = fetchResult.languageCode
-    }
-
-    func populate(fromSearchResult searchResult: SearchResult, withCoverImage coverImage: Data? = nil) {
-        googleBooksId = searchResult.id
-        title = searchResult.title
-        authors = searchResult.authors
-        isbn13 = ISBN13(searchResult.isbn13)?.int
-        self.coverImage = coverImage
     }
 
     static func get(fromContext context: NSManagedObjectContext, googleBooksId: String? = nil, isbn: String? = nil) -> Book? {

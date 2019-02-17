@@ -71,6 +71,7 @@ private class BookCSVParserDelegate: CSVParserDelegate {
         book.currentPage = Int32(values["Current Page"])
         book.notes = values["Notes"]?.replacingOccurrences(of: "\r\n", with: "\n")
         book.publicationDate = Date(iso: values["Publication Date"])
+        book.publisher = values["Publisher"]
         book.bookDescription = values["Description"]?.replacingOccurrences(of: "\r\n", with: "\n")
         if let started = Date(iso: values["Started Reading"]) {
             if let finished = Date(iso: values["Finished Reading"]) {

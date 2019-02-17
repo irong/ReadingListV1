@@ -92,11 +92,6 @@ class UserEngagement {
         Analytics.logEvent(event.rawValue, parameters: nil)
     }
 
-    static func logError(_ error: String) {
-        guard sendCrashReports else { return }
-        CLSLogv("%@", getVaList([error]))
-    }
-
     static func logError(_ error: Error) {
         guard sendCrashReports else { return }
         Crashlytics.sharedInstance().recordError(error)

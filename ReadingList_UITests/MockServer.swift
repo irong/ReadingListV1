@@ -15,7 +15,7 @@ class MockServer {
             } else if let fetch = fileUrl.lastPathComponent.regex("^Fetch_(.+).json$").first {
                 request = GoogleBooksRequest.fetch(fetch.groups.first!)
             } else if let search = fileUrl.lastPathComponent.regex("^Search_(.+).json$").first {
-                request = GoogleBooksRequest.searchText(search.groups.first!)
+                request = GoogleBooksRequest.searchText(search.groups.first!, nil)
             } else {
                 print("Unmatched file \(fileUrl.absoluteString)")
                 return nil

@@ -36,6 +36,7 @@ targets:
     settings:
       base:
         ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: $(inherited)
+        CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED: YES
         CODE_SIGN_STYLE: Manual
         CODE_SIGN_ENTITLEMENTS: ReadingList/ReadingList.entitlements
         DEVELOPMENT_TEAM: YPDEV2E775

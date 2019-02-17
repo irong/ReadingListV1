@@ -11,7 +11,8 @@ class GoogleBooks {
      */
     static func search(_ text: String) -> Promise<[SearchResult]> {
         os_log("Searching for Google Books with query", type: .debug)
-        return URLSession.shared.json(url: GoogleBooksRequest.searchText(text).url)
+        let languageRestriction = UserDefaults.standard[.searchLanguageRestriction]
+        return URLSession.shared.json(url: GoogleBooksRequest.searchText(text, languageRestriction).url)
             .then(GoogleBooksParser.assertNoError)
             .then(GoogleBooksParser.parseSearchResults)
     }
@@ -150,8 +151,9 @@ class GoogleBooksParser {
         if let code = fetchResult["volumeInfo"]["language"].string, Language.byIsoCode[code] != nil {
             result.languageCode = code
         }
-        // "Published Date" refers to *this* edition; there doesn't seem to be a way to get the first publication date :(
-        //result.publishedDate = fetchResult["volumeInfo","publishedDate"].string?.toDateViaFormat("yyyy-MM-dd")
+
+        // Note: "Published Date" refers to *this* edition; there doesn't seem to be a way to get the first publication date
+        result.publisher = fetchResult["volumeInfo", "publisher"].string
 
         result.hasSmallImage = fetchResult["volumeInfo", "imageLinks", "small"].string != nil
         result.hasThumbnailImage = fetchResult["volumeInfo", "imageLinks", "thumbnail"].string != nil
@@ -212,6 +214,7 @@ class FetchResult {
     var authors = [Author]()
     var isbn13: ISBN13?
     var description: String?
+    var publisher: String?
     var subjects = [String]()
     var languageCode: String?
     var publishedDate: Date?
