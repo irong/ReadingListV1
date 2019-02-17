@@ -1,8 +1,9 @@
 import Foundation
+import ReadingList_Foundation
 
 enum GoogleBooksRequest {
 
-    case searchText(String, String?)
+    case searchText(String, LanguageIso639_1?)
     case searchIsbn(String)
     case fetch(String)
     case coverImage(String, CoverType)

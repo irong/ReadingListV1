@@ -33,5 +33,7 @@ extension UserSettingsCollection {
     static let appStartupCount = UserSetting<Int>("appStartupCount", defaultValue: 0)
     static let userEngagementCount = UserSetting<Int>("userEngagementCount", defaultValue: 0)
 
-    static let searchLanguageRestriction = UserSetting<String?>("searchLanguageRestriction")
+    static let searchLanguageRestriction = UserSetting<LanguageIso639_1?>("searchLanguageRestriction")
 }
+
+extension LanguageIso639_1: UserSettingType { }

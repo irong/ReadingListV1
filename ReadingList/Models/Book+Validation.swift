@@ -27,7 +27,7 @@ extension Book {
 
     @objc func validateLanguageCode(_ value: AutoreleasingUnsafeMutablePointer<AnyObject?>) throws {
         guard let languageCode = value.pointee as? String else { return }
-        if Language.byIsoCode[languageCode] == nil {
+        if LanguageIso639_1(rawValue: languageCode) == nil {
             throw BookValidationError.invalidLanguageCode.NSError()
         }
     }

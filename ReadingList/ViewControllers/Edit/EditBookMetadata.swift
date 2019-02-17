@@ -77,14 +77,22 @@ class EditBookMetadata: FormViewController {
                     book.pageCount = pageCount
                 }
             }
-            <<< PickerInlineRow<Language> {
+            <<< PickerInlineRow<LanguageSelection> {
                 $0.title = "Language"
-                if let code = book.languageCode {
-                    $0.value = Language.byIsoCode[code]
-                }
-                $0.options = Language.all
+                $0.value = {
+                    if let language = book.language {
+                        return .some(language)
+                    } else {
+                        return .blank
+                    }
+                }()
+                $0.options = [.blank] + LanguageIso639_1.allCases.map { .some($0) }
                 $0.onChange {
-                    book.languageCode = $0.value?.isoCode
+                    if let selection = $0.value, case let .some(language) = selection {
+                        book.language = language
+                    } else {
+                        book.language = nil
+                    }
                 }
             }
             <<< DateRow {

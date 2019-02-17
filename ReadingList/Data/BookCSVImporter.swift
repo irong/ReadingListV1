@@ -85,7 +85,7 @@ private class BookCSVParserDelegate: CSVParserDelegate {
 
         book.subjects = Set(createSubjects(values["Subjects"]))
         book.rating = Int16(values["Rating"])
-        book.languageCode = values["Language Code"]
+        book.language = LanguageIso639_1(rawValue: values["Language Code"] ?? "")
         return book
     }
 

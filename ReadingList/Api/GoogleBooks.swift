@@ -148,8 +148,8 @@ class GoogleBooksParser {
 
         let result = FetchResult(fromSearchResult: searchResult)
         result.pageCount = fetchResult["volumeInfo", "pageCount"].int32
-        if let code = fetchResult["volumeInfo"]["language"].string, Language.byIsoCode[code] != nil {
-            result.languageCode = code
+        if let code = fetchResult["volumeInfo"]["language"].string, let language = LanguageIso639_1(rawValue: code) {
+            result.language = language
         }
 
         // Note: "Published Date" refers to *this* edition; there doesn't seem to be a way to get the first publication date
@@ -216,7 +216,7 @@ class FetchResult {
     var description: String?
     var publisher: String?
     var subjects = [String]()
-    var languageCode: String?
+    var language: LanguageIso639_1?
     var publishedDate: Date?
     var pageCount: Int32?
     var hasThumbnailImage: Bool = false

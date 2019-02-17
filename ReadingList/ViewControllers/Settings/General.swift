@@ -1,6 +1,7 @@
 import Foundation
 import UIKit
 import Eureka
+import ReadingList_Foundation
 
 class General: FormViewController {
     override func viewDidLoad() {
@@ -25,18 +26,17 @@ class General: FormViewController {
                 """)
                 <<< PickerInlineRow<LanguageSelection> {
                     $0.title = "Language Restriction"
-                    $0.options = [.none] + Language.all.map { .some($0) }
+                    $0.options = [.none] + LanguageIso639_1.allCases.map { .some($0) }
                     $0.value = {
-                        if let languageRestriction = UserDefaults.standard[.searchLanguageRestriction],
-                            let language = Language.byIsoCode[languageRestriction] {
-                            return .some(language)
+                        if let languageRestriction = UserDefaults.standard[.searchLanguageRestriction] {
+                            return .some(languageRestriction)
                         } else {
                             return LanguageSelection.none
                         }
                     }()
                     $0.onChange {
                         if let languageSelection = $0.value, case let .some(language) = languageSelection {
-                            UserDefaults.standard[.searchLanguageRestriction] = language.isoCode
+                            UserDefaults.standard[.searchLanguageRestriction] = language
                         } else {
                             UserDefaults.standard[.searchLanguageRestriction] = nil
                         }
@@ -131,18 +131,6 @@ class General: FormViewController {
             completion(true)
         })
         present(alert, animated: true)
-    }
-}
-
-enum LanguageSelection: CustomStringConvertible, Equatable {
-    case none
-    case some(Language)
-
-    var description: String {
-        switch self {
-        case .none: return "None"
-        case let .some(language): return language.displayName
-        }
     }
 }
 

@@ -23,7 +23,6 @@ class Book: NSManagedObject {
     @NSManaged var bookDescription: String?
     @NSManaged var coverImage: Data?
     @NSManaged var notes: String?
-    @NSManaged var languageCode: String? // ISO 639.1: two-digit language code
     @NSManaged var subjects: Set<Subject>
     @NSManaged private(set) var lists: Set<List>
 
@@ -64,6 +63,7 @@ class Book: NSManagedObject {
         case currentPage = "currentPage"
         case rating = "rating"
         case sort = "sort"
+        case languageCode = "languageCode"
         //swiftlint:enable redundant_string_enum_value
     }
 
@@ -109,6 +109,17 @@ class Book: NSManagedObject {
     var sort: Int32? {
         get { return safelyGetPrimitiveValue(.sort) as! Int32? }
         set { safelySetPrimitiveValue(newValue, .sort) }
+    }
+
+    var language: LanguageIso639_1? {
+        get {
+            if let code = safelyGetPrimitiveValue(.languageCode) as! String? {
+                return LanguageIso639_1(rawValue: code)
+            } else {
+                return nil
+            }
+        }
+        set { safelySetPrimitiveValue(newValue?.rawValue, .languageCode) }
     }
 
     override func willSave() {
@@ -157,7 +168,7 @@ extension Book {
         publicationDate = fetchResult.publishedDate
         publisher = fetchResult.publisher
         isbn13 = fetchResult.isbn13?.int
-        languageCode = fetchResult.languageCode
+        language = fetchResult.language
     }
 
     static func get(fromContext context: NSManagedObjectContext, googleBooksId: String? = nil, isbn: String? = nil) -> Book? {

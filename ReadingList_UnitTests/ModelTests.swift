@@ -97,19 +97,6 @@ class ModelTests: XCTestCase {
         XCTAssertEqual("Wahlöö Birkhäuser, Maj Sjöwall", book.authors.fullNames)
     }
 
-    func testLanguageValidation() {
-        let book = Book(context: testContainer.viewContext)
-        book.title = "Test"
-        book.authors = [Author(lastName: "Test", firstNames: "Author")]
-        book.manualBookId = UUID().uuidString
-
-        book.languageCode = "zz"
-        XCTAssertThrowsError(try book.validateForUpdate(), "Valid language code")
-
-        book.languageCode = "en"
-        XCTAssertNoThrow(try book.validateForUpdate(), "Invalid language code")
-    }
-
     func testIsbnValidation() {
         let book = Book(context: testContainer.viewContext)
         book.title = "Test"
