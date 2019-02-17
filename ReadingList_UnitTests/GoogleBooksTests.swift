@@ -27,6 +27,7 @@ class GoogleBooksTests: XCTestCase {
         XCTAssertEqual(book.pageCount, parseResult.pageCount)
         XCTAssertEqual(book.isbn13, parseResult.isbn13?.int)
         XCTAssertEqual(book.bookDescription, parseResult.description)
+        XCTAssertEqual(book.publisher, parseResult.publisher)
     }
 
     func testGoogleBooksFetchParsing() {
@@ -40,6 +41,7 @@ class GoogleBooksTests: XCTestCase {
         XCTAssertEqual("Satire", parseResult.subjects[1])
         XCTAssertEqual(304, parseResult.pageCount)
         XCTAssertEqual(9781786070166, parseResult.isbn13?.int)
+        XCTAssertEqual("Oneworld Publications", parseResult.publisher)
         XCTAssertNotNil(parseResult.description)
 
         let book = Book(context: testContainer.viewContext)
