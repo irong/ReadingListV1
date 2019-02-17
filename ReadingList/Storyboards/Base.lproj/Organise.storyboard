@@ -17,7 +17,7 @@
             </objects>
             <point key="canvasLocation" x="-9288" y="2222"/>
         </scene>
-        <!--Organise-->
+        <!--Organize-->
         <scene sceneID="WvJ-QL-gyx">
             <objects>
                 <tableViewController extendedLayoutIncludesOpaqueBars="YES" definesPresentationContext="YES" clearsSelectionOnViewWillAppear="NO" id="RiX-qo-4E3" customClass="Organise" customModule="ReadingList" customModuleProvider="target" sceneMemberID="viewController">
@@ -62,7 +62,7 @@
                             <outlet property="delegate" destination="RiX-qo-4E3" id="cg8-Np-mai"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" title="Organise" id="U1p-Q1-su7">
+                    <navigationItem key="navigationItem" title="Organize" id="U1p-Q1-su7">
                         <barButtonItem key="backBarButtonItem" title=" " id="5kO-5j-wCF"/>
                         <barButtonItem key="leftBarButtonItem" systemItem="edit" id="CFa-jF-OQJ"/>
                         <barButtonItem key="rightBarButtonItem" systemItem="add" id="WGn-Bx-0Kc">
@@ -115,11 +115,11 @@
             </objects>
             <point key="canvasLocation" x="-10130" y="1374"/>
         </scene>
-        <!--Organise-->
+        <!--Organize-->
         <scene sceneID="tj0-M4-c5I">
             <objects>
                 <splitViewController id="wWH-Ym-HSc" customClass="ThemedSplitViewController" customModule="ReadingList" customModuleProvider="target" sceneMemberID="viewController">
-                    <tabBarItem key="tabBarItem" tag="2" title="Organise" image="organise" selectedImage="organise-filled" id="ofv-YQ-PuH"/>
+                    <tabBarItem key="tabBarItem" tag="2" title="Organize" image="organise" selectedImage="organise-filled" id="ofv-YQ-PuH"/>
                     <connections>
                         <segue destination="WHn-Om-NYv" kind="relationship" relationship="masterViewController" id="vSL-Ob-iCW"/>
                         <segue destination="7z6-rj-KqQ" kind="relationship" relationship="detailViewController" id="xJE-Yc-3El"/>
@@ -136,6 +136,6 @@
     </resources>
     <inferredMetricsTieBreakers>
         <segue reference="QZG-yd-ESl"/>
-        <segue reference="C7a-WA-Ju3"/>
+        <segue reference="xJE-Yc-3El"/>
     </inferredMetricsTieBreakers>
 </document>
