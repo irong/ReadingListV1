@@ -4,7 +4,7 @@ import CoreData
 import DZNEmptyDataSet
 import ReadingList_Foundation
 
-class Organise: UITableViewController {
+class Organize: UITableViewController {
 
     var resultsController: NSFetchedResultsController<List>!
     var searchController: UISearchController!
@@ -134,7 +134,7 @@ class Organise: UITableViewController {
     }
 }
 
-extension Organise: UISearchResultsUpdating {
+extension Organize: UISearchResultsUpdating {
     func predicate(forSearchText searchText: String?) -> NSPredicate {
         if let searchText = searchText, !searchText.isEmptyOrWhitespace && searchText.trimming().count >= 2 {
             return NSPredicate(fieldName: #keyPath(List.name), containsSubstring: searchText)
@@ -153,13 +153,13 @@ extension Organise: UISearchResultsUpdating {
     }
 }
 
-extension Organise: DZNEmptyDataSetSource {
+extension Organize: DZNEmptyDataSetSource {
 
     func title(forEmptyDataSet scrollView: UIScrollView!) -> NSAttributedString! {
         if searchController.hasActiveSearchTerms {
             return StandardEmptyDataset.title(withText: "🔍 No Results")
         }
-        return StandardEmptyDataset.title(withText: "🗂️ Organise")
+        return StandardEmptyDataset.title(withText: NSLocalizedString("OrganizeEmptyHeader", comment: ""))
     }
 
     func verticalOffset(forEmptyDataSet scrollView: UIScrollView!) -> CGFloat {
@@ -173,14 +173,14 @@ extension Organise: DZNEmptyDataSetSource {
                 """)
         }
         return StandardEmptyDataset.description(withMarkdownText: """
-            Create your own lists to organise your books.
+            \(NSLocalizedString("OrganizeInstruction", comment: ""))
 
             To create a new list, tap the **+** button above, or tap **Add To List** when viewing a book.
             """)
     }
 }
 
-extension Organise: DZNEmptyDataSetDelegate {
+extension Organize: DZNEmptyDataSetDelegate {
     func emptyDataSetWillAppear(_ scrollView: UIScrollView!) {
         navigationItem.leftBarButtonItem = nil
         navigationItem.largeTitleDisplayMode = .never
