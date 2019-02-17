@@ -53,7 +53,7 @@ public protocol OptionalType {
 }
 extension Optional: OptionalType { }
 
-/* Initialiser to allow optional-type UserDefaults.standard[.to not have to specify that the default] is nil */
+/* Initialiser to allow optional-type UserDefaults to not have to specify that the default is nil */
 public extension UserSetting where Type: UserSettingType, Type: OptionalType, Type.Wrapped: UserSettingType {
     convenience init(_ key: String) {
         self.init(key: key)

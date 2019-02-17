@@ -160,14 +160,6 @@ extension Book {
         languageCode = fetchResult.languageCode
     }
 
-    func populate(fromSearchResult searchResult: SearchResult, withCoverImage coverImage: Data? = nil) {
-        googleBooksId = searchResult.id
-        title = searchResult.title
-        authors = searchResult.authors
-        isbn13 = ISBN13(searchResult.isbn13)?.int
-        self.coverImage = coverImage
-    }
-
     static func get(fromContext context: NSManagedObjectContext, googleBooksId: String? = nil, isbn: String? = nil) -> Book? {
         // if both are nil, leave early
         guard googleBooksId != nil || isbn != nil else { return nil }

@@ -22,8 +22,8 @@ public class List: NSManagedObject {
         return List(context: context, name: name)
     }
 
-    @NSManaged func addBooks(_ values: NSOrderedSet)
-    @NSManaged func removeBooks(_ values: NSSet)
+    @NSManaged func addBooks(_: NSOrderedSet)
+    @NSManaged func removeBooks(_: NSSet)
 
     static func names(fromContext context: NSManagedObjectContext) -> [String] {
         let fetchRequest = NSManagedObject.fetchRequest(List.self)
