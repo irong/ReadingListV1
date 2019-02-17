@@ -18,14 +18,14 @@
                         <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="bTb-kP-Eva">
+                            <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bTb-kP-Eva">
                                 <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
                                 <subviews>
-                                    <view contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="qHr-le-Bwg" userLabel="Content View">
-                                        <rect key="frame" x="0.0" y="0.0" width="414" height="1054.3333333333333"/>
+                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="qHr-le-Bwg" userLabel="Content View">
+                                        <rect key="frame" x="0.0" y="0.0" width="414" height="1076.3333333333333"/>
                                         <subviews>
-                                            <stackView opaque="NO" contentMode="scaleToFill" ambiguous="YES" axis="vertical" spacing="12" translatesAutoresizingMaskIntoConstraints="NO" id="bhg-kb-dQx" userLabel="Main Stack View">
-                                                <rect key="frame" x="18" y="18" width="378" height="1018.3333333333335"/>
+                                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="12" translatesAutoresizingMaskIntoConstraints="NO" id="bhg-kb-dQx" userLabel="Main Stack View">
+                                                <rect key="frame" x="18" y="18" width="378" height="1040.3333333333333"/>
                                                 <subviews>
                                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="yhn-N0-bz4" userLabel="CoverAndTitle">
                                                         <rect key="frame" x="0.0" y="0.0" width="378" height="120"/>
@@ -105,7 +105,7 @@
                                                             <constraint firstAttribute="height" constant="1" id="ngb-Bt-YD4" customClass="HairlineConstraint" customModule="ReadingList_Foundation"/>
                                                         </constraints>
                                                     </view>
-                                                    <view contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="G5L-nH-fCB" customClass="ExpandableLabel" customModule="ReadingList_Foundation">
+                                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="G5L-nH-fCB" customClass="ExpandableLabel" customModule="ReadingList_Foundation">
                                                         <rect key="frame" x="0.0" y="145" width="378" height="81.333333333333314"/>
                                                         <userDefinedRuntimeAttributes>
                                                             <userDefinedRuntimeAttribute type="string" keyPath="text">
@@ -119,14 +119,14 @@
                                                             </userDefinedRuntimeAttribute>
                                                         </userDefinedRuntimeAttributes>
                                                     </view>
-                                                    <view contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="VZx-ih-0hi" userLabel="Separator">
+                                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="VZx-ih-0hi" userLabel="Separator">
                                                         <rect key="frame" x="0.0" y="238.33333333333331" width="378" height="1"/>
                                                         <color key="backgroundColor" white="0.75" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                                                         <constraints>
                                                             <constraint firstAttribute="height" constant="1" id="YQZ-Es-BVd" customClass="HairlineConstraint" customModule="ReadingList_Foundation"/>
                                                         </constraints>
                                                     </view>
-                                                    <stackView opaque="NO" contentMode="scaleToFill" ambiguous="YES" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="dK7-Qi-TIg">
+                                                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="dK7-Qi-TIg">
                                                         <rect key="frame" x="0.0" y="251.33333333333331" width="378" height="146"/>
                                                         <subviews>
                                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="KgY-4c-9LI" userLabel="ReadingLogTitle">
@@ -372,15 +372,15 @@
                                                             </view>
                                                         </subviews>
                                                     </stackView>
-                                                    <view contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ldU-QI-O4q" userLabel="Separator">
+                                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ldU-QI-O4q" userLabel="Separator">
                                                         <rect key="frame" x="0.0" y="409.33333333333331" width="378" height="1"/>
                                                         <color key="backgroundColor" white="0.75" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                                                         <constraints>
                                                             <constraint firstAttribute="height" constant="1" id="BtD-V8-1bx" customClass="HairlineConstraint" customModule="ReadingList_Foundation"/>
                                                         </constraints>
                                                     </view>
-                                                    <stackView opaque="NO" contentMode="scaleToFill" ambiguous="YES" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="bza-Z5-QWk">
-                                                        <rect key="frame" x="0.0" y="422.33333333333326" width="378" height="188"/>
+                                                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="bza-Z5-QWk">
+                                                        <rect key="frame" x="0.0" y="422.33333333333326" width="378" height="210"/>
                                                         <subviews>
                                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="7hf-Cy-beu" userLabel="OrganiseTitle">
                                                                 <rect key="frame" x="0.0" y="0.0" width="378" height="30"/>
@@ -415,10 +415,10 @@
                                                                 </constraints>
                                                             </view>
                                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="46D-I0-I2V">
-                                                                <rect key="frame" x="0.0" y="38" width="378" height="150"/>
+                                                                <rect key="frame" x="0.0" y="38" width="378" height="172"/>
                                                                 <subviews>
                                                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="2" translatesAutoresizingMaskIntoConstraints="NO" id="iAd-Xj-pGQ">
-                                                                        <rect key="frame" x="16" y="0.0" width="362" height="150"/>
+                                                                        <rect key="frame" x="16" y="0.0" width="362" height="172"/>
                                                                         <subviews>
                                                                             <stackView opaque="NO" contentMode="scaleToFill" alignment="top" spacing="16" translatesAutoresizingMaskIntoConstraints="NO" id="eeC-fd-cO4">
                                                                                 <rect key="frame" x="0.0" y="0.0" width="362" height="20"/>
@@ -531,8 +531,45 @@
                                                                                     <constraint firstAttribute="height" constant="20" placeholder="YES" id="Su6-bj-o2X"/>
                                                                                 </constraints>
                                                                             </stackView>
-                                                                            <stackView opaque="NO" contentMode="scaleToFill" alignment="top" spacing="16" translatesAutoresizingMaskIntoConstraints="NO" id="Q6V-Vs-fIy">
+                                                                            <stackView opaque="NO" contentMode="scaleToFill" alignment="top" spacing="16" translatesAutoresizingMaskIntoConstraints="NO" id="BlV-4l-QPE">
                                                                                 <rect key="frame" x="0.0" y="66.000000000000057" width="362" height="20"/>
+                                                                                <subviews>
+                                                                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="252" verticalHuggingPriority="251" horizontalCompressionResistancePriority="751" text="Publisher" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="wd2-mm-Q70">
+                                                                                        <rect key="frame" x="0.0" y="0.0" width="56.333333333333336" height="15"/>
+                                                                                        <fontDescription key="fontDescription" name="GillSans" family="Gill Sans" pointSize="13"/>
+                                                                                        <color key="textColor" red="0.33333333329999998" green="0.33333333329999998" blue="0.33333333329999998" alpha="1" colorSpace="calibratedRGB"/>
+                                                                                        <nil key="highlightedColor"/>
+                                                                                        <userDefinedRuntimeAttributes>
+                                                                                            <userDefinedRuntimeAttribute type="string" keyPath="dynamicFontSize" value="Subhead"/>
+                                                                                        </userDefinedRuntimeAttributes>
+                                                                                    </label>
+                                                                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bkb-xk-IWB">
+                                                                                        <rect key="frame" x="72.333333333333343" y="0.0" width="289.66666666666663" height="20"/>
+                                                                                        <subviews>
+                                                                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Penguin Books" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="hx0-tm-djW">
+                                                                                                <rect key="frame" x="0.0" y="0.0" width="289.66666666666669" height="20"/>
+                                                                                                <fontDescription key="fontDescription" name="GillSans" family="Gill Sans" pointSize="13"/>
+                                                                                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                                                                                <nil key="highlightedColor"/>
+                                                                                                <userDefinedRuntimeAttributes>
+                                                                                                    <userDefinedRuntimeAttribute type="string" keyPath="dynamicFontSize" value="Subhead"/>
+                                                                                                </userDefinedRuntimeAttributes>
+                                                                                            </label>
+                                                                                        </subviews>
+                                                                                        <constraints>
+                                                                                            <constraint firstAttribute="bottom" secondItem="hx0-tm-djW" secondAttribute="bottom" id="Br9-tx-vHW"/>
+                                                                                            <constraint firstItem="hx0-tm-djW" firstAttribute="top" secondItem="bkb-xk-IWB" secondAttribute="top" id="Kb2-tf-qUc"/>
+                                                                                            <constraint firstItem="hx0-tm-djW" firstAttribute="leading" secondItem="bkb-xk-IWB" secondAttribute="leading" id="MM2-Fg-F2H"/>
+                                                                                            <constraint firstAttribute="trailing" secondItem="hx0-tm-djW" secondAttribute="trailing" id="VJE-jt-Dcy"/>
+                                                                                        </constraints>
+                                                                                    </view>
+                                                                                </subviews>
+                                                                                <constraints>
+                                                                                    <constraint firstAttribute="height" constant="20" placeholder="YES" id="c9i-O3-9n0"/>
+                                                                                </constraints>
+                                                                            </stackView>
+                                                                            <stackView opaque="NO" contentMode="scaleToFill" alignment="top" spacing="16" translatesAutoresizingMaskIntoConstraints="NO" id="Q6V-Vs-fIy">
+                                                                                <rect key="frame" x="0.0" y="88.000000000000057" width="362" height="20"/>
                                                                                 <subviews>
                                                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="252" verticalHuggingPriority="251" horizontalCompressionResistancePriority="751" text="Language" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="R6w-p1-Dhq">
                                                                                         <rect key="frame" x="0.0" y="0.0" width="56.333333333333336" height="15"/>
@@ -569,7 +606,7 @@
                                                                                 </constraints>
                                                                             </stackView>
                                                                             <stackView opaque="NO" contentMode="scaleToFill" alignment="top" spacing="16" translatesAutoresizingMaskIntoConstraints="NO" id="6ES-NX-Rgl">
-                                                                                <rect key="frame" x="0.0" y="88.000000000000057" width="362" height="20"/>
+                                                                                <rect key="frame" x="0.0" y="110.00000000000006" width="362" height="20"/>
                                                                                 <subviews>
                                                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="252" verticalHuggingPriority="251" horizontalCompressionResistancePriority="751" text="Subjects" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="d0F-Jj-4CA">
                                                                                         <rect key="frame" x="0.0" y="0.0" width="56.333333333333336" height="15"/>
@@ -606,7 +643,7 @@
                                                                                 </constraints>
                                                                             </stackView>
                                                                             <stackView opaque="NO" contentMode="scaleToFill" alignment="top" spacing="16" translatesAutoresizingMaskIntoConstraints="NO" id="Wsg-wK-pbA">
-                                                                                <rect key="frame" x="0.0" y="110.00000000000006" width="362" height="40"/>
+                                                                                <rect key="frame" x="0.0" y="132.00000000000006" width="362" height="40"/>
                                                                                 <subviews>
                                                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="252" verticalHuggingPriority="251" horizontalCompressionResistancePriority="751" text="Online" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ogo-6q-uuN">
                                                                                         <rect key="frame" x="0.0" y="0.0" width="56.333333333333336" height="15"/>
@@ -660,15 +697,15 @@
                                                             </view>
                                                         </subviews>
                                                     </stackView>
-                                                    <view contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Vo9-bZ-62H" userLabel="Separator">
-                                                        <rect key="frame" x="0.0" y="622.33333333333337" width="378" height="1"/>
+                                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Vo9-bZ-62H" userLabel="Separator">
+                                                        <rect key="frame" x="0.0" y="644.33333333333337" width="378" height="1"/>
                                                         <color key="backgroundColor" white="0.75" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                                                         <constraints>
                                                             <constraint firstAttribute="height" constant="1" id="ZtI-Rq-Ofe" customClass="HairlineConstraint" customModule="ReadingList_Foundation"/>
                                                         </constraints>
                                                     </view>
-                                                    <stackView opaque="NO" contentMode="scaleToFill" ambiguous="YES" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="FwS-uy-jCu">
-                                                        <rect key="frame" x="0.0" y="635.33333333333337" width="378" height="139"/>
+                                                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="FwS-uy-jCu">
+                                                        <rect key="frame" x="0.0" y="657.33333333333337" width="378" height="139"/>
                                                         <subviews>
                                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="xlI-AY-8l2" userLabel="NotesTItle">
                                                                 <rect key="frame" x="0.0" y="0.0" width="378" height="30"/>
@@ -802,15 +839,15 @@
                                                             </label>
                                                         </subviews>
                                                     </stackView>
-                                                    <view contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="R8c-m8-a9Z" userLabel="Separator">
-                                                        <rect key="frame" x="0.0" y="786.33333333333337" width="378" height="1"/>
+                                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="R8c-m8-a9Z" userLabel="Separator">
+                                                        <rect key="frame" x="0.0" y="808.33333333333337" width="378" height="1"/>
                                                         <color key="backgroundColor" white="0.75" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                                                         <constraints>
                                                             <constraint firstAttribute="height" constant="1" id="Ibg-wa-qDP" customClass="HairlineConstraint" customModule="ReadingList_Foundation"/>
                                                         </constraints>
                                                     </view>
-                                                    <stackView opaque="NO" contentMode="scaleToFill" ambiguous="YES" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="2Jl-qN-QRH">
-                                                        <rect key="frame" x="0.0" y="799.33333333333337" width="378" height="219"/>
+                                                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="2Jl-qN-QRH">
+                                                        <rect key="frame" x="0.0" y="821.33333333333337" width="378" height="219.00000000000011"/>
                                                         <subviews>
                                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="vmf-Me-0Kl" userLabel="OrganiseTitle">
                                                                 <rect key="frame" x="0.0" y="0.0" width="378" height="30"/>
@@ -892,6 +929,7 @@
                                                 <constraints>
                                                     <constraint firstItem="d0F-Jj-4CA" firstAttribute="trailing" secondItem="hoh-H9-zYK" secondAttribute="trailing" id="7BU-KS-tRb"/>
                                                     <constraint firstItem="pL1-ZO-U1T" firstAttribute="trailing" secondItem="hoh-H9-zYK" secondAttribute="trailing" id="OZy-Ru-QyV"/>
+                                                    <constraint firstItem="wd2-mm-Q70" firstAttribute="trailing" secondItem="hoh-H9-zYK" secondAttribute="trailing" id="VA1-Pl-ybp"/>
                                                     <constraint firstItem="wgT-jX-mIH" firstAttribute="trailing" secondItem="hoh-H9-zYK" secondAttribute="trailing" id="cav-dJ-ArK"/>
                                                     <constraint firstItem="BdG-SU-Xfn" firstAttribute="trailing" secondItem="hoh-H9-zYK" secondAttribute="trailing" id="j9n-kw-nN1"/>
                                                     <constraint firstItem="HIO-ZT-2aY" firstAttribute="trailing" secondItem="hoh-H9-zYK" secondAttribute="trailing" id="sQC-yu-6uB"/>
@@ -963,15 +1001,15 @@
                         <outletCollection property="titles" destination="N1v-kb-kYE" collectionClass="NSMutableArray" id="oOs-D8-XHC"/>
                         <outletCollection property="titleAuthorHeadings" destination="KUv-Qb-XLN" collectionClass="NSMutableArray" id="1lI-eM-03j"/>
                         <outletCollection property="titleAuthorHeadings" destination="Uvq-kK-HxE" collectionClass="NSMutableArray" id="S6q-Ta-Gdw"/>
-                        <outletCollection property="tableVaules" destination="P98-Ye-gdn" collectionClass="NSMutableArray" id="3oB-mQ-fdP"/>
-                        <outletCollection property="tableVaules" destination="6aZ-t0-uXB" collectionClass="NSMutableArray" id="Cc3-0d-MJv"/>
-                        <outletCollection property="tableVaules" destination="UR9-Oj-q8e" collectionClass="NSMutableArray" id="cSe-ug-0im"/>
-                        <outletCollection property="tableVaules" destination="mtG-OO-VDn" collectionClass="NSMutableArray" id="w4B-cZ-5oD"/>
-                        <outletCollection property="tableVaules" destination="CiQ-Tc-gbA" collectionClass="NSMutableArray" id="LFM-FK-rOt"/>
-                        <outletCollection property="tableVaules" destination="9xr-Xs-NDK" collectionClass="NSMutableArray" id="yyC-68-6fE"/>
-                        <outletCollection property="tableVaules" destination="cXF-BD-6WQ" collectionClass="NSMutableArray" id="JNj-Nc-cMA"/>
-                        <outletCollection property="tableVaules" destination="zoz-3C-YU5" collectionClass="NSMutableArray" id="j5J-st-XRH"/>
-                        <outletCollection property="tableVaules" destination="i89-sm-QGQ" collectionClass="NSMutableArray" id="wrW-JN-x9f"/>
+                        <outletCollection property="tableValues" destination="P98-Ye-gdn" collectionClass="NSMutableArray" id="3oB-mQ-fdP"/>
+                        <outletCollection property="tableValues" destination="6aZ-t0-uXB" collectionClass="NSMutableArray" id="Cc3-0d-MJv"/>
+                        <outletCollection property="tableValues" destination="UR9-Oj-q8e" collectionClass="NSMutableArray" id="cSe-ug-0im"/>
+                        <outletCollection property="tableValues" destination="mtG-OO-VDn" collectionClass="NSMutableArray" id="w4B-cZ-5oD"/>
+                        <outletCollection property="tableValues" destination="CiQ-Tc-gbA" collectionClass="NSMutableArray" id="LFM-FK-rOt"/>
+                        <outletCollection property="tableValues" destination="9xr-Xs-NDK" collectionClass="NSMutableArray" id="yyC-68-6fE"/>
+                        <outletCollection property="tableValues" destination="cXF-BD-6WQ" collectionClass="NSMutableArray" id="JNj-Nc-cMA"/>
+                        <outletCollection property="tableValues" destination="zoz-3C-YU5" collectionClass="NSMutableArray" id="j5J-st-XRH"/>
+                        <outletCollection property="tableValues" destination="i89-sm-QGQ" collectionClass="NSMutableArray" id="wrW-JN-x9f"/>
                         <outletCollection property="tableSubHeadings" destination="hoh-H9-zYK" collectionClass="NSMutableArray" id="L26-fq-w6H"/>
                         <outletCollection property="tableSubHeadings" destination="XDm-mx-SgA" collectionClass="NSMutableArray" id="7oC-cr-zAb"/>
                         <outletCollection property="tableSubHeadings" destination="GZy-9B-WfN" collectionClass="NSMutableArray" id="gmc-sh-dIe"/>
@@ -989,12 +1027,14 @@
                         <outletCollection property="separatorLines" destination="XWs-sG-Z2Z" collectionClass="NSMutableArray" id="hn0-xs-QXO"/>
                         <outletCollection property="tableSubHeadings" destination="BdG-SU-Xfn" collectionClass="NSMutableArray" id="Kfg-sE-ULy"/>
                         <outletCollection property="tableSubHeadings" destination="DsS-u3-Ynr" collectionClass="NSMutableArray" id="Gys-ES-DyJ"/>
-                        <outletCollection property="tableVaules" destination="oLc-lz-RbE" collectionClass="NSMutableArray" id="m72-77-5Dt"/>
+                        <outletCollection property="tableValues" destination="oLc-lz-RbE" collectionClass="NSMutableArray" id="m72-77-5Dt"/>
                         <outletCollection property="tableSubHeadings" destination="R6w-p1-Dhq" collectionClass="NSMutableArray" id="VfB-j1-3Tb"/>
                         <outletCollection property="separatorLines" destination="R8c-m8-a9Z" collectionClass="NSMutableArray" id="GLa-kS-zEz"/>
                         <outletCollection property="titles" destination="UCI-hy-ogj" collectionClass="NSMutableArray" id="W5y-F7-osP"/>
                         <outletCollection property="tableSubHeadings" destination="pL1-ZO-U1T" collectionClass="NSMutableArray" id="BtZ-XN-cBI"/>
                         <outletCollection property="tableSubHeadings" destination="WCG-Qh-pXO" collectionClass="NSMutableArray" id="3yv-GZ-BiI"/>
+                        <outletCollection property="tableValues" destination="hx0-tm-djW" collectionClass="NSMutableArray" id="tT2-Go-itl"/>
+                        <outletCollection property="tableSubHeadings" destination="wd2-mm-Q70" collectionClass="NSMutableArray" id="95W-df-36L"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="5dX-S1-jhF" userLabel="First Responder" sceneMemberID="firstResponder"/>

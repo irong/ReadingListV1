@@ -92,6 +92,12 @@ class EditBookMetadata: FormViewController {
                 $0.value = book.publicationDate
                 $0.onChange { book.publicationDate = $0.value }
             }
+            <<< TextRow {
+                $0.cell.textField.autocapitalizationType = .words
+                $0.title = "Publisher"
+                $0.value = book.publisher
+                $0.onChange { book.publisher = $0.value ?? "" }
+            }
             <<< ButtonRow {
                 $0.title = "Subjects"
                 $0.cellStyle = .value1
@@ -355,111 +361,5 @@ final class AuthorRow: _LabelRow, RowType {
             cell.textLabel!.textAlignment = .left
             cell.textLabel!.text = [self.firstNames, self.lastName].compactMap { $0 }.joined(separator: " ")
         }
-    }
-}
-
-class AddAuthorForm: FormViewController {
-
-    weak var presentingRow: AuthorRow!
-
-    convenience init(_ row: AuthorRow) {
-        self.init()
-        self.presentingRow = row
-    }
-
-    let lastNameRow = "lastName"
-    let firstNamesRow = "firstNames"
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-
-        form +++ Section(header: "Author Name", footer: "")
-            <<< TextRow(firstNamesRow) {
-                $0.placeholder = "First Name(s)"
-                $0.cell.textField.autocapitalizationType = .words
-            }
-            <<< TextRow(lastNameRow) {
-                $0.placeholder = "Last Name"
-                $0.cell.textField.autocapitalizationType = .words
-            }
-
-        monitorThemeSetting()
-    }
-
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-
-        // The removal of the presenting row should be at the point of disappear, since viewWillDisappear
-        // is called when a right-swipe is started - the user could reverse and bring this view back
-        let lastName = (form.rowBy(tag: lastNameRow) as! _TextRow).value
-        if lastName?.isEmptyOrWhitespace != false {
-            guard let index = presentingRow.indexPath?.row else { return }
-            presentingRow.section!.remove(at: index)
-        }
-    }
-
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-
-        if let lastName = (form.rowBy(tag: lastNameRow) as! _TextRow).value, !lastName.isEmptyOrWhitespace {
-            presentingRow.lastName = lastName
-            presentingRow.firstNames = (form.rowBy(tag: firstNamesRow) as! _TextRow).value
-            presentingRow.reload()
-            (presentingRow.section as! AuthorSection).rebuildAuthors()
-        }
-    }
-}
-
-class EditBookSubjectsForm: FormViewController {
-
-    convenience init(book: Book, sender: _ButtonRowOf<String>) {
-        self.init()
-        self.book = book
-        self.sendingRow = sender
-    }
-
-    weak var sendingRow: _ButtonRowOf<String>!
-
-    // This form is only presented by a metadata form, so does not need to maintain
-    // a strong reference to the book's object context
-    var book: Book!
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-
-        form +++ MultivaluedSection(multivaluedOptions: [.Insert, .Delete], header: "Subjects", footer: "Add subjects to categorise this book") {
-            $0.addButtonProvider = { _ in
-                ButtonRow {
-                    $0.title = "Add New Subject"
-                    $0.cellUpdate { cell, _ in
-                        cell.textLabel?.textAlignment = .left
-                    }
-                }
-            }
-            $0.multivaluedRowToInsertAt = { _ in
-                TextRow {
-                    $0.placeholder = "Subject"
-                    $0.cell.textField.autocapitalizationType = .words
-                }
-            }
-            for subject in book.subjects.sorted(by: { $0.name < $1.name }) {
-                $0 <<< TextRow {
-                    $0.value = subject.name
-                    $0.cell.textField.autocapitalizationType = .words
-                }
-            }
-        }
-
-        monitorThemeSetting()
-    }
-
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-
-        let subjectNames = form.rows.compactMap { ($0 as? TextRow)?.value?.trimming().nilIfWhitespace() }
-        if book.subjects.map({ $0.name }) != subjectNames {
-            book.subjects = Set(subjectNames.map { Subject.getOrCreate(inContext: book.managedObjectContext!, withName: $0) })
-        }
-        sendingRow.reload()
     }
 }

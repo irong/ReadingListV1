@@ -169,6 +169,7 @@ class LaunchManager {
         alert.addAction(UIAlertAction(title: "Delete Store", style: .destructive) { _ in
             NSPersistentStoreCoordinator().destroyAndDeleteStore(at: URL.applicationSupport.appendingPathComponent(PersistentStoreManager.storeFileName))
             self.initialisePersistentStore()
+            self.storeMigrationFailed = false
         })
         #endif
 

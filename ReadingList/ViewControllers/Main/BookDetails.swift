@@ -13,7 +13,7 @@ class BookDetails: UIViewController, UIScrollViewDelegate {
     @IBOutlet private weak var bookDescription: ExpandableLabel!
 
     @IBOutlet private weak var ratingStarsStackView: UIStackView!
-    @IBOutlet private var tableVaules: [UILabel]!
+    @IBOutlet private var tableValues: [UILabel]!
     @IBOutlet private var tableSubHeadings: [UILabel]!
 
     @IBOutlet private weak var googleBooks: UILabel!
@@ -74,9 +74,9 @@ class BookDetails: UIViewController, UIScrollViewDelegate {
         }
 
         // Read state is always present
-        tableVaules[0].text = book.readState.longDescription
-        setTextOrHideLine(tableVaules[1], book.startedReading?.toPrettyString(short: false))
-        setTextOrHideLine(tableVaules[2], book.finishedReading?.toPrettyString(short: false))
+        tableValues[0].text = book.readState.longDescription
+        setTextOrHideLine(tableValues[1], book.startedReading?.toPrettyString(short: false))
+        setTextOrHideLine(tableValues[2], book.finishedReading?.toPrettyString(short: false))
 
         let readTimeText: String?
         if book.readState == .toRead {
@@ -91,7 +91,7 @@ class BookDetails: UIViewController, UIScrollViewDelegate {
                 readTimeText = "\(dayCount) days"
             }
         }
-        setTextOrHideLine(tableVaules[3], readTimeText)
+        setTextOrHideLine(tableValues[3], readTimeText)
         let pageNumberText: String?
         if let currentPage = book.currentPage {
             if let totalPages = book.pageCount, currentPage <= totalPages, currentPage > 0 {
@@ -101,7 +101,7 @@ class BookDetails: UIViewController, UIScrollViewDelegate {
             }
         } else { pageNumberText = nil }
 
-        setTextOrHideLine(tableVaules[4], pageNumberText)
+        setTextOrHideLine(tableValues[4], pageNumberText)
 
         ratingStarsStackView.superview!.superview!.superview!.isHidden = book.rating == nil
         if let rating = book.rating {
@@ -114,11 +114,12 @@ class BookDetails: UIViewController, UIScrollViewDelegate {
         bookNotes.text = book.notes
         noNotes.isHidden = book.notes != nil || book.rating != nil
 
-        setTextOrHideLine(tableVaules[5], book.isbn13?.string)
-        setTextOrHideLine(tableVaules[6], book.pageCount?.string)
-        setTextOrHideLine(tableVaules[7], book.publicationDate?.toPrettyString(short: false))
-        setTextOrHideLine(tableVaules[8], book.subjects.map { $0.name }.sorted().joined(separator: ", ").nilIfWhitespace())
-        setTextOrHideLine(tableVaules[9], book.languageCode == nil ? nil : Language.byIsoCode[book.languageCode!]?.displayName)
+        setTextOrHideLine(tableValues[5], book.isbn13?.string)
+        setTextOrHideLine(tableValues[6], book.pageCount?.string)
+        setTextOrHideLine(tableValues[7], book.publicationDate?.toPrettyString(short: false))
+        setTextOrHideLine(tableValues[8], book.subjects.map { $0.name }.sorted().joined(separator: ", ").nilIfWhitespace())
+        setTextOrHideLine(tableValues[9], book.languageCode == nil ? nil : Language.byIsoCode[book.languageCode!]?.displayName)
+        setTextOrHideLine(tableValues[10], book.publisher)
 
         // Show or hide the links, depending on whether we have valid URLs. If both links are hidden, the enclosing stack should be too.
         googleBooks.isHidden = book.googleBooksId == nil
@@ -128,7 +129,7 @@ class BookDetails: UIViewController, UIScrollViewDelegate {
         // Remove all the existing list labels, then add a label per list. Copy the list properties from another similar label, that's easier
         listsStack.removeAllSubviews()
         for list in book.lists {
-            listsStack.addArrangedSubview(UILabel(font: tableVaules[0].font, color: tableVaules[0].textColor, text: list.name))
+            listsStack.addArrangedSubview(UILabel(font: tableValues[0].font, color: tableValues[0].textColor, text: list.name))
         }
 
         // There is a placeholder view for the case of no lists. Lists are stored in 3 nested stack views
@@ -327,7 +328,7 @@ extension BookDetails: ThemeableViewController {
         googleBooks.textColor = theme.tint
         titles.forEach { $0.textColor = theme.titleTextColor }
         tableSubHeadings.forEach { $0.textColor = theme.subtitleTextColor }
-        tableVaules.forEach { $0.textColor = theme.titleTextColor }
+        tableValues.forEach { $0.textColor = theme.titleTextColor }
         separatorLines.forEach { $0.backgroundColor = theme.cellSeparatorColor }
         listsStack.arrangedSubviews.forEach { ($0 as! UILabel).textColor = theme.titleTextColor }
         ratingStarsStackView.arrangedSubviews.compactMap { $0 as? UIImageView }.forEach { $0.tintColor = theme.titleTextColor }

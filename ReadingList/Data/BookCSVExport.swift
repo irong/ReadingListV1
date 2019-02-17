@@ -10,6 +10,7 @@ class BookCSVExport {
             CsvColumn<Book>(header: "Authors") { $0.authors.map { $0.lastNameCommaFirstName }.joined(separator: "; ") },
             CsvColumn<Book>(header: "Page Count") { $0.pageCount == nil ? nil : String(describing: $0.pageCount!) },
             CsvColumn<Book>(header: "Publication Date") { $0.publicationDate?.string(withDateFormat: "yyyy-MM-dd") },
+            CsvColumn<Book>(header: "Publisher") { $0.publisher },
             CsvColumn<Book>(header: "Description") { $0.bookDescription },
             CsvColumn<Book>(header: "Subjects") { $0.subjects.map { $0.name }.joined(separator: "; ") },
             CsvColumn<Book>(header: "Language Code") { $0.languageCode },

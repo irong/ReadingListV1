@@ -19,6 +19,7 @@ class Book: NSManagedObject {
     @NSManaged var title: String
     @NSManaged private(set) var authorSort: String
     @NSManaged var publicationDate: Date?
+    @NSManaged var publisher: String?
     @NSManaged var bookDescription: String?
     @NSManaged var coverImage: Data?
     @NSManaged var notes: String?
@@ -154,6 +155,7 @@ extension Book {
         coverImage = fetchResult.coverImage
         pageCount = fetchResult.pageCount
         publicationDate = fetchResult.publishedDate
+        publisher = fetchResult.publisher
         isbn13 = fetchResult.isbn13?.int
         languageCode = fetchResult.languageCode
     }
