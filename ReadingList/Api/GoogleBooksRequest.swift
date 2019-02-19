@@ -58,7 +58,7 @@ enum GoogleBooksRequest {
             let encodedQuery = searchString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!
             let langQuery: String
             if let languageCode = languageRestriction {
-                langQuery = "&langRestrict=\(languageCode)"
+                langQuery = "&langRestrict=\(languageCode.rawValue)"
             } else {
                 langQuery = ""
             }
