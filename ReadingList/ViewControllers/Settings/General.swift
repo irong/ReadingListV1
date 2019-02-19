@@ -11,7 +11,7 @@ class General: FormViewController {
                                                         selectionType: .singleSelection(enableDeselection: false)) {
             $0.onSelectSelectableRow = { _, row in
                 UserDefaults.standard[.theme] = row.value!
-                NotificationCenter.default.post(name: Notification.Name.ThemeSettingChanged, object: nil)
+                NotificationCenter.default.post(name: .ThemeSettingChanged, object: nil)
                 UserEngagement.logEvent(.changeTheme)
                 UserEngagement.onReviewTrigger()
             }
@@ -26,7 +26,7 @@ class General: FormViewController {
                 """)
                 <<< PickerInlineRow<LanguageSelection> {
                     $0.title = "Language Restriction"
-                    $0.options = [.none] + LanguageIso639_1.allCases.map { .some($0) }
+                    $0.options = [.none] + LanguageIso639_1.allCases.filter { $0.canFilterGoogleSearchResults }.map { .some($0) }
                     $0.value = {
                         if let languageRestriction = UserDefaults.standard[.searchLanguageRestriction] {
                             return .some(languageRestriction)
