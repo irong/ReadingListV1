@@ -110,12 +110,22 @@ private class BookCSVParserDelegate: CSVParserDelegate {
 
     private func populateLists() {
         for listMapping in listMappings {
-            let list = List.getOrCreate(fromContext: self.context, withName: listMapping.key)
+            let list = getOrCreateList(withName: listMapping.key)
             let orderedBooks = listMapping.value.sorted { $0.1 < $1.1 }
                 .map { context.object(with: $0.bookID) as! Book }
                 .filter { !list.books.contains($0) }
             list.addBooks(NSOrderedSet(array: orderedBooks))
         }
+    }
+
+    private func getOrCreateList(withName name: String) -> List {
+        let listFetchRequest = NSManagedObject.fetchRequest(List.self, limit: 1)
+        listFetchRequest.predicate = NSPredicate(format: "%K == %@", #keyPath(List.name), name)
+        listFetchRequest.returnsObjectsAsFaults = false
+        if let existingList = (try! context.fetch(listFetchRequest)).first {
+            return existingList
+        }
+        return List(context: context, name: name)
     }
 
     private func populateCover(forBook book: Book, withGoogleID googleID: String) {

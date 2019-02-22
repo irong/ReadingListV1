@@ -82,12 +82,3 @@ public extension NSEntityMigrationPolicy {
         }
     }
 }
-
-public extension NSFetchedResultsController {
-    @objc func withoutUpdates(_ block: () -> Void) {
-        let delegate = self.delegate
-        self.delegate = nil
-        block()
-        self.delegate = delegate
-    }
-}

@@ -1,7 +1,7 @@
 import Foundation
 import ReadingList_Foundation
 
-@objc enum BookSort: Int16, CaseIterable, CustomStringConvertible, UserSettingType {
+@objc public enum BookSort: Int16, CaseIterable, CustomStringConvertible, UserSettingType {
     case custom = 1
     case startDate = 2
     case finishDate = 3
@@ -9,7 +9,7 @@ import ReadingList_Foundation
     case author = 5
     case listCustom = 6
 
-    var description: String {
+    public var description: String {
         switch self {
         case .custom, .listCustom: return "Custom"
         case .startDate: return "Start Date"
