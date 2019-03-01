@@ -97,11 +97,11 @@ class ListBookTable: UITableViewController {
         if let popover = alert.popoverPresentationController {
             popover.barButtonItem = sender
         }
-        for listOrder in BookSort.listSorts {
-            let title = list.order == listOrder ? "  \(listOrder) ✓" : listOrder.description
+        for sortOrder in BookSort.allCases where sortOrder.supportsListSorting {
+            let title = list.order == sortOrder ? "  \(sortOrder) ✓" : sortOrder.description
             alert.addAction(UIAlertAction(title: title, style: .default) { _ in
-                if self.list.order != listOrder {
-                    self.list.order = listOrder
+                if self.list.order != sortOrder {
+                    self.list.order = sortOrder
                     self.list.managedObjectContext!.saveAndLogIfErrored()
                     UserEngagement.logEvent(.setListOrder)
                     self.sortOrderChanged()

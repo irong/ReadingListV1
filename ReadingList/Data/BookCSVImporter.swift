@@ -38,7 +38,7 @@ struct BookCSVImportResults {
 private class BookCSVParserDelegate: CSVParserDelegate {
     private let context: NSManagedObjectContext
     private let includeImages: Bool
-    private var currentSort: Int32?
+    private var cachedSorts: [BookReadState: BookSortIndexManager]
     private var coverDownloadPromises = [Promise<Void>]()
     private var listMappings = [String: [(bookID: NSManagedObjectID, index: Int)]]()
     private var listNames = [String]()
@@ -48,6 +48,11 @@ private class BookCSVParserDelegate: CSVParserDelegate {
     init(context: NSManagedObjectContext, includeImages: Bool = true) {
         self.context = context
         self.includeImages = includeImages
+
+        cachedSorts = BookReadState.allCases.reduce(into: [BookReadState: BookSortIndexManager]()) { result, readState in
+            // For imports, we ignore the "Add to Top" settings, and always add books downwards, in the order they appear in the CSV
+            result[readState] = BookSortIndexManager(context: context, readState: readState, sortUpwards: false)
+        }
     }
 
     func headersRead(_ headers: [String]) -> Bool {
@@ -149,14 +154,8 @@ private class BookCSVParserDelegate: CSVParserDelegate {
             }
 
             guard let newBook = createBook(values) else { invalidCount += 1; return }
-            if newBook.readState == .toRead {
-                // Get the current sort value if we have not done so yet
-                if currentSort == nil {
-                    currentSort = Book.maxSort(fromContext: context) ?? -1
-                }
-                currentSort! += 1
-                newBook.sort = currentSort
-            }
+            guard let sortManager = cachedSorts[newBook.readState] else { preconditionFailure() }
+            newBook.sort = sortManager.getAndIncrementSort()
 
             // If the book is not valid, delete it
             guard newBook.isValidForUpdate() else {

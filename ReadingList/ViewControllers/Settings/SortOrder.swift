@@ -32,15 +32,15 @@ class SortOrder: FormViewController {
             To Read, Reading and Finished.
             """)
 
-        +++ SelectableSection<ListCheckRow<BookSort>>(header: "Order 'To Read' By:", footer: """
+            +++ SelectableSection<ListCheckRow<BookSort>>(header: "Order 'To Read' By:", footer: """
                 Title sorts the books alphabetically; Author sorts the books alphabetically by \
                 the first author's surname; Custom allows the books to be sorted manually: tap \
                 Edit and drag to reorder the books. New books can be added to either the top or \
                 the bottom of the list.
                 """, selectionType: .singleSelection(enableDeselection: false))
-            <<< tableSortRow(forReadState: .toRead, .title)
-            <<< tableSortRow(forReadState: .toRead, .author)
-            <<< tableSortRow(forReadState: .toRead, .custom)
+            <<< BookSort.allCases.filter { $0.supports(.toRead) }.map {
+                tableSortRow(forReadState: .toRead, $0)
+            }
             <<< SwitchRow {
                 $0.tag = self.customBooksToTopTag
                 $0.title = "Add Books to Top"
@@ -56,17 +56,16 @@ class SortOrder: FormViewController {
         +++ SelectableSection<ListCheckRow<BookSort>>(header: "Order 'Reading' By:", footer: """
                 Start Date orders the books with the most recently started book first.
                 """, selectionType: .singleSelection(enableDeselection: false))
-            <<< tableSortRow(forReadState: .reading, .startDate)
-            <<< tableSortRow(forReadState: .reading, .title)
-            <<< tableSortRow(forReadState: .reading, .author)
+            <<< BookSort.allCases.filter { $0.supports(.reading) }.map {
+                tableSortRow(forReadState: .reading, $0)
+            }
 
         +++ SelectableSection<ListCheckRow<BookSort>>(header: "Order 'Finished' By:", footer: """
                 Finish Date orders the books with the most recently finished book first.
                 """, selectionType: .singleSelection(enableDeselection: false))
-            <<< tableSortRow(forReadState: .finished, .startDate)
-            <<< tableSortRow(forReadState: .finished, .finishDate)
-            <<< tableSortRow(forReadState: .finished, .title)
-            <<< tableSortRow(forReadState: .finished, .author)
+            <<< BookSort.allCases.filter { $0.supports(.finished) }.map {
+                tableSortRow(forReadState: .finished, $0)
+            }
 
         monitorThemeSetting()
     }

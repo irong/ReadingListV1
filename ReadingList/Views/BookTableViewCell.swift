@@ -64,8 +64,8 @@ class BookTableViewCell: UITableViewCell {
         }
 
         #if DEBUG
-            if let sort = book.sort, UserDefaults.standard[.showSortNumber] {
-                titleLabel.text = "(\(sort)) \(book.title)"
+            if UserDefaults.standard[.showSortNumber] {
+                titleLabel.text = "(\(book.sort)) \(book.title)"
             }
         #endif
     }

@@ -166,7 +166,7 @@ class EditBookMetadata: FormViewController {
                 $0.title = "Sort"
                 $0.value = book.sort
                 $0.onChange {
-                    book.sort = $0.value
+                    book.sort = $0.value ?? 0
                 }
             }
             <<< LabelRow {

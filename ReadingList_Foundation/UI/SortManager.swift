@@ -11,7 +11,6 @@ public class SortManager<ItemType: Sortable> {
 
     let tableView: UITableView
     let getObject: (IndexPath) -> ItemType
-    public var getMinimumSortIndex: (() -> Int32?)?
 
     public init(_ tableView: UITableView, getObject: @escaping ((IndexPath) -> ItemType)) {
         self.tableView = tableView
@@ -33,6 +32,9 @@ public class SortManager<ItemType: Sortable> {
             getObject(IndexPath(row: $0, section: sourceIndexPath.section))
         }
 
+        // We may need the top index later, so capture it now.
+        let initialFirstIndex = objectsInMovementRange.first!.sortIndex
+
         // Move the objects array to reflect the desired order
         if downwardMovement {
             let first = objectsInMovementRange.removeFirst()
@@ -42,9 +44,10 @@ public class SortManager<ItemType: Sortable> {
             objectsInMovementRange.insert(last, at: 0)
         }
 
-        // Get the desired sort index for the top row in the movement range. This will be the basis
-        // of our new sort values.
-        let topRowSort = getDesiredSort(for: topRowIndex)
+        // Get the desired sort index for the top row in the movement range. This will be the basis of our new sort values.
+        // The desired sort index should be the sort of the item immediately above the specified cell, plus 1, or - if the
+        // cell is at the top - the value of the current minimum sort.
+        let topRowSort = topRowIndex.row == 0 ? initialFirstIndex : getObject(topRowIndex.previous()).sortIndex + 1
 
         // Update the sort indices for all books in the range, increasing the sort by 1 for each cell.
         var sort = topRowSort
@@ -59,16 +62,6 @@ public class SortManager<ItemType: Sortable> {
         // values are not enforced in the data model. Overlap might occur due to difficult-to-avoid timing issues
         // in iCloud sync. We take advantage of this time to clean up any mess that may be present.
         cleanupClashingSortIndices(from: bottomRowIndex.next(), withSort: sort)
-    }
-
-    private func getDesiredSort(for indexPath: IndexPath) -> Int32 {
-        // The desired sort index should be the sort of the book immediately above the specified cell,
-        // plus 1, or - if the cell is at the top - the value of the current minimum sort.
-        guard indexPath.row != 0 else {
-            return getMinimumSortIndex?() ?? 0
-        }
-        let indexPathAboveCell = indexPath.previous()
-        return getObject(indexPathAboveCell).sortIndex + 1
     }
 
     private func cleanupClashingSortIndices(from topIndexPath: IndexPath, withSort topSort: Int32) {

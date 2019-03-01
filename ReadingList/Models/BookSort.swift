@@ -2,12 +2,13 @@ import Foundation
 import ReadingList_Foundation
 
 @objc public enum BookSort: Int16, CaseIterable, CustomStringConvertible, UserSettingType {
+    // The order of this enum determines the order that the settings are shown in menus, via the allCases property
     case custom = 1
+    case listCustom = 6
     case startDate = 2
     case finishDate = 3
     case title = 4
     case author = 5
-    case listCustom = 6
 
     public var description: String {
         switch self {
@@ -19,13 +20,21 @@ import ReadingList_Foundation
         }
     }
 
-    static var listSorts = [BookSort.listCustom, .title, .author, .startDate, .finishDate]
+    public var supportsListSorting: Bool {
+        switch self {
+        case .listCustom, .title, .author, .startDate, .finishDate:
+            return true
+        case .custom:
+            return false
+        }
+    }
 
-    static func bookSorts(forState state: BookReadState) -> [BookSort] {
-        switch state {
-        case .toRead: return [BookSort.custom, .title, .author]
-        case .reading: return [BookSort.startDate, .title, .author]
-        case .finished: return [BookSort.startDate, .finishDate, .title, .author]
+    func supports(_ state: BookReadState) -> Bool {
+        switch self {
+        case .custom, .title, .author: return true
+        case .listCustom: return false
+        case .startDate: return state == .reading || state == .finished
+        case .finishDate: return state == .finished
         }
     }
 
@@ -39,7 +48,7 @@ import ReadingList_Foundation
         case .finishDate: return [NSSortDescriptor(\Book.finishedReading, ascending: false),
                                   NSSortDescriptor(\Book.startedReading, ascending: false),
                                   NSSortDescriptor(\Book.title)]
-        case .custom: return [NSSortDescriptor(Book.Key.sort.rawValue),
+        case .custom: return [NSSortDescriptor(\Book.sort),
                               NSSortDescriptor(\Book.googleBooksId),
                               NSSortDescriptor(\Book.manualBookId)]
         case .listCustom: return [NSSortDescriptor(\Book.lists)]
