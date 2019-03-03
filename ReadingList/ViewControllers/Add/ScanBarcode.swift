@@ -149,7 +149,7 @@ class ScanBarcode: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
     }
 
     func presentDuplicateAlert(_ book: Book) {
-        let alert = duplicateBookAlertController(goToExistingBook: {
+        let alert = UIAlertController.duplicateBook(goToExistingBook: {
             self.dismiss(animated: true) {
                 guard let tabBarController = AppDelegate.shared.tabBarController else {
                     assertionFailure()

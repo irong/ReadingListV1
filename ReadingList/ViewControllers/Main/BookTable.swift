@@ -26,6 +26,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
 
         tableView.keyboardDismissMode = .onDrag
         tableView.register(UINib(BookTableViewCell.self), forCellReuseIdentifier: String(describing: BookTableViewCell.self))
+        tableView.register(UINib(BookTableHeader.self), forHeaderFooterViewReuseIdentifier: String(describing: BookTableHeader.self))
 
         clearsSelectionOnViewWillAppear = false
         navigationItem.title = readStates.last!.description
@@ -40,7 +41,6 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         tableView.emptyDataSetDelegate = self
 
         // Watch for changes
-        NotificationCenter.default.addObserver(self, selector: #selector(bookSortChanged), name: .BookSortOrderChanged, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(refetch), name: .PersistentStoreBatchOperationOccurred, object: nil)
 
         monitorThemeSetting()
@@ -64,15 +64,28 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         }
     }
 
-    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        return titleForHeader(inSection: section)
+    override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        guard let header = tableView.dequeueReusableHeaderFooterView(withIdentifier: String(describing: BookTableHeader.self)) as? BookTableHeader else {
+            preconditionFailure()
+        }
+        configureHeader(header, at: section)
+        return header
     }
 
-    private func titleForHeader(inSection section: Int) -> String {
-        // Turn the section name into a BookReadState and use its description property
-        let sectionAsInt = Int(resultsController.sections![section].name)!
-        let rowCount = resultsController.sections![section].numberOfObjects
-        return "\(BookReadState(rawValue: Int16(sectionAsInt))!.description.uppercased()) (\(rowCount))"
+    private func configureHeader(_ header: BookTableHeader, at section: Int) {
+        let readState = readStateForSection(at: section)
+        header.configure(readState: readState, bookCount: resultsController.sections![section].numberOfObjects)
+        header.sortTapped = { [unowned self] readState in
+            let alert = UIAlertController.selectOrder(.book(readState)) { [unowned self] in
+                self.buildResultsController()
+                self.tableView.reloadData()
+            }
+            alert.popoverPresentationController?.sourceView = header.sortButton
+            alert.popoverPresentationController?.sourceRect = header.sortButton.bounds
+            self.present(alert, animated: true, completion: nil)
+        }
+        header.initialise(withTheme: UserDefaults.standard[.theme])
+        header.sortButton.isEnabled = !isEditing
     }
 
     private func buildResultsController() {
@@ -103,9 +116,17 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         }
 
         configureNavBarButtons()
+        reloadHeaders()
     }
 
-    func configureNavBarButtons() {
+    private func reloadHeaders() {
+        for index in 0..<numberOfSections(in: tableView) {
+            guard let header = tableView.headerView(forSection: index) as? BookTableHeader else { continue }
+            configureHeader(header, at: index)
+        }
+    }
+
+    private func configureNavBarButtons() {
         let leftButton, rightButton: UIBarButtonItem
         if isEditing {
             // If we're editing, the right button should become an "edit action" button, but be disabled until any books are selected
@@ -125,14 +146,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         navigationItem.rightBarButtonItem = rightButton
     }
 
-    @objc func bookSortChanged() {
-        DispatchQueue.main.async { // I should've commented why this is async; I don't remember why
-            self.buildResultsController()
-            self.tableView.reloadData()
-        }
-    }
-
-    @objc func refetch() {
+    @objc private func refetch() {
         // FUTURE: This can leave the EmptyDataSet off-screen if a bulk delete has occurred. Can't find a way to prevent this.
         try! self.resultsController.performFetch()
         self.tableView.reloadData()
@@ -176,7 +190,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         }
     }
 
-    @objc func editActionButtonPressed(_ sender: UIBarButtonItem) {
+    @objc private func editActionButtonPressed(_ sender: UIBarButtonItem) {
         guard let selectedRows = tableView.indexPathsForSelectedRows, !selectedRows.isEmpty else { return }
         let selectedSectionIndices = selectedRows.map { $0.section }.distinct()
         let selectedReadStates = sectionIndexByReadState.filter { selectedSectionIndices.contains($0.value) }.keys
@@ -241,7 +255,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         return readStateForSection(resultsController.sections![index])
     }
 
-    var sectionIndexByReadState: [BookReadState: Int] {
+    private var sectionIndexByReadState: [BookReadState: Int] {
         guard let sections = resultsController.sections else { preconditionFailure("Cannot get section indexes before fetch") }
         return sections.enumerated().reduce(into: [BookReadState: Int]()) { result, section in
             let readState = readStateForSection(section.element)
@@ -459,14 +473,7 @@ extension BookTable: NSFetchedResultsControllerDelegate {
 
     func controllerDidChangeContent(_: NSFetchedResultsController<NSFetchRequestResult>) {
         tableView.endUpdates()
-
-        // Reload the footer text whenever content changes
-        for section in 0..<resultsController.sections!.count {
-            let title = titleForHeader(inSection: section)
-            guard let headerView = tableView.headerView(forSection: section) else { continue }
-            headerView.textLabel?.text = title
-            headerView.sizeToFit()
-        }
+        reloadHeaders()
     }
 
     func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {

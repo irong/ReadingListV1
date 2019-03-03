@@ -182,7 +182,7 @@ class SearchOnline: UITableViewController {
     }
 
     func presentDuplicateBookAlert(book: Book, fromSelectedIndex indexPath: IndexPath) {
-        let alert = duplicateBookAlertController(goToExistingBook: {
+        let alert = UIAlertController.duplicateBook(goToExistingBook: {
             self.presentingViewController?.dismiss(animated: true) {
                 guard let tabBarController = AppDelegate.shared.tabBarController else {
                     assertionFailure()
