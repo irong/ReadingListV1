@@ -127,7 +127,12 @@ class Book: NSManagedObject {
         #if DEBUG
         let changedKeys = changedValues().keys
         if !changedKeys.contains(#keyPath(Book.sort)) && (isInserted || changedKeys.contains(#keyPath(Book.readState))) {
-            assertionFailure("readState changed but sort index not updated")
+            if sort == 0 {
+                print("Possibly un-updated sort value for book \"\(title)\". This can happen in normal operation, but if " +
+                      "this message is printed frequently, this may indicate a bug")
+            } else {
+                assertionFailure("readState changed to \(readState) but sort index not updated from \(sort), for \"\(title)\"")
+            }
         }
         #endif
     }

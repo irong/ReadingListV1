@@ -30,21 +30,26 @@ class Settings: XCTestCase {
         app.launchArguments = defaultLaunchArguments
         app.launch()
 
-        app.clickTab(.settings)
-        app.tables.staticTexts["Sort"].tap()
-
-        let tables = app.tables.element(boundBy: UIDevice.current.userInterfaceIdiom == .pad ? 1 : 0)
-        var sortCount = 0
-        for cell in tables.children(matching: .cell).allElementsBoundByIndex {
-            guard cell.exists else {
-                if sortCount > 9 { return }
-                fatalError("Only \(sortCount) sorts tested")
+        func testAllSorts() {
+            let sortButton = app.tables.otherElements.firstMatch.children(matching: .button).element
+            var buttonIndex = 0
+            while true {
+                sortButton.tap()
+                let chooseOrderSheet = app.sheets["Choose Order"]
+                let sortSheetButton = chooseOrderSheet.buttons.element(boundBy: buttonIndex)
+                if !sortSheetButton.exists {
+                    chooseOrderSheet.buttons.element(boundBy: buttonIndex - 1).tap()
+                    break
+                }
+                sortSheetButton.tap()
+                buttonIndex += 1
             }
-            sortCount += 1
-            cell.tap()
-            app.clickTab(.toRead)
-            app.clickTab(.finished)
-            app.clickTab(.settings)
         }
+
+        app.clickTab(.toRead)
+        testAllSorts()
+
+        app.clickTab(.finished)
+        testAllSorts()
     }
 }

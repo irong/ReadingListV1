@@ -15,9 +15,7 @@ class BookSortIndexManager {
         } else if !addToTop, let maxSort = Book.maxSort(with: readState, from: context, excluding: exclude) {
             sort = maxSort + 1
         } else {
-            // It is quite important that we don't use the default sort value (0), but use some other
-            // acceptable value. This makes it easier to detect the cases where we have not updated the sort.
-            sort = 1
+            sort = 0
         }
     }
 
