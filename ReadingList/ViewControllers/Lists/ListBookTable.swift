@@ -2,6 +2,7 @@ import Foundation
 import UIKit
 import CoreData
 import DZNEmptyDataSet
+import ReadingList_Foundation
 
 class ListBookTable: UITableViewController {
 
@@ -35,13 +36,12 @@ class ListBookTable: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        tableView.register(UINib(BookTableViewCell.self), forCellReuseIdentifier: String(describing: BookTableViewCell.self))
+        tableView.register(BookTableViewCell.self)
+        tableView.register(BookTableHeader.self)
 
         cachedListNames = List.names(fromContext: PersistentStoreManager.container.viewContext)
         navigationItem.title = list.name
-
-        let orderButton = UIBarButtonItem(image: #imageLiteral(resourceName: "SortIcon"), style: .plain, target: self, action: #selector(sortTapped(_:)))
-        navigationItem.rightBarButtonItems = [editButtonItem, orderButton]
+        navigationItem.rightBarButtonItem = editButtonItem
 
         tableView.emptyDataSetSource = self
         tableView.emptyDataSetDelegate = self
@@ -92,26 +92,6 @@ class ListBookTable: UITableViewController {
         return textField
     }
 
-    @IBAction private func sortTapped(_ sender: UIBarButtonItem) {
-        let alert = UIAlertController(title: "Choose Order", message: nil, preferredStyle: .actionSheet)
-        if let popover = alert.popoverPresentationController {
-            popover.barButtonItem = sender
-        }
-        for sortOrder in BookSort.allCases where sortOrder.supportsListSorting {
-            let title = list.order == sortOrder ? "  \(sortOrder) ✓" : sortOrder.description
-            alert.addAction(UIAlertAction(title: title, style: .default) { _ in
-                if self.list.order != sortOrder {
-                    self.list.order = sortOrder
-                    self.list.managedObjectContext!.saveAndLogIfErrored()
-                    UserEngagement.logEvent(.setListOrder)
-                    self.sortOrderChanged()
-                }
-            })
-        }
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-        present(alert, animated: true, completion: nil)
-    }
-
     private func canUpdateListName(to name: String) -> Bool {
         guard !name.isEmptyOrWhitespace else { return false }
         return name == list.name || !cachedListNames.contains(name)
@@ -141,7 +121,16 @@ class ListBookTable: UITableViewController {
         }
         configureTitleView()
         configureBarButtons()
+        reloadHeaders()
         searchController.searchBar.isActive = !editing
+    }
+
+    override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        let header = tableView.dequeue(BookTableHeader.self)
+        header.presenter = self
+        header.onSortChanged = sortOrderChanged
+        configureHeader(header, at: section)
+        return header
     }
 
     private func configureTitleView() {
@@ -155,12 +144,8 @@ class ListBookTable: UITableViewController {
     }
 
     @objc private func configureBarButtons() {
-        guard let buttons = navigationItem.rightBarButtonItems, let editButton = buttons[safe: 0], let sortButton = buttons[safe: 1] else {
-            assertionFailure()
-            return
-        }
-        sortButton.isEnabled = list.books.count > 1 && !isEditing
-        editButton.isEnabled = {
+        guard let editDoneButton = navigationItem.rightBarButtonItem else { assertionFailure(); return }
+        editDoneButton.isEnabled = {
             if let listNameField = listNameField {
                 if !listNameField.isEditing { return true }
                 if let newName = listNameField.text, canUpdateListName(to: newName) { return true }
@@ -231,7 +216,7 @@ class ListBookTable: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: String(describing: BookTableViewCell.self), for: indexPath) as! BookTableViewCell
+        let cell = tableView.dequeue(BookTableViewCell.self, for: indexPath)
 
         let book: Book
         if readRelatedBooksDirectly {
@@ -357,6 +342,13 @@ extension ListBookTable: DZNEmptyDataSetDelegate {
 
     func emptyDataSetDidDisappear(_ scrollView: UIScrollView!) {
         configureBarButtons()
+    }
+}
+
+extension ListBookTable: HeaderConfigurable {
+    func configureHeader(_ header: UITableViewHeaderFooterView, at index: Int) {
+        guard let header = header as? BookTableHeader else { preconditionFailure() }
+        header.configure(list: list, bookCount: tableView.numberOfRows(inSection: 0))
     }
 }
 

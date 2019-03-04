@@ -25,8 +25,8 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         }
 
         tableView.keyboardDismissMode = .onDrag
-        tableView.register(UINib(BookTableViewCell.self), forCellReuseIdentifier: String(describing: BookTableViewCell.self))
-        tableView.register(UINib(BookTableHeader.self), forHeaderFooterViewReuseIdentifier: String(describing: BookTableHeader.self))
+        tableView.register(BookTableHeader.self)
+        tableView.register(BookTableViewCell.self)
 
         clearsSelectionOnViewWillAppear = false
         navigationItem.title = readStates.last!.description
@@ -65,27 +65,14 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
     }
 
     override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        guard let header = tableView.dequeueReusableHeaderFooterView(withIdentifier: String(describing: BookTableHeader.self)) as? BookTableHeader else {
-            preconditionFailure()
+        let header = tableView.dequeue(BookTableHeader.self)
+        header.presenter = self
+        header.onSortChanged = { [unowned self] in
+            self.buildResultsController()
+            self.tableView.reloadData()
         }
         configureHeader(header, at: section)
         return header
-    }
-
-    private func configureHeader(_ header: BookTableHeader, at section: Int) {
-        let readState = readStateForSection(at: section)
-        header.configure(readState: readState, bookCount: resultsController.sections![section].numberOfObjects)
-        header.sortTapped = { [unowned self] readState in
-            let alert = UIAlertController.selectOrder(.book(readState)) { [unowned self] in
-                self.buildResultsController()
-                self.tableView.reloadData()
-            }
-            alert.popoverPresentationController?.sourceView = header.sortButton
-            alert.popoverPresentationController?.sourceRect = header.sortButton.bounds
-            self.present(alert, animated: true, completion: nil)
-        }
-        header.initialise(withTheme: UserDefaults.standard[.theme])
-        header.sortButton.isEnabled = !isEditing
     }
 
     private func buildResultsController() {
@@ -117,13 +104,6 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
 
         configureNavBarButtons()
         reloadHeaders()
-    }
-
-    private func reloadHeaders() {
-        for index in 0..<numberOfSections(in: tableView) {
-            guard let header = tableView.headerView(forSection: index) as? BookTableHeader else { continue }
-            configureHeader(header, at: index)
-        }
     }
 
     private func configureNavBarButtons() {
@@ -161,7 +141,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "BookTableViewCell", for: indexPath) as! BookTableViewCell
+        let cell = tableView.dequeue(BookTableViewCell.self, for: indexPath)
         let book = resultsController.object(at: indexPath)
         cell.configureFrom(book)
         cell.initialise(withTheme: UserDefaults.standard[.theme])
@@ -463,6 +443,13 @@ extension BookTable: UISearchResultsUpdating {
             try! resultsController.performFetch()
             tableView.reloadData()
         }
+    }
+}
+
+extension BookTable: HeaderConfigurable {
+    func configureHeader(_ header: UITableViewHeaderFooterView, at index: Int) {
+        guard let header = header as? BookTableHeader else { preconditionFailure() }
+        header.configure(readState: readStateForSection(at: index), bookCount: resultsController.sections![index].numberOfObjects)
     }
 }
 

@@ -89,7 +89,7 @@ class SearchOnline: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: String(describing: BookTableViewCell.self), for: indexPath) as! BookTableViewCell
+        let cell = tableView.dequeue(BookTableViewCell.self, for: indexPath)
         cell.configureFrom(tableItems[indexPath.row])
         return cell
     }

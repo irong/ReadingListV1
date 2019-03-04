@@ -3,24 +3,39 @@ import UIKit
 
 class BookTableHeader: UITableViewHeaderFooterView {
 
-    @IBOutlet private weak var label: UILabel!
-    @IBOutlet private(set) weak var sortButton: UIButton! //swiftlint:disable:this private_outlet
-    @IBAction private func sortButtonTapped(_ sender: UIButton) {
-        sortTapped(readState)
-    }
+    var orderable: Orderable!
+    weak var presenter: UITableViewController!
+    var onSortChanged: (() -> Void)!
 
-    var readState = BookReadState.toRead
+    @IBOutlet private weak var label: UILabel!
+    @IBOutlet private weak var sortButton: UIButton!
+
+    @IBAction private func sortButtonTapped(_ sender: UIButton) {
+        let alert = UIAlertController.selectOrder(orderable) { [unowned self] in
+            self.onSortChanged()
+        }
+        if let popover = alert.popoverPresentationController {
+            popover.sourceView = sortButton
+            popover.sourceRect = sortButton.bounds
+        }
+        presenter.present(alert, animated: true, completion: nil)
+    }
 
     func configure(readState: BookReadState, bookCount: Int) {
         label.text = "\(readState.description.uppercased()) (\(bookCount))"
-        self.readState = readState
+        orderable = .book(readState)
+        sortButton.isEnabled = !presenter.isEditing
+        initialise(withTheme: UserDefaults.standard[.theme])
     }
 
-    var sortTapped: (BookReadState) -> Void = { _ in
-        assertionFailure()
+    func configure(list: List, bookCount: Int) {
+        label.text = "\(bookCount) BOOK\(bookCount == 1 ? "" : "S")"
+        orderable = .list(list)
+        sortButton.isEnabled = !presenter.isEditing
+        initialise(withTheme: UserDefaults.standard[.theme])
     }
 
-    func initialise(withTheme theme: Theme) {
+    private func initialise(withTheme theme: Theme) {
         label.textColor = theme.subtitleTextColor
         sortButton.tintColor = theme.subtitleTextColor
     }
