@@ -126,6 +126,7 @@ class ListBookTable: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        guard section == 0 && tableView.numberOfRows(inSection: 0) > 0 else { return nil }
         let header = tableView.dequeue(BookTableHeader.self)
         header.presenter = self
         header.onSortChanged = sortOrderChanged
@@ -359,6 +360,10 @@ extension ListBookTable: UITextFieldDelegate {
 
     func textFieldDidEndEditing(_ textField: UITextField) {
         textField.text = listNameFieldDefaultText
+        // If we renamed the list, refresh the empty data set - if present
+        if list.books.count == 0 { //swiftlint:disable:this empty_count
+            tableView.reloadData()
+        }
     }
 
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
