@@ -349,7 +349,7 @@ extension ListBookTable: DZNEmptyDataSetDelegate {
 extension ListBookTable: HeaderConfigurable {
     func configureHeader(_ header: UITableViewHeaderFooterView, at index: Int) {
         guard let header = header as? BookTableHeader else { preconditionFailure() }
-        header.configure(list: list, bookCount: tableView.numberOfRows(inSection: 0))
+        header.configure(list: list, bookCount: tableView.numberOfRows(inSection: 0), enableSort: !isEditing && !searchController.isActive)
     }
 }
 

@@ -442,6 +442,8 @@ extension BookTable: UISearchResultsUpdating {
         if anyChangedPredicates {
             try! resultsController.performFetch()
             tableView.reloadData()
+        } else {
+            reloadHeaders()
         }
     }
 }
@@ -449,7 +451,8 @@ extension BookTable: UISearchResultsUpdating {
 extension BookTable: HeaderConfigurable {
     func configureHeader(_ header: UITableViewHeaderFooterView, at index: Int) {
         guard let header = header as? BookTableHeader else { preconditionFailure() }
-        header.configure(readState: readStateForSection(at: index), bookCount: resultsController.sections![index].numberOfObjects)
+        header.configure(readState: readStateForSection(at: index), bookCount: resultsController.sections![index].numberOfObjects,
+                         enableSort: !isEditing && !searchController.isActive)
     }
 }
 

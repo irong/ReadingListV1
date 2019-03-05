@@ -21,17 +21,17 @@ class BookTableHeader: UITableViewHeaderFooterView {
         presenter.present(alert, animated: true, completion: nil)
     }
 
-    func configure(readState: BookReadState, bookCount: Int) {
+    func configure(readState: BookReadState, bookCount: Int, enableSort: Bool) {
         label.text = "\(readState.description.uppercased()) (\(bookCount))"
         orderable = .book(readState)
-        sortButton.isEnabled = !presenter.isEditing
+        sortButton.isEnabled = enableSort
         initialise(withTheme: UserDefaults.standard[.theme])
     }
 
-    func configure(list: List, bookCount: Int) {
+    func configure(list: List, bookCount: Int, enableSort: Bool) {
         label.text = "\(bookCount) BOOK\(bookCount == 1 ? "" : "S")"
         orderable = .list(list)
-        sortButton.isEnabled = !presenter.isEditing
+        sortButton.isEnabled = enableSort
         initialise(withTheme: UserDefaults.standard[.theme])
     }
 
