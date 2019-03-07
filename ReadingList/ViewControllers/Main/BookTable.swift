@@ -95,7 +95,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
 
         // The search bar should be disabled if editing: searches will clear selections in edit mode,
         // so it's probably better to just prevent searches from occuring.
-        searchController.searchBar.isActive = !editing
+        searchController.searchBar.isEnabled = !editing
 
         // If we have stopped editing, reset the navigation title
         if !isEditing {

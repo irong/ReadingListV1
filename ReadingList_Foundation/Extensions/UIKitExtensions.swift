@@ -193,7 +193,7 @@ public extension UIActivity.ActivityType {
 }
 
 public extension UISearchBar {
-    var isActive: Bool {
+    var isEnabled: Bool {
         get {
             return isUserInteractionEnabled
         }
