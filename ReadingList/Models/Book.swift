@@ -13,6 +13,7 @@ class Book: NSManagedObject {
     @NSManaged private(set) var readState: BookReadState
     @NSManaged private(set) var startedReading: Date?
     @NSManaged private(set) var finishedReading: Date?
+    @NSManaged var sort: Int32
 
     @NSManaged var googleBooksId: String?
     @NSManaged var manualBookId: String?
@@ -62,7 +63,6 @@ class Book: NSManagedObject {
         case pageCount = "pageCount"
         case currentPage = "currentPage"
         case rating = "rating"
-        case sort = "sort"
         case languageCode = "languageCode"
         //swiftlint:enable redundant_string_enum_value
     }
@@ -106,11 +106,6 @@ class Book: NSManagedObject {
         set { safelySetPrimitiveValue(newValue, .rating) }
     }
 
-    var sort: Int32? {
-        get { return safelyGetPrimitiveValue(.sort) as! Int32? }
-        set { safelySetPrimitiveValue(newValue, .sort) }
-    }
-
     var language: LanguageIso639_1? {
         get {
             if let code = safelyGetPrimitiveValue(.languageCode) as! String? {
@@ -122,34 +117,31 @@ class Book: NSManagedObject {
         set { safelySetPrimitiveValue(newValue?.rawValue, .languageCode) }
     }
 
+    func updateSortIndex() {
+        sort = BookSortIndexManager(context: managedObjectContext!, readState: readState, exclude: self).getAndIncrementSort()
+    }
+
     override func willSave() {
         super.willSave()
 
-        // FUTURE: willSave() is called after property validation, so if we add sort/readState validation
-        // then this removal of the sort property will need to be done earlier.
-        setSort()
-    }
-
-    private func setSort() {
-        guard readState == .toRead else {
-            if sort != nil { sort = nil }
-            return
+        #if DEBUG
+        let changedKeys = changedValues().keys
+        if !changedKeys.contains(#keyPath(Book.sort)) && (isInserted || changedKeys.contains(#keyPath(Book.readState))) {
+            if sort == 0 {
+                print("Possibly un-updated sort value for book \"\(title)\". This can happen in normal operation, but if " +
+                      "this message is printed frequently, this may indicate a bug")
+            } else {
+                assertionFailure("readState changed to \(readState) but sort index not updated from \(sort), for \"\(title)\"")
+            }
         }
-        guard sort == nil else { return }
-
-        if let maximalSort = Book.maximalSort(getMaximum: !UserDefaults.standard[.addBooksToTopOfCustom], fromContext: managedObjectContext!) {
-            let plusMinusOne: Int32 = UserDefaults.standard[.addBooksToTopOfCustom] ? -1 : 1
-            sort = maximalSort + plusMinusOne
-        } else {
-            sort = 0
-        }
+        #endif
     }
 
     override func prepareForDeletion() {
         super.prepareForDeletion()
-        for orphanedSubject in subjects.filter({ $0.books.count == 1 }) {
-            orphanedSubject.delete()
-            os_log("Orphaned subject %{public}s deleted.", type: .info, orphanedSubject.name)
+        for subject in subjects where subject.books.count == 1 {
+            subject.delete()
+            os_log("Orphaned subject %{public}s deleted.", type: .info, subject.name)
         }
     }
 }
@@ -197,24 +189,27 @@ extension Book {
     /**
      Gets the "maximal" sort value of any book - i.e. either the maximum or minimum value.
     */
-    static func maximalSort(getMaximum: Bool, fromContext context: NSManagedObjectContext) -> Int32? {
+    private static func maximalSort(getMax: Bool, with readState: BookReadState, from context: NSManagedObjectContext, excluding excludedBook: Book?) -> Int32? {
         // The following code could (and in fact was) rewritten to use an NSExpression to just grab the max or min
         // sort, but it crashes when the store type is InMemoryStore (as it is in tests). Would need to rewrite
         // the unit tests to use SQL stores. See https://stackoverflow.com/a/13681549/5513562
         let fetchRequest = NSManagedObject.fetchRequest(Book.self, limit: 1)
-        fetchRequest.predicate = NSPredicate.and([
-            NSPredicate(format: "%K == %ld", #keyPath(Book.readState), BookReadState.toRead.rawValue),
-            NSPredicate(format: "%K != nil", Book.Key.sort.rawValue)])
-        fetchRequest.sortDescriptors = [NSSortDescriptor(Book.Key.sort.rawValue, ascending: !getMaximum)]
+        let readStatePredicate = NSPredicate(format: "%K == %ld", #keyPath(Book.readState), readState.rawValue)
+        if let excludedBook = excludedBook {
+            fetchRequest.predicate = .and([readStatePredicate, NSPredicate(format: "SELF != %@", excludedBook)])
+        } else {
+            fetchRequest.predicate = readStatePredicate
+        }
+        fetchRequest.sortDescriptors = [NSSortDescriptor(\Book.sort, ascending: !getMax)]
         fetchRequest.returnsObjectsAsFaults = false
         return (try! context.fetch(fetchRequest)).first?.sort
     }
 
-    static func maxSort(fromContext context: NSManagedObjectContext) -> Int32? {
-        return maximalSort(getMaximum: true, fromContext: context)
+    static func maxSort(with readState: BookReadState, from context: NSManagedObjectContext, excluding excludedBook: Book? = nil) -> Int32? {
+        return maximalSort(getMax: true, with: readState, from: context, excluding: excludedBook)
     }
 
-    static func minSort(fromContext context: NSManagedObjectContext) -> Int32? {
-        return maximalSort(getMaximum: false, fromContext: context)
+    static func minSort(with readState: BookReadState, from context: NSManagedObjectContext, excluding excludedBook: Book? = nil) -> Int32? {
+        return maximalSort(getMax: false, with: readState, from: context, excluding: excludedBook)
     }
 }

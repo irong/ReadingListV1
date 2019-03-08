@@ -6,9 +6,11 @@ import os.log
 
 class BookTable: UITableViewController { //swiftlint:disable:this type_body_length
 
-    var resultsController: CompoundFetchedResultsController<Book>!
     var readStates: [BookReadState]!
-    var searchController: UISearchController!
+
+    private var resultsController: CompoundFetchedResultsController<Book>!
+    private var searchController: UISearchController!
+    private var sortManager: SortManager<Book>!
     private lazy var orderedDefaultPredicates = readStates.map {
         (readState: $0, predicate: NSPredicate(format: "%K == %ld", #keyPath(Book.readState), $0.rawValue))
     }
@@ -18,8 +20,13 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         searchController.searchResultsUpdater = self
         navigationItem.searchController = searchController
 
+        sortManager = SortManager<Book>(tableView) {
+            self.resultsController.object(at: $0)
+        }
+
         tableView.keyboardDismissMode = .onDrag
-        tableView.register(UINib(BookTableViewCell.self), forCellReuseIdentifier: String(describing: BookTableViewCell.self))
+        tableView.register(BookTableHeader.self)
+        tableView.register(BookTableViewCell.self)
 
         clearsSelectionOnViewWillAppear = false
         navigationItem.title = readStates.last!.description
@@ -34,7 +41,6 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         tableView.emptyDataSetDelegate = self
 
         // Watch for changes
-        NotificationCenter.default.addObserver(self, selector: #selector(bookSortChanged), name: .BookSortOrderChanged, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(refetch), name: .PersistentStoreBatchOperationOccurred, object: nil)
 
         monitorThemeSetting()
@@ -58,18 +64,18 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         }
     }
 
-    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        return titleForHeader(inSection: section)
+    override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        let header = tableView.dequeue(BookTableHeader.self)
+        header.presenter = self
+        header.onSortChanged = { [unowned self] in
+            self.buildResultsController()
+            self.tableView.reloadData()
+        }
+        configureHeader(header, at: section)
+        return header
     }
 
-    func titleForHeader(inSection section: Int) -> String {
-        // Turn the section name into a BookReadState and use its description property
-        let sectionAsInt = Int(resultsController.sections![section].name)!
-        let rowCount = resultsController.sections![section].numberOfObjects
-        return "\(BookReadState(rawValue: Int16(sectionAsInt))!.description.uppercased()) (\(rowCount))"
-    }
-
-    func buildResultsController() {
+    private func buildResultsController() {
         let controllers = orderedDefaultPredicates.map { readState, predicate -> NSFetchedResultsController<Book> in
             let fetchRequest = NSManagedObject.fetchRequest(Book.self, batch: 25)
             fetchRequest.predicate = predicate
@@ -89,7 +95,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
 
         // The search bar should be disabled if editing: searches will clear selections in edit mode,
         // so it's probably better to just prevent searches from occuring.
-        searchController.searchBar.isActive = !editing
+        searchController.searchBar.isEnabled = !editing
 
         // If we have stopped editing, reset the navigation title
         if !isEditing {
@@ -97,9 +103,10 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         }
 
         configureNavBarButtons()
+        reloadHeaders()
     }
 
-    func configureNavBarButtons() {
+    private func configureNavBarButtons() {
         let leftButton, rightButton: UIBarButtonItem
         if isEditing {
             // If we're editing, the right button should become an "edit action" button, but be disabled until any books are selected
@@ -119,14 +126,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         navigationItem.rightBarButtonItem = rightButton
     }
 
-    @objc func bookSortChanged() {
-        DispatchQueue.main.async { // I should've commented why this is async; I don't remember why
-            self.buildResultsController()
-            self.tableView.reloadData()
-        }
-    }
-
-    @objc func refetch() {
+    @objc private func refetch() {
         // FUTURE: This can leave the EmptyDataSet off-screen if a bulk delete has occurred. Can't find a way to prevent this.
         try! self.resultsController.performFetch()
         self.tableView.reloadData()
@@ -141,7 +141,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "BookTableViewCell", for: indexPath) as! BookTableViewCell
+        let cell = tableView.dequeue(BookTableViewCell.self, for: indexPath)
         let book = resultsController.object(at: indexPath)
         cell.configureFrom(book)
         cell.initialise(withTheme: UserDefaults.standard[.theme])
@@ -170,7 +170,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         }
     }
 
-    @objc func editActionButtonPressed(_ sender: UIBarButtonItem) {
+    @objc private func editActionButtonPressed(_ sender: UIBarButtonItem) {
         guard let selectedRows = tableView.indexPathsForSelectedRows, !selectedRows.isEmpty else { return }
         let selectedSectionIndices = selectedRows.map { $0.section }.distinct()
         let selectedReadStates = sectionIndexByReadState.filter { selectedSectionIndices.contains($0.value) }.keys
@@ -189,12 +189,17 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         if let initialSelectionReadState = selectedReadStates.first, initialSelectionReadState != .finished, selectedReadStates.count == 1 {
             let title = (initialSelectionReadState == .toRead ? "Start" : "Finish") + (selectedRows.count > 1 ? " All" : "")
             optionsAlert.addAction(UIAlertAction(title: title, style: .default) { _ in
+
+                // We need to manage the sort indices manually, since we will be saving the batch operation at once
+                let bookSortManager = BookSortIndexManager(context: PersistentStoreManager.container.viewContext,
+                                                           readState: initialSelectionReadState == .toRead ? .reading : .finished)
                 for book in selectedRows.map(self.resultsController.object) {
                     if initialSelectionReadState == .toRead {
                         book.setReading(started: Date())
                     } else if let started = book.startedReading {
                         book.setFinished(started: started, finished: Date())
                     }
+                    book.sort = bookSortManager.getAndIncrementSort()
                 }
                 PersistentStoreManager.container.viewContext.saveIfChanged()
                 self.setEditing(false, animated: true)
@@ -219,12 +224,21 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         self.present(optionsAlert, animated: true, completion: nil)
     }
 
-    var sectionIndexByReadState: [BookReadState: Int] {
+    private func readStateForSection(_ section: NSFetchedResultsSectionInfo) -> BookReadState {
+        guard let sectionNameInt = Int16(section.name), let readState = BookReadState(rawValue: sectionNameInt) else {
+            preconditionFailure("Unexpected section name \"\(section.name)\"")
+        }
+        return readState
+    }
+
+    private func readStateForSection(at index: Int) -> BookReadState {
+        return readStateForSection(resultsController.sections![index])
+    }
+
+    private var sectionIndexByReadState: [BookReadState: Int] {
         guard let sections = resultsController.sections else { preconditionFailure("Cannot get section indexes before fetch") }
         return sections.enumerated().reduce(into: [BookReadState: Int]()) { result, section in
-            guard let sectionNameInt = Int16(section.element.name), let readState = BookReadState(rawValue: sectionNameInt) else {
-                preconditionFailure("Unexpected section name \"\(section.element.name)\"")
-            }
+            let readState = readStateForSection(section.element)
             result[readState] = section.offset
         }
     }
@@ -233,9 +247,8 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         let book = PersistentStoreManager.container.viewContext.object(with: bookID) as! Book
         let indexPathOfSelectedBook = self.resultsController.indexPath(forObject: book)
 
-        // If there is a row (there might not be is there is a search filtering the results,
-        // and clearing the search creates animations which mess up push segues), then
-        // scroll to it.
+        // If there is a row (there might not be is there is a search filtering the results, and
+        // clearing the search creates animations which mess up push segues), then scroll to it.
         if let indexPathOfSelectedBook = indexPathOfSelectedBook {
             tableView.scrollToRow(at: indexPathOfSelectedBook, at: .none, animated: true)
         }
@@ -281,7 +294,6 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
     }
 
     @IBAction private func addWasPressed(_ sender: UIBarButtonItem) {
-
         func storyboardAction(title: String, storyboard: UIStoryboard) -> UIAlertAction {
             return UIAlertAction(title: title, style: .default) { _ in
                 self.present(storyboard.rootAsFormSheet(), animated: true, completion: nil)
@@ -334,8 +346,12 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
             let book = self.resultsController.object(at: indexPath)
             if readStateOfSection == .toRead {
                 book.setReading(started: Date())
+                book.updateSortIndex()
             } else if let started = book.startedReading {
                 book.setFinished(started: started, finished: Date())
+                book.updateSortIndex()
+            } else {
+                assertionFailure("Unexpected read state")
             }
             book.managedObjectContext!.saveAndLogIfErrored()
             UserEngagement.logEvent(.transitionReadState)
@@ -366,100 +382,41 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
     override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
         // Disable reorderng when searching, or when the sort order is not custom
         guard !searchController.hasActiveSearchTerms else { return false }
-        guard let toReadSectionIndex = sectionIndexByReadState[.toRead] else { return false }
-        guard UserDefaults.standard[.toReadSort] == .custom else { return false }
+        let readState = readStateForSection(resultsController.sections![indexPath.section])
+        guard UserDefaults.standard[UserSettingsCollection.sortSetting(for: readState)] == .custom else { return false }
 
-        // We can reorder the "ToRead" books if there are more than one
-        return indexPath.section == toReadSectionIndex && self.tableView(tableView, numberOfRowsInSection: toReadSectionIndex) > 1
+        // We can reorder the books if there are more than one
+        return self.tableView(tableView, numberOfRowsInSection: indexPath.section) > 1
     }
 
     override func tableView(_ tableView: UITableView, targetIndexPathForMoveFromRowAt sourceIndexPath: IndexPath, toProposedIndexPath proposedDestinationIndexPath: IndexPath) -> IndexPath {
+        // Easy case if the sections are the same
         if sourceIndexPath.section == proposedDestinationIndexPath.section {
             return proposedDestinationIndexPath
-        } else {
-            // FUTURE: To work best in the general case, this should see whether the proposed section is lower or higher
-            // than the source section, and use that to set the returned IndexPath's row to either 0 or the maximum (respectively)
-            return IndexPath(row: 0, section: sourceIndexPath.section)
         }
+
+        // If we are trying to move a cell into the section below this source cell's section, use the largest row value
+        if sourceIndexPath.section < proposedDestinationIndexPath.section {
+            let sourceSectonRowCount = self.tableView(tableView, numberOfRowsInSection: sourceIndexPath.section)
+            return IndexPath(row: sourceSectonRowCount - 1, section: sourceIndexPath.section)
+        }
+
+        // Otherwise we must be trying to move a row into the section above the source section: propose a row index of 0
+        return IndexPath(row: 0, section: sourceIndexPath.section)
     }
 
     override func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
-        // We should only have movement in the ToRead secion. We also ignore moves which have no effect
-        guard let toReadSectionIndex = sectionIndexByReadState[.toRead] else { return }
-        guard sourceIndexPath.section == toReadSectionIndex && destinationIndexPath.section == toReadSectionIndex else { return }
-        guard sourceIndexPath.row != destinationIndexPath.row else { return }
-
-        // Get the range of objects that the move affects
-        let topRowIndex = sourceIndexPath.row < destinationIndexPath.row ? sourceIndexPath : destinationIndexPath
-        let bottomRowIndex = sourceIndexPath.row < destinationIndexPath.row ? destinationIndexPath : sourceIndexPath
-        let downwardMovement = sourceIndexPath.row < destinationIndexPath.row
-        var booksInMovementRange = (topRowIndex.row...bottomRowIndex.row).map {
-            resultsController.object(at: IndexPath(row: $0, section: toReadSectionIndex))
-        }
-
-        // Move the objects array to reflect the desired order
-        if downwardMovement {
-            let first = booksInMovementRange.removeFirst()
-            booksInMovementRange.append(first)
-        } else {
-            let last = booksInMovementRange.removeLast()
-            booksInMovementRange.insert(last, at: 0)
-        }
+        // We should only have movement within a section
+        guard sourceIndexPath.section == destinationIndexPath.section else { return }
+        let readState = readStateForSection(at: sourceIndexPath.section)
+        guard UserDefaults.standard[UserSettingsCollection.sortSetting(for: readState)] == .custom else { return }
 
         // Turn off updates while we manipulate the object context
         resultsController.delegate = nil
-
-        // Get the desired sort index for the top row in the movement range. This will be the basis
-        // of our new sort values.
-        let topRowSort = getDesiredSort(for: topRowIndex)
-
-        // Update the sort indices for all books in the range, increasing the sort by 1 for each cell.
-        var sort = topRowSort
-        for book in booksInMovementRange {
-            book.sort = sort
-            sort += 1
-        }
-
-        // The following operation does not strictly follow from this reorder operation: we want to ensure that
-        // we don't have overlapping sort indices. This shoudn't happen in normal usage of the app - but distinct
-        // values are not enforced in the data model. Overlap might occur due to difficult-to-avoid timing issues
-        // in iCloud sync. We take advantage of this time to clean up any mess that may be present.
-        cleanupClashingSortIndices(from: bottomRowIndex.next(), withSort: sort)
-
+        sortManager.move(objectAt: sourceIndexPath, to: destinationIndexPath)
         PersistentStoreManager.container.viewContext.saveAndLogIfErrored()
         try! resultsController.performFetch()
-
-        // Enable updates again
         resultsController.delegate = self
-    }
-
-    private func getDesiredSort(for indexPath: IndexPath) -> Int32 {
-        // The desired sort index should be the sort of the book immediately above the specified cell,
-        // plus 1, or - if the cell is at the top - the value of the current minimum sort.
-        guard indexPath.row != 0 else {
-            return Book.minSort(fromContext: PersistentStoreManager.container.viewContext) ?? 0
-        }
-        let indexPathAboveCell = indexPath.previous()
-        guard let sortIndexAboveCell = resultsController.object(at: indexPathAboveCell).sort else {
-            preconditionFailure("Book at index (\(indexPathAboveCell.section), \(indexPathAboveCell.row)) has nil sort")
-        }
-        return sortIndexAboveCell + 1
-    }
-
-    private func cleanupClashingSortIndices(from topIndexPath: IndexPath, withSort topSort: Int32) {
-        var cleanupIndex = topIndexPath
-        while cleanupIndex.row < tableView.numberOfRows(inSection: cleanupIndex.section) {
-            let cleanupBook = resultsController.object(at: cleanupIndex)
-            let cleanupSort = Int32(cleanupIndex.row - topIndexPath.row) + topSort
-
-            // No need to proceed if the sort index is large enough
-            if let currentSort = cleanupBook.sort, currentSort >= cleanupSort { break }
-
-            os_log("Adjusting sort index of book at index %d from %{public}s to %d.", type: .debug, cleanupIndex.row, String(describing: cleanupBook.sort), cleanupSort)
-
-            cleanupBook.sort = cleanupSort
-            cleanupIndex = cleanupIndex.next()
-        }
     }
 }
 
@@ -485,7 +442,17 @@ extension BookTable: UISearchResultsUpdating {
         if anyChangedPredicates {
             try! resultsController.performFetch()
             tableView.reloadData()
+        } else {
+            reloadHeaders()
         }
+    }
+}
+
+extension BookTable: HeaderConfigurable {
+    func configureHeader(_ header: UITableViewHeaderFooterView, at index: Int) {
+        guard let header = header as? BookTableHeader else { preconditionFailure() }
+        header.configure(readState: readStateForSection(at: index), bookCount: resultsController.sections![index].numberOfObjects,
+                         enableSort: !isEditing && !searchController.isActive)
     }
 }
 
@@ -496,14 +463,7 @@ extension BookTable: NSFetchedResultsControllerDelegate {
 
     func controllerDidChangeContent(_: NSFetchedResultsController<NSFetchRequestResult>) {
         tableView.endUpdates()
-
-        // Reload the footer text whenever content changes
-        for section in 0..<resultsController.sections!.count {
-            let title = titleForHeader(inSection: section)
-            guard let headerView = tableView.headerView(forSection: section) else { continue }
-            headerView.textLabel?.text = title
-            headerView.sizeToFit()
-        }
+        reloadHeaders()
     }
 
     func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
@@ -534,7 +494,6 @@ extension BookTable: UIViewControllerPreviewingDelegate {
 }
 
 extension BookTable: DZNEmptyDataSetSource {
-
     func title(forEmptyDataSet scrollView: UIScrollView!) -> NSAttributedString! {
         if searchController.hasActiveSearchTerms {
             return StandardEmptyDataset.title(withText: "🔍 No Results")
@@ -572,7 +531,6 @@ extension BookTable: DZNEmptyDataSetSource {
 }
 
 extension BookTable: DZNEmptyDataSetDelegate {
-
     func emptyDataSetWillAppear(_ scrollView: UIScrollView!) {
         navigationItem.leftBarButtonItem!.setHidden(true)
         navigationItem.largeTitleDisplayMode = .never
@@ -581,5 +539,12 @@ extension BookTable: DZNEmptyDataSetDelegate {
     func emptyDataSetWillDisappear(_ scrollView: UIScrollView!) {
         navigationItem.leftBarButtonItem!.setHidden(false)
         navigationItem.largeTitleDisplayMode = .automatic
+    }
+}
+
+extension Book: Sortable {
+    var sortIndex: Int32 {
+        get { return sort }
+        set(newValue) { sort = newValue }
     }
 }

@@ -89,7 +89,7 @@ class SearchOnline: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: String(describing: BookTableViewCell.self), for: indexPath) as! BookTableViewCell
+        let cell = tableView.dequeue(BookTableViewCell.self, for: indexPath)
         cell.configureFrom(tableItems[indexPath.row])
         return cell
     }
@@ -182,7 +182,7 @@ class SearchOnline: UITableViewController {
     }
 
     func presentDuplicateBookAlert(book: Book, fromSelectedIndex indexPath: IndexPath) {
-        let alert = duplicateBookAlertController(goToExistingBook: {
+        let alert = UIAlertController.duplicateBook(goToExistingBook: {
             self.presentingViewController?.dismiss(animated: true) {
                 guard let tabBarController = AppDelegate.shared.tabBarController else {
                     assertionFailure()
@@ -276,14 +276,9 @@ class SearchOnline: UITableViewController {
                 let newBookCount = newBooks.count
 
                 // Apply sorting
-                var maximalSort = Book.maximalSort(getMaximum: !UserDefaults.standard[.addBooksToTopOfCustom], fromContext: editContext) ?? 0
+                let bookSortManager = BookSortIndexManager(context: PersistentStoreManager.container.viewContext, readState: .toRead)
                 for book in newBooks {
-                    if UserDefaults.standard[.addBooksToTopOfCustom] {
-                        maximalSort -= 1
-                    } else {
-                        maximalSort += 1
-                    }
-                    book.sort = maximalSort
+                    book.sort = bookSortManager.getAndIncrementSort()
                 }
 
                 editContext.saveAndLogIfErrored()

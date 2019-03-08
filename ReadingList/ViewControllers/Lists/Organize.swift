@@ -4,10 +4,18 @@ import CoreData
 import DZNEmptyDataSet
 import ReadingList_Foundation
 
+extension List: Sortable {
+    public var sortIndex: Int32 {
+        get { return sort }
+        set(newValue) { sort = newValue }
+    }
+}
+
 class Organize: UITableViewController {
 
     var resultsController: NSFetchedResultsController<List>!
     var searchController: UISearchController!
+    var sortManager: SortManager<List>!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -17,12 +25,16 @@ class Organize: UITableViewController {
         tableView.emptyDataSetSource = self
         tableView.emptyDataSetDelegate = self
 
+        sortManager = SortManager(tableView) {
+            self.resultsController.object(at: $0)
+        }
+
         searchController = UISearchController(filterPlaceholderText: "Your Lists")
         searchController.searchResultsUpdater = self
         navigationItem.searchController = searchController
 
         let fetchRequest = NSManagedObject.fetchRequest(List.self, batch: 25)
-        fetchRequest.sortDescriptors = [NSSortDescriptor(\List.name)]
+        fetchRequest.sortDescriptors = [NSSortDescriptor(\List.sort), NSSortDescriptor(\List.name)]
         resultsController = NSFetchedResultsController<List>(fetchRequest: fetchRequest, managedObjectContext: PersistentStoreManager.container.viewContext, sectionNameKeyPath: nil, cacheName: nil)
         try! resultsController.performFetch()
         resultsController.delegate = tableView
@@ -32,6 +44,11 @@ class Organize: UITableViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(refetch), name: NSNotification.Name.PersistentStoreBatchOperationOccurred, object: nil)
 
         monitorThemeSetting()
+    }
+
+    override func setEditing(_ editing: Bool, animated: Bool) {
+        super.setEditing(editing, animated: animated)
+        searchController.searchBar.isEnabled = !editing
     }
 
     @objc func refetch() {
@@ -122,15 +139,33 @@ class Organize: UITableViewController {
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if let listBookTable = segue.destination as? ListBookTable {
-            listBookTable.list = resultsController.object(at: tableView.indexPath(for: (sender as! UITableViewCell))!)
-        } else {
-            super.prepare(for: segue, sender: sender)
+            guard let cell = sender as? UITableViewCell, let index = tableView.indexPath(for: cell) else { preconditionFailure() }
+            listBookTable.list = resultsController.object(at: index)
+            listBookTable.organizeController = self
+
+            // If the search bar is visible on this view, then it should be visible on the presented view too
+            // to prevent an animation issue from occuring (https://stackoverflow.com/a/55043782/5513562)
+            listBookTable.showSearchBarOnAppearance = !searchController.isActive && searchController.searchBar.frame.height > 0
         }
     }
 
     override func shouldPerformSegue(withIdentifier identifier: String, sender: Any?) -> Bool {
         // No segue in edit mode
         return !tableView.isEditing
+    }
+}
+
+extension Organize {
+    override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
+        return resultsController.sections![0].numberOfObjects > 1
+    }
+
+    override func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
+        resultsController.delegate = nil
+        sortManager.move(objectAt: sourceIndexPath, to: destinationIndexPath)
+        try! resultsController.performFetch()
+        PersistentStoreManager.container.viewContext.saveAndLogIfErrored()
+        resultsController.delegate = tableView
     }
 }
 

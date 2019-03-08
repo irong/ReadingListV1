@@ -193,7 +193,7 @@ public extension UIActivity.ActivityType {
 }
 
 public extension UISearchBar {
-    var isActive: Bool {
+    var isEnabled: Bool {
         get {
             return isUserInteractionEnabled
         }
@@ -310,6 +310,28 @@ public extension NSAttributedString {
 public extension UITableView {
     func advisedFetchBatchSize(forTypicalCell cell: UITableViewCell) -> Int {
         return Int((self.frame.height / cell.frame.height) * 1.3)
+    }
+
+    func register<Cell: UITableViewCell>(_ type: Cell.Type) {
+        register(UINib(type), forCellReuseIdentifier: String(describing: type))
+    }
+
+    func dequeue<Cell: UITableViewCell>(_ type: Cell.Type, for indexPath: IndexPath) -> Cell {
+        guard let cell = dequeueReusableCell(withIdentifier: String(describing: type), for: indexPath) as? Cell else {
+            preconditionFailure()
+        }
+        return cell
+    }
+
+    func register<HeaderFooter: UITableViewHeaderFooterView>(_ type: HeaderFooter.Type) {
+        register(UINib(type), forHeaderFooterViewReuseIdentifier: String(describing: type))
+    }
+
+    func dequeue<HeaderFooter: UITableViewHeaderFooterView>(_ type: HeaderFooter.Type) -> HeaderFooter {
+        guard let header = dequeueReusableHeaderFooterView(withIdentifier: String(describing: type)) as? HeaderFooter else {
+            preconditionFailure()
+        }
+        return header
     }
 }
 

@@ -132,8 +132,11 @@ class EditBookReadState: FormViewController {
 
     @objc func donePressed() {
         guard book.isValidForUpdate() else { return }
-
         view.endEditing(true)
+
+        if newBook || book.changedValues().keys.contains(#keyPath(Book.readState)) {
+            book.updateSortIndex()
+        }
         editContext.saveIfChanged()
 
         // FUTURE: Figure out a better way to solve this problem.
