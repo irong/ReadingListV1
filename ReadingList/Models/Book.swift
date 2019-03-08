@@ -56,16 +56,14 @@ class Book: NSManagedObject {
      the optional numerical attributes, which are much more convenient to use when handled manually in their
      Swift types, than represented as @NSManaged optional NSNumber objects.
     */
-    enum Key: String {
-        //swiftlint:disable redundant_string_enum_value
+    enum Key: String { //swiftlint:disable redundant_string_enum_value
         case authors = "authors"
         case isbn13 = "isbn13"
         case pageCount = "pageCount"
         case currentPage = "currentPage"
         case rating = "rating"
         case languageCode = "languageCode"
-        //swiftlint:enable redundant_string_enum_value
-    }
+    } //swiftlint:enable redundant_string_enum_value
 
     private func safelyGetPrimitiveValue(_ key: Book.Key) -> Any? {
         return safelyGetPrimitiveValue(forKey: key.rawValue)
@@ -119,22 +117,6 @@ class Book: NSManagedObject {
 
     func updateSortIndex() {
         sort = BookSortIndexManager(context: managedObjectContext!, readState: readState, exclude: self).getAndIncrementSort()
-    }
-
-    override func willSave() {
-        super.willSave()
-
-        #if DEBUG
-        let changedKeys = changedValues().keys
-        if !changedKeys.contains(#keyPath(Book.sort)) && (isInserted || changedKeys.contains(#keyPath(Book.readState))) {
-            if sort == 0 {
-                print("Possibly un-updated sort value for book \"\(title)\". This can happen in normal operation, but if " +
-                      "this message is printed frequently, this may indicate a bug")
-            } else {
-                assertionFailure("readState changed to \(readState) but sort index not updated from \(sort), for \"\(title)\"")
-            }
-        }
-        #endif
     }
 
     override func prepareForDeletion() {
