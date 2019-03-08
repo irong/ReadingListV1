@@ -192,9 +192,9 @@ extension Organize: DZNEmptyDataSetSource {
 
     func title(forEmptyDataSet scrollView: UIScrollView!) -> NSAttributedString! {
         if searchController.hasActiveSearchTerms {
-            return StandardEmptyDataset.title(withText: "🔍 No Results")
+            return title("🔍 No Results")
         }
-        return StandardEmptyDataset.title(withText: NSLocalizedString("OrganizeEmptyHeader", comment: ""))
+        return title(NSLocalizedString("OrganizeEmptyHeader", comment: ""))
     }
 
     func verticalOffset(forEmptyDataSet scrollView: UIScrollView!) -> CGFloat {
@@ -203,15 +203,16 @@ extension Organize: DZNEmptyDataSetSource {
 
     func description(forEmptyDataSet scrollView: UIScrollView!) -> NSAttributedString! {
         if searchController.hasActiveSearchTerms {
-            return StandardEmptyDataset.description(withMarkdownText: """
-                Try changing your search, or add a new list by tapping the **+** button above.
-                """)
+            return noResultsDescription(for: "list")
         }
-        return StandardEmptyDataset.description(withMarkdownText: """
-            \(NSLocalizedString("OrganizeInstruction", comment: ""))
-
-            To create a new list, tap the **+** button above, or tap **Add To List** when viewing a book.
-            """)
+        return applyDescriptionAttributes(
+            NSMutableAttributedString(NSLocalizedString("OrganizeInstruction", comment: ""), font: descriptionFont)
+            .appending("\n\nTo create a new list, tap the ", font: descriptionFont)
+            .appending("+", font: boldDescriptionFont)
+            .appending(" button above, or tap ", font: descriptionFont)
+            .appending("Add To List", font: boldDescriptionFont)
+            .appending(" when viewing a book.", font: descriptionFont)
+        )
     }
 }
 

@@ -1,19 +1,28 @@
 import Foundation
 import UIKit
+import DZNEmptyDataSet
 
-class StandardEmptyDataset {
+extension DZNEmptyDataSetSource {
+    var titleFont: UIFont { return UIFont.gillSans(ofSize: 32) }
+    var descriptionFont: UIFont { return UIFont.gillSans(forTextStyle: .title2) }
+    var boldDescriptionFont: UIFont { return UIFont.gillSansSemiBold(forTextStyle: .title2) }
 
-    static func title(withText text: String) -> NSAttributedString {
-        return NSAttributedString(string: text, attributes: [.font: UIFont.gillSans(ofSize: 32),
+    func title(_ text: String) -> NSAttributedString {
+        return NSAttributedString(string: text, attributes: [.font: titleFont,
                                                              .foregroundColor: UserDefaults.standard[.theme].titleTextColor])
     }
 
-    static func description(withMarkdownText markdownText: String) -> NSAttributedString {
-        let bodyFont = UIFont.gillSans(forTextStyle: .title2)
-        let boldFont = UIFont.gillSansSemiBold(forTextStyle: .title2)
+    func applyDescriptionAttributes(_ attributedString: NSMutableAttributedString) -> NSMutableAttributedString {
+        attributedString.addAttribute(.foregroundColor, value: UserDefaults.standard[.theme].subtitleTextColor,
+                                      range: NSRange(location: 0, length: attributedString.string.count))
+        return attributedString
+    }
 
-        let markedUpString = NSAttributedString.createFromMarkdown(markdownText, font: bodyFont, boldFont: boldFont)
-        markedUpString.addAttribute(.foregroundColor, value: UserDefaults.standard[.theme].subtitleTextColor, range: NSRange(location: 0, length: markedUpString.string.count))
-        return markedUpString
+    func noResultsDescription(for entity: String) -> NSAttributedString {
+        return applyDescriptionAttributes(
+            NSMutableAttributedString("Try changing your search, or add a new \(entity) by tapping the ", font: descriptionFont)
+                .appending("+", font: boldDescriptionFont)
+                .appending(" button.", font: descriptionFont)
+        )
     }
 }

@@ -294,16 +294,19 @@ public extension UIImage {
 }
 
 public extension NSAttributedString {
-    @objc convenience init(_ string: String, withFont font: UIFont) {
+    @objc convenience init(_ string: String, font: UIFont) {
+        self.init(string: string, attributes: [.font: font])
+    }
+}
+
+public extension NSMutableAttributedString {
+    @objc convenience init(_ string: String, font: UIFont) {
         self.init(string: string, attributes: [.font: font])
     }
 
-    static func createFromMarkdown(_ markdown: String, font: UIFont, boldFont: UIFont) -> NSMutableAttributedString {
-        let boldedResult = NSMutableAttributedString()
-        for (index, component) in markdown.components(separatedBy: "**").enumerated() {
-            boldedResult.append(NSAttributedString(component, withFont: index % 2 == 0 ? font : boldFont))
-        }
-        return boldedResult
+    @discardableResult func appending(_ text: String, font: UIFont) -> NSMutableAttributedString {
+        self.append(NSAttributedString(text, font: font))
+        return self
     }
 }
 

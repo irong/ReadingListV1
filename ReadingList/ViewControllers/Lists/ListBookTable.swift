@@ -356,9 +356,9 @@ extension ListBookTable: UISearchResultsUpdating {
 extension ListBookTable: DZNEmptyDataSetSource {
     func title(forEmptyDataSet scrollView: UIScrollView!) -> NSAttributedString! {
         if searchController.hasActiveSearchTerms {
-            return StandardEmptyDataset.title(withText: "🔍 No Results")
+            return title("🔍 No Results")
         }
-        return StandardEmptyDataset.title(withText: "✨ Empty List")
+        return title("✨ Empty List")
     }
 
     func verticalOffset(forEmptyDataSet scrollView: UIScrollView!) -> CGFloat {
@@ -367,11 +367,16 @@ extension ListBookTable: DZNEmptyDataSetSource {
 
     func description(forEmptyDataSet scrollView: UIScrollView!) -> NSAttributedString! {
         if searchController.hasActiveSearchTerms {
-            return StandardEmptyDataset.description(withMarkdownText: """
-                Try changing your search, or add a new list by tapping the **+** button above.
-                """)
+            return applyDescriptionAttributes(
+                NSMutableAttributedString("Try changing your search, or add a new list by tapping the ", font: descriptionFont)
+                .appending("+", font: boldDescriptionFont)
+                .appending(" button above", font: descriptionFont)
+            )
         }
-        return StandardEmptyDataset.description(withMarkdownText: "The list \"\(list.name)\" is currently empty.  To add a book to it, find a book and click **Add to List**.")
+        return applyDescriptionAttributes(
+            NSMutableAttributedString("The list \"\(list.name)\" is currently empty.  To add a book to it, find a book and click ", font: descriptionFont)
+                .appending("Add to List", font: boldDescriptionFont)
+        )
     }
 }
 

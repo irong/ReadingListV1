@@ -496,11 +496,11 @@ extension BookTable: UIViewControllerPreviewingDelegate {
 extension BookTable: DZNEmptyDataSetSource {
     func title(forEmptyDataSet scrollView: UIScrollView!) -> NSAttributedString! {
         if searchController.hasActiveSearchTerms {
-            return StandardEmptyDataset.title(withText: "🔍 No Results")
+            return title("🔍 No Results")
         } else if readStates.contains(.reading) {
-            return StandardEmptyDataset.title(withText: "📚 To Read")
+            return title("📚 To Read")
         } else {
-            return StandardEmptyDataset.title(withText: "🎉 Finished")
+            return title("🎉 Finished")
         }
     }
 
@@ -510,23 +510,26 @@ extension BookTable: DZNEmptyDataSetSource {
 
     func description(forEmptyDataSet scrollView: UIScrollView!) -> NSAttributedString! {
         if searchController.hasActiveSearchTerms {
-            return StandardEmptyDataset.description(withMarkdownText: """
-                Try changing your search, or add a new book by tapping the **+** button above.
-                """)
+            return noResultsDescription(for: "book")
         }
+
+        let attributedDescription: NSMutableAttributedString
         if readStates.contains(.reading) {
-            return StandardEmptyDataset.description(withMarkdownText: """
-                Books you add to your **To Read** list, or mark as currently **Reading** will show up here.
-
-                Add a book by tapping the **+** button above.
-                """)
+            attributedDescription = NSMutableAttributedString("Books you add to your ", font: descriptionFont)
+                .appending("To Read", font: boldDescriptionFont)
+                .appending(" list, or mark as currently ", font: descriptionFont)
+                .appending("Reading", font: boldDescriptionFont)
+                .appending(" will show up here.", font: descriptionFont)
         } else {
-            return StandardEmptyDataset.description(withMarkdownText: """
-                Books you mark as **Finished** will show up here.
-
-                Add a book by tapping the **+** button above.
-                """)
+            attributedDescription = NSMutableAttributedString("Books you mark as ", font: descriptionFont)
+                .appending("Finished", font: boldDescriptionFont)
+                .appending(" will show up here.", font: descriptionFont)
         }
+        return applyDescriptionAttributes(
+            attributedDescription.appending("\n\nAdd a book by tapping the ", font: descriptionFont)
+                .appending("+", font: boldDescriptionFont)
+                .appending(" button above.", font: descriptionFont)
+        )
     }
 }
 
