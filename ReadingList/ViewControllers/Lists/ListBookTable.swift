@@ -29,8 +29,11 @@ enum ListBooksSource {
 
 class ListBookTable: UITableViewController {
 
+    weak var organizeController: Organize!
     var list: List!
-    var loadWithSearchBarDisplayed = false
+    var showSearchBarOnAppearance: Bool = false {
+        didSet { navigationItem.hidesSearchBarWhenScrolling = !showSearchBarOnAppearance }
+    }
 
     private var cachedListNames: [String]!
     private var ignoreNotifications = false
@@ -76,10 +79,6 @@ class ListBookTable: UITableViewController {
         searchController = UISearchController(filterPlaceholderText: "Filter List")
         searchController.searchResultsUpdater = self
         navigationItem.searchController = searchController
-        if loadWithSearchBarDisplayed {
-            // To load with the search bar visible, set this false here, and then back to true in viewDidAppear
-            navigationItem.hidesSearchBarWhenScrolling = false
-        }
 
         NotificationCenter.default.addObserver(self, selector: #selector(objectContextChanged(_:)),
                                                name: .NSManagedObjectContextObjectsDidChange,
@@ -100,10 +99,10 @@ class ListBookTable: UITableViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        if loadWithSearchBarDisplayed {
-            // Works in combination with viewDidLoad to make the search bar shown on load (but still scroll-away-able)
-            navigationItem.hidesSearchBarWhenScrolling = true
-        }
+
+        // Ensure that hidesSearchBarWhenScrolling is always true when the view appears.
+        // Works in conjunction with showSearchBarOnAppearance.
+        navigationItem.hidesSearchBarWhenScrolling = true
     }
 
     override func initialise(withTheme theme: Theme) {
