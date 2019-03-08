@@ -45,7 +45,8 @@ class ListBookTable: UITableViewController {
     }
 
     private var listNameField: UITextField? {
-        return navigationItem.titleView as? UITextField
+        get { return navigationItem.titleView as? UITextField }
+        set { navigationItem.titleView = newValue }
     }
 
     private var listNameFieldDefaultText: String {
@@ -150,7 +151,7 @@ class ListBookTable: UITableViewController {
         // If we go from editing to not editing, and we are (/were) editing the title text field, then
         // save the update (if we can), and stop editing it.
         if !editing, let listNameField = listNameField, listNameField.isEditing {
-            if let proposedName = listNameField.text {
+            if let proposedName = listNameField.text, list.name != proposedName {
                 tryUpdateListName(to: proposedName)
             }
             listNameField.endEditing(true)
@@ -180,10 +181,12 @@ class ListBookTable: UITableViewController {
         }()
         searchController.searchBar.isEnabled = !isEditing
         if isEditing {
-            navigationItem.titleView = listTextField()
-            navigationItem.title = nil
+            if listNameField == nil {
+                listNameField = listTextField()
+                navigationItem.title = nil
+            }
         } else {
-            navigationItem.titleView = nil
+            listNameField = nil
             navigationItem.title = list.name
         }
     }
