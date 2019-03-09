@@ -29,19 +29,14 @@ enum ListBooksSource {
 
 class ListBookTable: UITableViewController {
 
-    weak var organizeController: Organize!
     var list: List!
-    var showSearchBarOnAppearance: Bool = false {
-        didSet { navigationItem.hidesSearchBarWhenScrolling = !showSearchBarOnAppearance }
-    }
-
     private var cachedListNames: [String]!
     private var ignoreNotifications = false
     private var searchController: UISearchController!
     private var listBookSource: ListBooksSource!
 
-    private var shouldReadRelatedBooksDirectly: Bool {
-        return list.order == .listCustom
+    var showSearchBarOnAppearance: Bool = false {
+        didSet { navigationItem.hidesSearchBarWhenScrolling = !showSearchBarOnAppearance }
     }
 
     private var listNameField: UITextField? {
@@ -69,13 +64,7 @@ class ListBookTable: UITableViewController {
         tableView.emptyDataSetSource = self
         tableView.emptyDataSetDelegate = self
 
-        if list.order == .listCustom {
-            listBookSource = .orderedSet(list.books)
-        } else {
-            let controller = buildResultsController()
-            try! controller.performFetch()
-            listBookSource = .controller(controller)
-        }
+        buildBookSource()
 
         searchController = UISearchController(filterPlaceholderText: "Filter List")
         searchController.searchResultsUpdater = self
@@ -83,8 +72,18 @@ class ListBookTable: UITableViewController {
 
         NotificationCenter.default.addObserver(self, selector: #selector(objectContextChanged(_:)),
                                                name: .NSManagedObjectContextObjectsDidChange,
-                                               object: list.managedObjectContext!)
+                                               object: PersistentStoreManager.container.viewContext)
         monitorThemeSetting()
+    }
+
+    private func buildBookSource() {
+        // We cannot use a fetched results controller when ordering by the underlying ordered predicate order.
+        // Instead, we just use the ordered set as our source.
+        if list.order == .listCustom {
+            listBookSource = .orderedSet(list.books)
+        } else {
+            listBookSource = .controller(buildResultsController())
+        }
     }
 
     private func buildResultsController() -> NSFetchedResultsController<Book> {
@@ -95,6 +94,7 @@ class ListBookTable: UITableViewController {
                                                     managedObjectContext: PersistentStoreManager.container.viewContext,
                                                     sectionNameKeyPath: nil, cacheName: nil)
         controller.delegate = tableView
+        try! controller.performFetch()
         return controller
     }
 
@@ -197,20 +197,7 @@ class ListBookTable: UITableViewController {
             assertionFailure()
             searchController.isActive = false
         }
-
-        // We cannot use a fetched results controller when ordering by the underlying ordered predicate order.
-        // Instead, we just use the ordered set as our source.
-        if list.order == .listCustom {
-            listBookSource = .orderedSet(list.books)
-        } else {
-            if case .controller(let controller) = listBookSource! {
-                controller.fetchRequest.predicate = defaultPredicate
-            } else {
-                let newController = buildResultsController()
-                listBookSource = .controller(newController)
-                try! newController.performFetch()
-            }
-        }
+        buildBookSource()
         tableView.reloadData()
 
         // Put the top row at the "middle", so that the top row is not right up at the top of the table
