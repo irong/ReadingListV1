@@ -93,7 +93,7 @@ class ListBookTable: UITableViewController {
         let controller = NSFetchedResultsController(fetchRequest: fetchRequest,
                                                     managedObjectContext: PersistentStoreManager.container.viewContext,
                                                     sectionNameKeyPath: nil, cacheName: nil)
-        controller.delegate = tableView
+        controller.delegate = self
         try! controller.performFetch()
         return controller
     }
@@ -308,6 +308,25 @@ class ListBookTable: UITableViewController {
             let book = listBookSource.book(at: senderIndex)
             detailsViewController.book = book
         }
+    }
+}
+
+extension ListBookTable: NSFetchedResultsControllerDelegate {
+    func controllerWillChangeContent(_: NSFetchedResultsController<NSFetchRequestResult>) {
+        tableView.beginUpdates()
+    }
+
+    func controllerDidChangeContent(_: NSFetchedResultsController<NSFetchRequestResult>) {
+        tableView.endUpdates()
+        reloadHeaders()
+    }
+
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
+        tableView.controller(controller, didChange: anObject, at: indexPath, for: type, newIndexPath: newIndexPath)
+    }
+
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange sectionInfo: NSFetchedResultsSectionInfo, atSectionIndex sectionIndex: Int, for type: NSFetchedResultsChangeType) {
+        tableView.controller(controller, didChange: sectionInfo, atSectionIndex: sectionIndex, for: type)
     }
 }
 
