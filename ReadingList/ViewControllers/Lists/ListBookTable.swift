@@ -234,7 +234,7 @@ class ListBookTable: UITableViewController {
         case .controller(let controller):
             return controller.sections!.count
         case .orderedSet(let set):
-            return set.count == 0 ? 0 : 1 //swiftlint:disable:this empty_count
+            return set.isEmpty ? 0 : 1
         }
     }
 
@@ -273,7 +273,7 @@ class ListBookTable: UITableViewController {
                 self.listBookSource = .orderedSet(mutableSet)
             }
             if case .orderedSet(let set) = self.listBookSource! {
-                if set.count == 0 { //swiftlint:disable:this empty_count
+                if set.isEmpty {
                     tableView.deleteSections(IndexSet(arrayLiteral: 0), with: .automatic)
                     tableView.reloadEmptyDataSet()
                 } else {
@@ -383,8 +383,8 @@ extension ListBookTable: DZNEmptyDataSetSource {
             )
         }
         return applyDescriptionAttributes(
-            NSMutableAttributedString("The list \"\(list.name)\" is currently empty.  To add a book to it, find a book and click ", font: descriptionFont)
-                .appending("Add to List", font: boldDescriptionFont)
+            NSMutableAttributedString("The list \"\(list.name)\" is currently empty.  To add a book to it, find a book and tap ", font: descriptionFont)
+                .appending("Manage Lists", font: boldDescriptionFont)
         )
     }
 }
@@ -422,7 +422,7 @@ extension ListBookTable: UITextFieldDelegate {
     func textFieldDidEndEditing(_ textField: UITextField) {
         textField.text = listNameFieldDefaultText
         // If we renamed the list, refresh the empty data set - if present
-        if list.books.count == 0 { //swiftlint:disable:this empty_count
+        if list.books.isEmpty {
             tableView.reloadData()
         }
     }

@@ -274,3 +274,9 @@ public extension NSPredicate {
         })
     }
 }
+
+public extension NSOrderedSet {
+    var isEmpty: Bool {
+        return count == 0 //swiftlint:disable:this empty_count
+    }
+}

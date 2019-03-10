@@ -14,7 +14,7 @@ class Lists: XCTestCase {
         app.launch()
 
         app.tables.cells.element(boundBy: 0).tap()
-        app.scrollViews.otherElements.buttons["Add to List"].tap()
+        app.scrollViews.otherElements.buttons["Manage Lists"].tap()
 
         XCTAssertEqual(app.alerts.count, 1, "Alert should appear when adding first list")
         let addNewListAlert = app.alerts.firstMatch
@@ -26,7 +26,7 @@ class Lists: XCTestCase {
         XCTAssertEqual(app.tables.cells.count, 1, "Should be one list in organise tab")
 
         app.clickTab(.toRead)
-        app.scrollViews.otherElements.buttons["Add to List"].tap()
+        app.scrollViews.otherElements.buttons["Manage Lists"].tap()
 
         let modalTable = app.tables.element(boundBy: 0)
         XCTAssertEqual(modalTable.cells.count, 2, "Should be 2 table rows in modal list selector")

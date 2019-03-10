@@ -176,10 +176,10 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         let selectedReadStates = sectionIndexByReadState.filter { selectedSectionIndices.contains($0.value) }.keys
 
         let optionsAlert = UIAlertController(title: "Edit \(selectedRows.count) book\(selectedRows.count == 1 ? "" : "s")", message: nil, preferredStyle: .actionSheet)
-        optionsAlert.addAction(UIAlertAction(title: "Add to List", style: .default) { _ in
+        optionsAlert.addAction(UIAlertAction(title: "Manage Lists", style: .default) { _ in
             let books = selectedRows.map(self.resultsController.object)
 
-            self.present(AddToList.getAppropriateVcForAddingBooksToList(books) { _ in
+            self.present(ManageLists.getAppropriateVcForManagingLists(books) {
                 self.setEditing(false, animated: true)
                 UserEngagement.logEvent(.bulkAddBookToList)
                 UserEngagement.onReviewTrigger()

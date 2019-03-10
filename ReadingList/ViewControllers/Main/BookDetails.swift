@@ -252,7 +252,7 @@ class BookDetails: UIViewController, UIScrollViewDelegate {
 
     @IBAction private func addToList(_ sender: Any) {
         guard let book = book else { return }
-        present(AddToList.getAppropriateVcForAddingBooksToList([book]) { _ in
+        present(ManageLists.getAppropriateVcForManagingLists([book]) {
             UserEngagement.logEvent(.addBookToList)
             UserEngagement.onReviewTrigger()
         }, animated: true)

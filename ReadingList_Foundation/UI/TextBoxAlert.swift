@@ -5,7 +5,7 @@ import UIKit
  A UIAlertController with a single text field input, and an OK and Cancel action. The OK button is disabled
  when the text box is empty or whitespace.
  */
-public class TextBoxAlertController: UIAlertController {
+public class TextBoxAlert: UIAlertController {
 
     var textValidator: ((String?) -> Bool)?
 
