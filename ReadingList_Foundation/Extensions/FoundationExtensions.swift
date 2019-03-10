@@ -252,6 +252,10 @@ public extension NSPredicate {
         }
     }
 
+    func not() -> NSPredicate {
+        return NSCompoundPredicate(notPredicateWithSubpredicate: self)
+    }
+
     static func or(_ orPredicates: [NSPredicate]) -> NSPredicate {
         return NSCompoundPredicate(orPredicateWithSubpredicates: orPredicates)
     }

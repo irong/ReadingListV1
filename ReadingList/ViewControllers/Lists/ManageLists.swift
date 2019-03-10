@@ -40,7 +40,7 @@ class ManageLists: UITableViewController {
         super.prepare(for: segue, sender: sender)
 
         if let addToExistingLists = segue.destination as? AddToExistingLists {
-            addToExistingLists.books = books
+            addToExistingLists.books = Set<Book>(books)
             addToExistingLists.onComplete = onComplete
         } else if let removeFromExistingLists = segue.destination as? RemoveFromExistingLists {
             guard books.count == 1 else { preconditionFailure() }
