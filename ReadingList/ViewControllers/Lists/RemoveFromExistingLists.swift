@@ -1,37 +1,38 @@
 import Foundation
 import UIKit
+import CoreData
 
 class RemoveFromExistingLists: UITableViewController {
     var book: Book!
-    var sortedLists: [List]!
+    private var resultsController: NSFetchedResultsController<List>!
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        cacheSortedLists()
+
+        let fetchRequest = NSManagedObject.fetchRequest(List.self, batch: 40)
+        fetchRequest.predicate = NSPredicate(format: "%@ IN books", book)
+        fetchRequest.sortDescriptors = [NSSortDescriptor(\List.sort), NSSortDescriptor(\List.name)]
+        resultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: PersistentStoreManager.container.viewContext, sectionNameKeyPath: nil, cacheName: nil)
+        resultsController.delegate = self
+        try! resultsController.performFetch()
+
         setEditing(true, animated: false)
         monitorThemeSetting()
     }
 
-    private func cacheSortedLists() {
-        sortedLists = book.lists.sorted {
-            if $0.sort == $1.sort { return $0.name.compare($1.name) == .orderedAscending }
-            return $0.sort < $1.sort
-        }
-    }
-
     override func numberOfSections(in tableView: UITableView) -> Int {
-        return 1
+        return resultsController.sections!.count
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return sortedLists.count
+        return resultsController.sections![section].numberOfObjects
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ExistingListCell", for: indexPath)
         cell.defaultInitialise(withTheme: UserDefaults.standard[.theme])
 
-        let list = sortedLists[indexPath.row]
+        let list = resultsController.object(at: indexPath)
         cell.textLabel!.text = list.name
         cell.detailTextLabel!.text = "\(list.books.count) book\(list.books.count == 1 ? "" : "s")"
         return cell
@@ -39,14 +40,30 @@ class RemoveFromExistingLists: UITableViewController {
 
     override func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath) -> [UITableViewRowAction]? {
         return [UITableViewRowAction(style: .destructive, title: "Remove", color: .red) { _, indexPath in
-            let list = self.sortedLists[indexPath.row]
+            let list = self.resultsController.object(at: indexPath)
             list.removeBooks(NSSet(object: self.book))
-            self.cacheSortedLists()
             list.managedObjectContext!.saveAndLogIfErrored()
-            self.tableView.deleteRows(at: [indexPath], with: .automatic)
-            if self.book.lists.isEmpty {
-                self.navigationController?.popViewController(animated: true)
-            }
         }]
+    }
+}
+
+extension RemoveFromExistingLists: NSFetchedResultsControllerDelegate {
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        tableView.controllerDidChangeContent(controller)
+        if controller.sections![0].numberOfObjects == 0 {
+            navigationController?.popViewController(animated: true)
+        }
+    }
+    
+    func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        tableView.controllerWillChangeContent(controller)
+    }
+    
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
+        tableView.controller(controller, didChange: anObject, at: indexPath, for: type, newIndexPath: newIndexPath)
+    }
+    
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange sectionInfo: NSFetchedResultsSectionInfo, atSectionIndex sectionIndex: Int, for type: NSFetchedResultsChangeType) {
+        tableView.controller(controller, didChange: sectionInfo, atSectionIndex: sectionIndex, for: type)
     }
 }
