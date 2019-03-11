@@ -6,6 +6,7 @@ import ReadingList_Foundation
 class ManageLists: UITableViewController {
     var books: [Book]!
     var onComplete: (() -> Void)?
+    private var candidateListsExist = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -14,16 +15,42 @@ class ManageLists: UITableViewController {
         if books.count == 1 {
             NotificationCenter.default.addObserver(self, selector: #selector(saveOccurred(_:)), name: .NSManagedObjectContextDidSave, object: PersistentStoreManager.container.viewContext)
         }
+
+        updateCandidateListPresenceCache()
+        monitorThemeSetting()
+    }
+
+    private func updateCandidateListPresenceCache() {
+        let fetchRequest = NSManagedObject.fetchRequest(List.self, limit: 1)
+        fetchRequest.predicate = NSPredicate.or(books.map {
+            NSPredicate(format: "SELF IN %@", $0.lists).not()
+        })
+        candidateListsExist = !(try! PersistentStoreManager.container.viewContext.fetch(fetchRequest)).isEmpty
     }
 
     @objc private func saveOccurred(_ notification: Notification) {
         // In case the book's list membership changes, reload the table so that the second section is shown or hidden accordingly
+        updateCandidateListPresenceCache()
         tableView.reloadData()
     }
 
     override func numberOfSections(in tableView: UITableView) -> Int {
         if books.count > 1 || books[0].lists.isEmpty { return 1 }
         return 2
+    }
+
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if section == 0 && !candidateListsExist {
+            return super.tableView(tableView, numberOfRowsInSection: section) - 1
+        } else {
+            return super.tableView(tableView, numberOfRowsInSection: section)
+        }
+    }
+
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
+        cell.defaultInitialise(withTheme: UserDefaults.standard[.theme])
+        return cell
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {

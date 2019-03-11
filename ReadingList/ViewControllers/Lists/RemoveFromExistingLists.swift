@@ -9,6 +9,7 @@ class RemoveFromExistingLists: UITableViewController {
         super.viewDidLoad()
         cacheSortedLists()
         setEditing(true, animated: false)
+        monitorThemeSetting()
     }
 
     private func cacheSortedLists() {

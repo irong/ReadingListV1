@@ -20,6 +20,8 @@ class AddToExistingLists: UITableViewController {
         resultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: PersistentStoreManager.container.viewContext, sectionNameKeyPath: nil, cacheName: nil)
         resultsController.delegate = tableView
         try! resultsController.performFetch()
+
+        monitorThemeSetting()
     }
 
     override func numberOfSections(in tableView: UITableView) -> Int {

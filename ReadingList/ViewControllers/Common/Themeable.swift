@@ -140,7 +140,7 @@ fileprivate extension UIViewController {
 extension ThemeableViewController {
     func monitorThemeSetting() {
         initialise(withTheme: UserDefaults.standard[.theme])
-        NotificationCenter.default.addObserver(self, selector: #selector(transitionThemeChange), name: NSNotification.Name.ThemeSettingChanged, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(transitionThemeChange), name: .ThemeSettingChanged, object: nil)
     }
 }
 
