@@ -27,7 +27,7 @@ class Screenshots: XCTestCase {
 
         snapshot("0_ToReadList")
         app.clickTab(.finished)
-        app.tables.staticTexts["Finished"].swipeUp()
+        app.swipeUp()
         app.tables.staticTexts["The Color Purple"].tap()
         snapshot("1_BookDetails")
 
@@ -37,7 +37,7 @@ class Screenshots: XCTestCase {
         }
         if isIpad {
             app.tables.staticTexts["The Great Gatsby"].tap()
-            app.tables.staticTexts["Finished"].swipeDown()
+            app.swipeDown()
         }
         app.navigationBars["Finished"].buttons["Add"].tap()
         app.sheets["Add New Book"].buttons["Scan Barcode"].tap()
@@ -69,7 +69,7 @@ class Screenshots: XCTestCase {
         app.tables.cells.element(boundBy: 7).tap()
         snapshot("4_BulkEdit")
 
-        app.tabBars.buttons["Organise"].tap()
+        app.tabBars.buttons.element(boundBy: 2).tap()
         app.tables.cells.element(boundBy: 0).tap()
         if isIpad {
             app.tables.cells.element(boundBy: 6).tap()
