@@ -104,7 +104,7 @@ class EditBookMetadata: FormViewController {
                 $0.cell.textField.autocapitalizationType = .words
                 $0.title = "Publisher"
                 $0.value = book.publisher
-                $0.onChange { book.publisher = $0.value ?? "" }
+                $0.onChange { book.publisher = $0.value }
             }
             <<< ButtonRow {
                 $0.title = "Subjects"
