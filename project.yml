@@ -31,14 +31,14 @@ targets:
       - name: Run Fabric Script
         inputFiles: [$(BUILT_PRODUCTS_DIR)/$(INFOPLIST_PATH)]
         script: |
-                # Run Fabric script: added here when built for deployment.
-                # FABRIC_SCRIPT_PLACEHOLDER
+                "${PODS_ROOT}/Fabric/run"
     settings:
       base:
         ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: $(inherited)
         CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED: YES
         CODE_SIGN_STYLE: Manual
         CODE_SIGN_ENTITLEMENTS: ReadingList/ReadingList.entitlements
+        DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
         DEVELOPMENT_TEAM: YPDEV2E775
         PRODUCT_BUNDLE_IDENTIFIER: com.andrewbennet.books
       configs:
