@@ -162,7 +162,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
     override func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
         guard isEditing else { return }
         // If this deselection was deselecting the only selected row, disable the edit action button and reset the title
-        if let selectedRows = tableView.indexPathForSelectedRow, !selectedRows.isEmpty {
+        if let selectedRows = tableView.indexPathsForSelectedRows, !selectedRows.isEmpty {
             navigationItem.title = "\(selectedRows.count) Selected"
         } else {
             navigationItem.rightBarButtonItem!.isEnabled = false

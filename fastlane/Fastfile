@@ -5,7 +5,6 @@ platform :ios do
 
   desc "Configures Fabric, builds the project file and sets the build number from git."
   lane :preprocess do
-    sh "./configure_fabric.sh"
     sh "cd .. && mint run yonaskolb/xcodegen"
     sh "cd .. && pod install"
     increment_build_number(build_number: number_of_commits)

@@ -24,7 +24,8 @@ class UserEngagement {
 
     static func initialiseUserAnalytics() {
         #if RELEASE
-            if sendAnalytics { FirebaseApp.configure() }
+            // We need to configure the firebase app in order to send crash reports
+            if sendAnalytics || sendCrashReports { FirebaseApp.configure() }
             if sendCrashReports { Fabric.with([Crashlytics.self]) }
         #endif
     }

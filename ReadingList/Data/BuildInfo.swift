@@ -19,7 +19,7 @@ class BuildInfo {
     private static let isTestFlight = Bundle.main.appStoreReceiptURL?.lastPathComponent == "sandboxReceipt"
 
     static var isDebug: Bool {
-        #if DEBUG
+        #if DEBUG || arch(i386) || arch(x86_64)
             return true
         #else
             return false
