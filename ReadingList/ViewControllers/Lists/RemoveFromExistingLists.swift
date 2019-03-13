@@ -54,15 +54,15 @@ extension RemoveFromExistingLists: NSFetchedResultsControllerDelegate {
             navigationController?.popViewController(animated: true)
         }
     }
-    
+
     func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         tableView.controllerWillChangeContent(controller)
     }
-    
+
     func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
         tableView.controller(controller, didChange: anObject, at: indexPath, for: type, newIndexPath: newIndexPath)
     }
-    
+
     func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange sectionInfo: NSFetchedResultsSectionInfo, atSectionIndex sectionIndex: Int, for type: NSFetchedResultsChangeType) {
         tableView.controller(controller, didChange: sectionInfo, atSectionIndex: sectionIndex, for: type)
     }

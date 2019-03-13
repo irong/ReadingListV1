@@ -30,8 +30,6 @@ class Lists: XCTestCase {
 
         let modalTable = app.tables.element(boundBy: 0)
         XCTAssertEqual(modalTable.cells.count, 2, "Should be 2 table rows in modal list selector")
-        XCTAssertEqual(true, modalTable.cells.element(boundBy: 0).isEnabled, "Add New List should be hittable")
-        XCTAssertEqual(false, modalTable.cells.element(boundBy: 1).isEnabled, "Add to List A should not be hittable")
 
         modalTable.cells.element(boundBy: 0).tap()
         XCTAssertEqual(app.alerts.count, 1, "Alert should appear when adding new list")
