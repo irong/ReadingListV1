@@ -862,9 +862,9 @@
                                                                         </userDefinedRuntimeAttributes>
                                                                     </label>
                                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="5eR-3P-EAn">
-                                                                        <rect key="frame" x="308" y="0.0" width="70" height="30"/>
+                                                                        <rect key="frame" x="292" y="0.0" width="86" height="30"/>
                                                                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                                                        <state key="normal" title="Add to List"/>
+                                                                        <state key="normal" title="Manage Lists"/>
                                                                         <connections>
                                                                             <action selector="addToList:" destination="7uR-tE-cQd" eventType="touchUpInside" id="Niu-VD-hHf"/>
                                                                         </connections>

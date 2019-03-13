@@ -85,7 +85,7 @@ class Organize: UITableViewController {
                 let list = self.resultsController.object(at: indexPath)
 
                 let existingListNames = List.names(fromContext: PersistentStoreManager.container.viewContext)
-                let renameListAlert = TextBoxAlertController(title: "Rename List", message: "Choose a new name for this list", initialValue: list.name, placeholder: "New list name", keyboardAppearance: UserDefaults.standard[.theme].keyboardAppearance, textValidator: { listName in
+                let renameListAlert = TextBoxAlert(title: "Rename List", message: "Choose a new name for this list", initialValue: list.name, placeholder: "New list name", keyboardAppearance: UserDefaults.standard[.theme].keyboardAppearance, textValidator: { listName in
                         guard let listName = listName, !listName.isEmptyOrWhitespace else { return false }
                         return listName == list.name || !existingListNames.contains(listName)
                     }, onOK: {
@@ -104,7 +104,7 @@ class Organize: UITableViewController {
     }
 
     @IBAction private func addWasTapped(_ sender: UIBarButtonItem) {
-        present(AddToList.newListAlertController([]) { [unowned self] list in
+        present(ManageLists.newListAlertController([]) { [unowned self] list in
             guard let indexPath = self.resultsController.indexPath(forObject: list) else {
                 assertionFailure()
                 return
@@ -209,7 +209,7 @@ extension Organize: DZNEmptyDataSetSource {
             .appending("\n\nTo create a new list, tap the ", font: descriptionFont)
             .appending("+", font: boldDescriptionFont)
             .appending(" button above, or tap ", font: descriptionFont)
-            .appending("Add To List", font: boldDescriptionFont)
+            .appending("Manage Lists", font: boldDescriptionFont)
             .appending(" when viewing a book.", font: descriptionFont)
         )
     }

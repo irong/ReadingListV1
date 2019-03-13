@@ -252,6 +252,10 @@ public extension NSPredicate {
         }
     }
 
+    func not() -> NSPredicate {
+        return NSCompoundPredicate(notPredicateWithSubpredicate: self)
+    }
+
     static func or(_ orPredicates: [NSPredicate]) -> NSPredicate {
         return NSCompoundPredicate(orPredicateWithSubpredicates: orPredicates)
     }
@@ -272,5 +276,11 @@ public extension NSPredicate {
                 NSPredicate(fieldName: fieldName, containsSubstring: searchStringComponent)
             })
         })
+    }
+}
+
+public extension NSOrderedSet {
+    var isEmpty: Bool {
+        return count == 0 //swiftlint:disable:this empty_count
     }
 }

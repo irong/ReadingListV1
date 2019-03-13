@@ -10,8 +10,8 @@ extension UIStoryboard {
          return UIStoryboard(name: "ScanBarcode", bundle: Bundle.main)
     }
 
-    static var AddToList: UIStoryboard {
-         return UIStoryboard(name: "AddToList", bundle: Bundle.main)
+    static var ManageLists: UIStoryboard {
+         return UIStoryboard(name: "ManageLists", bundle: Bundle.main)
     }
 
     static var BookTable: UIStoryboard {

@@ -5,8 +5,8 @@
 /* Class = "UILabel"; text = "Published"; ObjectID = "5Ob-tP-Vww"; */
 "5Ob-tP-Vww.text" = "Published";
 
-/* Class = "UIButton"; normalTitle = "Add to List"; ObjectID = "5eR-3P-EAn"; */
-"5eR-3P-EAn.normalTitle" = "Add to List";
+/* Class = "UIButton"; normalTitle = "Manage Lists"; ObjectID = "5eR-3P-EAn"; */
+"5eR-3P-EAn.normalTitle" = "Manage Lists";
 
 /* Class = "UILabel"; text = "19 December 2017"; ObjectID = "6aZ-t0-uXB"; */
 "6aZ-t0-uXB.text" = "19 December 2017";
