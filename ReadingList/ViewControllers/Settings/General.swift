@@ -21,7 +21,7 @@ class General: FormViewController {
             <<< themeRow(.black, name: "Black")
 
             +++ Section(header: "Search Results", footer: """
-                By default, Reading List prioritises search results based on their language and your location. To instead
+                By default, Reading List prioritises search results based on their language and your location. To instead \
                 restrict search results to be of a specific language only, select a language above.
                 """)
                 <<< PickerInlineRow<LanguageSelection> {
