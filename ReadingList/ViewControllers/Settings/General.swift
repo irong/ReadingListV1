@@ -40,6 +40,7 @@ class General: FormViewController {
                         } else {
                             UserDefaults.standard[.searchLanguageRestriction] = nil
                         }
+                        UserEngagement.logEvent(.changeSearchOnlineLanguage)
                     }
                 }
 
@@ -81,6 +82,7 @@ class General: FormViewController {
         guard let switchValue = sender.value else { return }
         if switchValue {
             UserDefaults.standard[.sendCrashReports] = true
+            UserEngagement.initialiseUserAnalytics()
             UserEngagement.logEvent(.enableCrashReports)
         } else {
             // If this is being turned off, let's try to persuade them to turn it back on
@@ -104,6 +106,7 @@ class General: FormViewController {
         guard let switchValue = sender.value else { return }
         if switchValue {
             UserDefaults.standard[.sendAnalytics] = true
+            UserEngagement.initialiseUserAnalytics()
             UserEngagement.logEvent(.enableAnalytics)
         } else {
             // If this is being turned off, let's try to persuade them to turn it back on

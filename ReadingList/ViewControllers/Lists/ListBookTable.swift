@@ -202,6 +202,7 @@ class ListBookTable: UITableViewController {
 
         // Put the top row at the "middle", so that the top row is not right up at the top of the table
         tableView.scrollToRow(at: IndexPath(row: 0, section: 0), at: .middle, animated: false)
+        UserEngagement.logEvent(.changeListSortOrder)
     }
 
     @objc private func objectContextChanged(_ notification: Notification) {

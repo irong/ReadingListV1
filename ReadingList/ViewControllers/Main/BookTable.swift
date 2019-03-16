@@ -70,6 +70,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         header.onSortChanged = { [unowned self] in
             self.buildResultsController()
             self.tableView.reloadData()
+            UserEngagement.logEvent(.changeSortOrder)
         }
         configureHeader(header, at: section)
         return header

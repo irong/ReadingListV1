@@ -63,5 +63,6 @@ class AddToExistingLists: UITableViewController {
             list.addBooks(NSOrderedSet(set: self.books))
         }
         navigationController?.dismiss(animated: true, completion: onComplete)
+        UserEngagement.logEvent(.addBookToList)
     }
 }

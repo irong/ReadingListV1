@@ -7,27 +7,24 @@ class UserEngagement {
     // Note: TestFlight users are automatically enrolled in analytics and crash reporting. This should be reflected
     // on the corresponding Settings page.
     static var sendAnalytics: Bool {
-        #if DEBUG
-        return false
-        #else
         return BuildInfo.appConfiguration == .testFlight || UserDefaults.standard[.sendAnalytics]
-        #endif
     }
 
     static var sendCrashReports: Bool {
-        #if DEBUG
-        return false
-        #else
         return BuildInfo.appConfiguration == .testFlight || UserDefaults.standard[.sendCrashReports]
-        #endif
     }
 
     static func initialiseUserAnalytics() {
-        #if RELEASE
-            // We need to configure the firebase app in order to send crash reports
-            if sendAnalytics || sendCrashReports { FirebaseApp.configure() }
-            if sendCrashReports { Fabric.with([Crashlytics.self]) }
-        #endif
+        guard sendAnalytics || sendCrashReports else { return }
+        // We need to configure the firebase app in order to send crash reports
+        if FirebaseApp.app() == nil {
+            FirebaseApp.configure()
+        }
+        if sendCrashReports {
+            #if RELEASE
+            Fabric.with([Crashlytics.self])
+            #endif
+        }
     }
 
     static func onReviewTrigger() {
@@ -60,6 +57,7 @@ class UserEngagement {
         case bulkDeleteBook = "Bulk_Delete_Book"
         case editBook = "Edit_Book"
         case editReadState = "Edit_Read_State"
+        case changeSortOrder = "Change_Sort"
 
         // Lists
         case createList = "Create_List"
@@ -68,7 +66,7 @@ class UserEngagement {
         case removeBookFromList = "Remove_Book_From_List"
         case reorederList = "Reorder_List"
         case deleteList = "Delete_List"
-        case setListOrder = "Set_List_Order"
+        case changeListSortOrder = "Change_List_Sort_Order"
         case renameList = "Rename_List"
 
         // Quick actions
@@ -81,7 +79,7 @@ class UserEngagement {
         case disableCrashReports = "Disable_Crash_Reports"
         case enableCrashReports = "Enable_Crash_Reports"
         case changeTheme = "Change_Theme"
-        case changeSortOrder = "Change_Sort"
+        case changeSearchOnlineLanguage = "Change_Search_Online_Language"
 
         // Other
         case viewOnAmazon = "View_On_Amazon"
@@ -90,7 +88,9 @@ class UserEngagement {
 
     static func logEvent(_ event: Event) {
         guard sendAnalytics else { return }
+        #if RELEASE
         Analytics.logEvent(event.rawValue, parameters: nil)
+        #endif
     }
 
     static func logError(_ error: Error) {

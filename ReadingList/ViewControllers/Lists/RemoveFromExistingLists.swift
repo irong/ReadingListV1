@@ -43,6 +43,7 @@ class RemoveFromExistingLists: UITableViewController {
             let list = self.resultsController.object(at: indexPath)
             list.removeBooks(NSSet(object: self.book))
             list.managedObjectContext!.saveAndLogIfErrored()
+            UserEngagement.logEvent(.removeBookFromList)
         }]
     }
 }
