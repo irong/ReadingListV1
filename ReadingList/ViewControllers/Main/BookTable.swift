@@ -342,7 +342,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
             return UISwipeActionsConfiguration(performFirstActionWithFullSwipe: false, actions: actions)
         }
 
-        let leadingSwipeAction = UIContextualAction(style: .normal, title: readStateOfSection == .toRead ? "Start" : "Finish") { _, _, callback in
+        let leadingSwipeAction = UIContextualAction(style: .destructive, title: readStateOfSection == .toRead ? "Start" : "Finish") { _, _, callback in
             let book = self.resultsController.object(at: indexPath)
             if readStateOfSection == .toRead {
                 book.setReading(started: Date())
