@@ -2,22 +2,15 @@ import XCTest
 
 class Screenshots: XCTestCase {
 
-    override func setUp() {
-        super.setUp()
-        continueAfterFailure = false
-
-        let app = ReadingListApp()
-        setupSnapshot(app)
-        app.launchArguments = ["--reset", "--UITests", "--UITests_PopulateData", "--UITests_Screenshots", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryXL"]
-        app.launch()
-        sleep(5)
-    }
-
     func testSnapshot() {
         // Screenshot is designed for iOS 12 only
         guard #available(iOS 12.0, *) else { return }
-
+        
+        continueAfterFailure = false
         let app = ReadingListApp()
+        setupSnapshot(app)
+        app.launch()
+        sleep(120)
         app.clickTab(.toRead)
 
         let isIpad = app.navigationBars.count == 2
