@@ -56,6 +56,7 @@ class Screenshots: XCTestCase {
 
         app.tabBars.buttons["Finished"].tap()
         app.tables.element(boundBy: 0).swipeDown()
+        app.tables.element(boundBy: 0).swipeDown()
 
         let yourLibrarySearchField = app.searchFields["Your Library"]
         yourLibrarySearchField.tap()
