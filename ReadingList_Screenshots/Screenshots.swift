@@ -2,15 +2,31 @@ import XCTest
 
 class Screenshots: XCTestCase {
 
+    let mockServer = MockServer()
+
+    override func setUp() {
+        super.setUp()
+        continueAfterFailure = false
+
+        try! mockServer.server.start()
+
+        let app = ReadingListApp()
+        setupSnapshot(app)
+        app.launchArguments = ["--reset", "--UITests", "--UITests_PopulateData", "--UITests_Screenshots", "--UITests_MockHttpCalls", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryXL"]
+        app.launch()
+        sleep(5)
+    }
+
+    override func tearDown() {
+        super.tearDown()
+        mockServer.server.stop()
+    }
+
     func testSnapshot() {
         // Screenshot is designed for iOS 12 only
         guard #available(iOS 12.0, *) else { return }
-        
-        continueAfterFailure = false
+
         let app = ReadingListApp()
-        setupSnapshot(app)
-        app.launch()
-        sleep(120)
         app.clickTab(.toRead)
 
         let isIpad = app.navigationBars.count == 2

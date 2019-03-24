@@ -92,6 +92,9 @@ targets:
     sources:
       - path: ReadingList_Screenshots
       - path: ReadingList_UITests/ReadingListApp.swift
+      - path: ReadingList_UITests/MockServer.swift
+      - path: ReadingList/Api/GoogleBooksRequest.swift
+      - path: ReadingList_UITests/GoogleApiResponses
     dependencies:
       - target: ReadingList
     scheme:

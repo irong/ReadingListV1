@@ -14,15 +14,29 @@ enum GoogleBooksRequest {
         case small = 2
     }
 
-    // The base URL for GoogleBooks API v1 requests
-    private static let apiBaseUrl = URL(string: "https://www.googleapis.com/")!
-    private static let googleBooksHost = URL(string: "https://books.google.com/")!
+    private static let apiBaseUrl = URL(string: { //swiftlint:disable:this trailing_closure
+        #if DEBUG
+        if CommandLine.arguments.contains("--UITests_MockHttpCalls") {
+            return "http://localhost:8080/"
+        }
+        #endif
+        return "https://www.googleapis.com/"
+    }())!
+    private static let googleBooksBaseUrl = URL(string: { //swiftlint:disable:this trailing_closure
+        #if DEBUG
+        if CommandLine.arguments.contains("--UITests_MockHttpCalls") {
+            return "http://localhost:8080/"
+        }
+        #endif
+        return "https://books.google.com/"
+    }())!
+
     private static let searchResultFields = "items(id,volumeInfo(title,authors,industryIdentifiers,categories,imageLinks/thumbnail))"
 
     var baseUrl: URL {
         switch self {
         case .coverImage, .webpage:
-            return GoogleBooksRequest.googleBooksHost
+            return GoogleBooksRequest.googleBooksBaseUrl
         default:
             return GoogleBooksRequest.apiBaseUrl
         }
@@ -72,14 +86,6 @@ enum GoogleBooksRequest {
     }
 
     var url: URL {
-        let fullUrl = URL(string: pathAndQuery, relativeTo: baseUrl)!
-        #if DEBUG
-        if CommandLine.arguments.contains("--UITests_MockHttpCalls") {
-            
-            let encodedUrl = fullUrl.absoluteString.addingPercentEncoding(withAllowedCharacters: CharacterSet.urlPathAllowed.intersection(.urlHostAllowed).intersection(.urlQueryAllowed))!
-            return URL(string: "http://localhost:8080/?url=\(encodedUrl)")!
-        }
-        #endif
-        return fullUrl
+        return URL(string: pathAndQuery, relativeTo: baseUrl)!
     }
 }
