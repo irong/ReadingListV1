@@ -30,7 +30,7 @@ public extension UIView {
 
     var nextSibling: UIView? {
         guard let views = superview?.subviews else { return nil }
-        let thisIndex = views.index(of: self)!
+        let thisIndex = views.firstIndex(of: self)!
         guard thisIndex + 1 < views.count else { return nil }
         return views[thisIndex + 1]
     }

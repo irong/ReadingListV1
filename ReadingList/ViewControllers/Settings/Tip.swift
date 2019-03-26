@@ -74,7 +74,7 @@ class Tip: UIViewController, ThemeableViewController {
     @IBAction private func tipPressed(_ sender: UIButton) {
         guard let tipProducts = tipProducts else { return }
 
-        let senderIndex = tipButtons.index(of: sender)!
+        let senderIndex = tipButtons.firstIndex(of: sender)!
         let productId = tipProductIds[senderIndex]
         let product = tipProducts.first { $0.productIdentifier == productId }!
 
