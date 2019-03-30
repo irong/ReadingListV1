@@ -10,8 +10,7 @@ cache:
     - /usr/local/lib/mint/
 install:
   - bundle install
-  - brew install mint
-  - brew upgrade mint
+  - brew update && brew install mint
   - pod repo update
 before_script:
   - bundle exec fastlane preprocess
