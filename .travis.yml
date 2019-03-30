@@ -11,6 +11,7 @@ cache:
 install:
   - bundle install
   - brew install mint
+  - brew upgrade mint
   - pod repo update
 before_script:
   - bundle exec fastlane preprocess
