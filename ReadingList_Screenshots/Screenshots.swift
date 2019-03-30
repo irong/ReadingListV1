@@ -2,15 +2,24 @@ import XCTest
 
 class Screenshots: XCTestCase {
 
+    let mockServer = MockServer()
+
     override func setUp() {
         super.setUp()
         continueAfterFailure = false
 
+        try! mockServer.server.start()
+
         let app = ReadingListApp()
         setupSnapshot(app)
-        app.launchArguments = ["--reset", "--UITests", "--UITests_PopulateData", "--UITests_Screenshots", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryXL"]
+        app.launchArguments = ["--reset", "--UITests", "--UITests_PopulateData", "--UITests_Screenshots", "--UITests_MockHttpCalls", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryXL"]
         app.launch()
         sleep(5)
+    }
+
+    override func tearDown() {
+        super.tearDown()
+        mockServer.server.stop()
     }
 
     func testSnapshot() {
@@ -46,6 +55,7 @@ class Screenshots: XCTestCase {
         app.navigationBars["Scan Barcode"].buttons["Cancel"].tap()
 
         app.tabBars.buttons["Finished"].tap()
+        app.tables.element(boundBy: 0).swipeDown()
         app.tables.element(boundBy: 0).swipeDown()
 
         let yourLibrarySearchField = app.searchFields["Your Library"]

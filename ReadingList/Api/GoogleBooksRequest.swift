@@ -14,19 +14,22 @@ enum GoogleBooksRequest {
         case small = 2
     }
 
-    // The base URL for GoogleBooks API v1 requests
     private static let apiBaseUrl = URL(string: { //swiftlint:disable:this trailing_closure
         #if DEBUG
         if CommandLine.arguments.contains("--UITests_MockHttpCalls") {
             return "http://localhost:8080/"
-        } else {
-            return "https://www.googleapis.com/"
         }
-        #else
-        return "https://www.googleapis.com/"
         #endif
+        return "https://www.googleapis.com/"
     }())!
-    private static let googleBooksBaseUrl = URL(string: "https://books.google.com/")!
+    private static let googleBooksBaseUrl = URL(string: { //swiftlint:disable:this trailing_closure
+        #if DEBUG
+        if CommandLine.arguments.contains("--UITests_MockHttpCalls") {
+            return "http://localhost:8080/"
+        }
+        #endif
+        return "https://books.google.com/"
+    }())!
 
     private static let searchResultFields = "items(id,volumeInfo(title,authors,industryIdentifiers,categories,imageLinks/thumbnail))"
 
