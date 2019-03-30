@@ -186,7 +186,10 @@ class ListBookTable: UITableViewController {
                 navigationItem.title = nil
             }
         } else {
-            listNameField = nil
+            if let textField = listNameField {
+                textField.removeFromSuperview()
+                listNameField = nil
+            }
             navigationItem.title = list.name
         }
     }
