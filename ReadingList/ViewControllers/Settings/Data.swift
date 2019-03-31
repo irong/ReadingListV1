@@ -60,18 +60,17 @@ class DataVC: UITableViewController {
             UserEngagement.logEvent(.csvImport)
 
             self.csvImporter = BookCSVImporter()
-            self.csvImporter!.startImport(fromFileAt: url) { error, results in
-                if let error = error {
+            self.csvImporter!.startImport(fromFileAt: url) { result in
+                switch result {
+                case .failure(let error):
                     SVProgressHUD.dismiss()
                     self.presentCsvErrorAlert(error)
-                    return
+                case .success(let importResults):
+                    var statusMessagePieces = ["\(importResults.success) books imported"]
+                    if importResults.duplicate != 0 { statusMessagePieces.append("\(importResults.duplicate) rows ignored due pre-existing data") }
+                    if importResults.error != 0 { statusMessagePieces.append("\(importResults.error) rows ignored due to invalid data") }
+                    SVProgressHUD.showInfo(withStatus: statusMessagePieces.joined(separator: ". "))
                 }
-                guard let results = results else { preconditionFailure("error and results were nil") }
-                var statusMessagePieces = ["\(results.success) books imported"]
-
-                if results.duplicate != 0 { statusMessagePieces.append("\(results.duplicate) rows ignored due pre-existing data") }
-                if results.error != 0 { statusMessagePieces.append("\(results.error) rows ignored due to invalid data") }
-                SVProgressHUD.showInfo(withStatus: statusMessagePieces.joined(separator: ". "))
             }
         })
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))

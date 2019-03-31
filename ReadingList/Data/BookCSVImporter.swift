@@ -19,7 +19,7 @@ class BookCSVImporter {
         - error: if the CSV import failed irreversibly, this parameter will be non-nil
         - results: otherwise, this summary of the results of the import will be non-nil
     */
-    func startImport(fromFileAt fileLocation: URL, _ completion: @escaping (CSVImportError?, BookCSVImportResults?) -> Void) {
+    func startImport(fromFileAt fileLocation: URL, _ completion: @escaping (Result<BookCSVImportResults, CSVImportError>) -> Void) {
         os_log("Beginning import from CSV file")
         parserDelegate.onCompletion = completion
 
@@ -35,7 +35,7 @@ struct BookCSVImportResults {
     let duplicate: Int
 }
 
-private class BookCSVParserDelegate: CSVParserDelegate {
+class BookCSVParserDelegate: CSVParserDelegate {
     private let context: NSManagedObjectContext
     private let includeImages: Bool
     private var cachedSorts: [BookReadState: BookSortIndexManager]
@@ -43,7 +43,7 @@ private class BookCSVParserDelegate: CSVParserDelegate {
     private var listMappings = [String: [(bookID: NSManagedObjectID, index: Int)]]()
     private var listNames = [String]()
 
-    var onCompletion: ((CSVImportError?, BookCSVImportResults?) -> Void)?
+    var onCompletion: ((Result<BookCSVImportResults, CSVImportError>) -> Void)?
 
     init(context: NSManagedObjectContext, includeImages: Bool = true) {
         self.context = context
@@ -190,7 +190,7 @@ private class BookCSVParserDelegate: CSVParserDelegate {
     }
 
     func onFailure(_ error: CSVImportError) {
-        onCompletion?(error, nil)
+        onCompletion?(.failure(error))
     }
 
     func completion() {
@@ -201,7 +201,7 @@ private class BookCSVParserDelegate: CSVParserDelegate {
                     self.context.saveAndLogIfErrored()
                 }
                 let results = BookCSVImportResults(success: self.successCount, error: self.invalidCount, duplicate: self.duplicateCount)
-                self.onCompletion?(nil, results)
+                self.onCompletion?(.success(results))
             }
     }
 }

@@ -9,7 +9,7 @@ public protocol CSVParserDelegate: class {
     func completion()
 }
 
-public enum CSVImportError {
+public enum CSVImportError: Error {
     case invalidCsv
     case missingHeaders
 }
