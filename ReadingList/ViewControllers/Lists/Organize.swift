@@ -140,11 +140,12 @@ class Organize: UITableViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if let listBookTable = segue.destination as? ListBookTable {
             guard let cell = sender as? UITableViewCell, let index = tableView.indexPath(for: cell) else { preconditionFailure() }
-            listBookTable.list = resultsController.object(at: index)
+            let list = resultsController.object(at: index)
+            listBookTable.list = list
 
             // If the search bar is visible on this view, then it should be visible on the presented view too
             // to prevent an animation issue from occuring (https://stackoverflow.com/a/55043782/5513562)
-            listBookTable.showSearchBarOnAppearance = !searchController.isActive && searchController.searchBar.frame.height > 0
+            listBookTable.showSearchBarOnAppearance = !searchController.isActive && searchController.searchBar.frame.height > 0 && !list.books.isEmpty
         }
     }
 
