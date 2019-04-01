@@ -96,10 +96,14 @@ class AddToExistingLists: UITableViewController {
 
     @IBAction private func addManyTapped(_ sender: Any) {
         guard let selectedRows = tableView.indexPathsForSelectedRows else { return }
-        let alert = UIAlertController(title: "Add To \(selectedRows.count) List\(selectedRows.count == 1 ? "" : "s")", message: "Are you sure you want to add this book to the \(selectedRows.count) selected List\(selectedRows.count == 1 ? "" : "s")?", preferredStyle: .actionSheet)
+        let bookSubject = books.count == 1 ? "this book" : "all \(books.count) books"
+        let alert = UIAlertController(
+            title: "Add To \(selectedRows.count == 1 ? "List" : "\(selectedRows.count) Lists")",
+            message: "Are you sure you want to add \(bookSubject) to the \(selectedRows.count) selected List\(selectedRows.count == 1 ? "" : "s")?",
+            preferredStyle: .actionSheet
+        )
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         alert.addAction(UIAlertAction(title: "Add To All", style: .default) { [unowned self] _ in
-
             let lists = selectedRows.map { self.resultsController.object(at: $0) }
             let bookSet = NSOrderedSet(set: self.books)
             PersistentStoreManager.container.viewContext.performAndSave {
