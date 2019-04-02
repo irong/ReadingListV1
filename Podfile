@@ -4,8 +4,8 @@ use_frameworks!
 target 'ReadingList' do
   pod 'DZNEmptyDataSet', '~> 1.8'
   pod 'SwiftyJSON', '~> 4.0'
-  pod 'Eureka', '~> 4.3'
-  pod 'ImageRow', '~> 3.0'
+  pod 'Eureka', '~> 5.0'
+  pod 'ImageRow', :git => 'https://github.com/AndrewBennet/ImageRow.git'
   pod 'SVProgressHUD', '~> 2.2'
   pod 'SwiftyStoreKit', '~> 0.13'
   pod 'CHCSVParser', :git => 'https://github.com/davedelong/CHCSVParser.git'
