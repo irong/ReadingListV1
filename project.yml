@@ -91,10 +91,8 @@ targets:
     deploymentTarget: 11.0
     sources:
       - path: ReadingList_Screenshots
-      - path: ReadingList_UITests/ReadingListApp.swift
-      - path: ReadingList_UITests/MockServer.swift
+      - path: ReadingList_UITests
       - path: ReadingList/Api/GoogleBooksRequest.swift
-      - path: ReadingList_UITests/GoogleApiResponses
     dependencies:
       - target: ReadingList
     scheme:
