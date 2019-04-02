@@ -7,8 +7,7 @@ class AddToExistingLists: UITableViewController {
     var resultsController: NSFetchedResultsController<List>!
     var onComplete: (() -> Void)?
     var books: Set<Book>!
-    @IBOutlet private weak var addModeButton: UIBarButtonItem!
-    @IBOutlet private weak var bottomBarDoneButton: UIBarButtonItem!
+    @IBOutlet private weak var doneButton: UIBarButtonItem!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -24,17 +23,7 @@ class AddToExistingLists: UITableViewController {
         try! resultsController.performFetch()
 
         monitorThemeSetting()
-        navigationController?.setToolbarHidden(false, animated: true)
-    }
-
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        navigationController?.setToolbarHidden(false, animated: true)
-    }
-
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        navigationController?.setToolbarHidden(true, animated: true)
+        setEditing(true, animated: false)
     }
 
     override func numberOfSections(in tableView: UITableView) -> Int {
@@ -63,38 +52,24 @@ class AddToExistingLists: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        if isEditing {
-            configureBottomBar()
-        } else {
-            // Append the books to the end of the selected list
-            let list = resultsController.object(at: IndexPath(row: indexPath.row, section: 0))
-            list.managedObjectContext!.performAndSave {
-                list.addBooks(NSOrderedSet(set: self.books))
-            }
-            navigationController?.dismiss(animated: true, completion: onComplete)
-            UserEngagement.logEvent(.addBookToList)
-        }
+        updateNavigationItem()
     }
 
     override func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
-        guard isEditing else { return }
-        configureBottomBar()
+        updateNavigationItem()
     }
 
-    override func setEditing(_ editing: Bool, animated: Bool) {
-        super.setEditing(editing, animated: animated)
-        addModeButton.title = editing ? "Select Single" : "Select Many"
-        if !editing {
-            bottomBarDoneButton.title = "Add To Lists"
-            bottomBarDoneButton.isEnabled = false
+    private func updateNavigationItem() {
+        if let selectedRows = tableView.indexPathsForSelectedRows, !selectedRows.isEmpty {
+            navigationItem.title = selectedRows.count == 1 ? "Add To List" : "Add To \(selectedRows.count) Lists"
+            navigationItem.rightBarButtonItem?.isEnabled = true
+        } else {
+            navigationItem.title = "Add To List"
+            navigationItem.rightBarButtonItem?.isEnabled = false
         }
     }
 
-    @IBAction private func addModeTapped(_ sender: UIBarButtonItem) {
-        setEditing(!isEditing, animated: true)
-    }
-
-    @IBAction private func addManyTapped(_ sender: Any) {
+    @IBAction private func doneButtonTapped(_ sender: UIBarButtonItem) {
         guard let selectedRows = tableView.indexPathsForSelectedRows else { return }
         let bookSubject = books.count == 1 ? "this book" : "all \(books.count) books"
         let alert = UIAlertController(
@@ -103,7 +78,7 @@ class AddToExistingLists: UITableViewController {
             preferredStyle: .actionSheet
         )
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-        alert.addAction(UIAlertAction(title: "Add To All", style: .default) { [unowned self] _ in
+        alert.addAction(UIAlertAction(title: "Add To \(selectedRows.count > 1 ? "All" : "List")", style: .default) { [unowned self] _ in
             let lists = selectedRows.map { self.resultsController.object(at: $0) }
             let bookSet = NSOrderedSet(set: self.books)
             PersistentStoreManager.container.viewContext.performAndSave {
@@ -116,16 +91,6 @@ class AddToExistingLists: UITableViewController {
         })
 
         present(alert, animated: true, completion: nil)
-    }
-
-    private func configureBottomBar() {
-        if let selectedRows = tableView.indexPathsForSelectedRows, !selectedRows.isEmpty {
-            bottomBarDoneButton.title = "Add to \(selectedRows.count) List\(selectedRows.count == 1 ? "" : "s")"
-            bottomBarDoneButton.isEnabled = true
-        } else {
-            bottomBarDoneButton.title = "Add to Lists"
-            bottomBarDoneButton.isEnabled = false
-        }
     }
 
     private func getBookListOverlap(_ list: List) -> Int {

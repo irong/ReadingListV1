@@ -10,29 +10,29 @@
     </dependencies>
     <scenes>
         <!--Add To List-->
-        <scene sceneID="k92-Nk-Zwz">
+        <scene sceneID="glQ-vA-cEY">
             <objects>
-                <tableViewController id="oDc-K2-tFF" customClass="AddToExistingLists" customModule="ReadingList" customModuleProvider="target" sceneMemberID="viewController">
-                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="grouped" separatorStyle="default" allowsSelectionDuringEditing="YES" allowsMultipleSelectionDuringEditing="YES" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="18" sectionFooterHeight="18" id="lZF-wy-Ezg">
+                <tableViewController id="5p4-2p-vlZ" customClass="AddToExistingLists" customModule="ReadingList" customModuleProvider="target" sceneMemberID="viewController">
+                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="grouped" separatorStyle="default" allowsSelection="NO" allowsSelectionDuringEditing="YES" allowsMultipleSelectionDuringEditing="YES" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="18" sectionFooterHeight="18" id="tvx-OZ-41f">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
                         <prototypes>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="ExistingListCell" textLabel="EoZ-zz-xdL" detailTextLabel="n6g-7y-1pM" style="IBUITableViewCellStyleSubtitle" id="hhH-Zp-muQ">
+                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="ExistingListCell" textLabel="Xd1-wh-Jdo" detailTextLabel="syK-HQ-NO1" style="IBUITableViewCellStyleSubtitle" id="hEO-DM-GYN">
                                 <rect key="frame" x="0.0" y="55.5" width="375" height="44"/>
                                 <autoresizingMask key="autoresizingMask"/>
-                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="hhH-Zp-muQ" id="9hv-fI-jtP">
+                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="hEO-DM-GYN" id="pJj-KV-eHd">
                                     <rect key="frame" x="0.0" y="0.0" width="375" height="43.5"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <subviews>
-                                        <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" insetsLayoutMarginsFromSafeArea="NO" text="Existing List Name" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="EoZ-zz-xdL">
+                                        <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" insetsLayoutMarginsFromSafeArea="NO" text="Existing List Name" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="Xd1-wh-Jdo">
                                             <rect key="frame" x="16" y="5" width="141" height="20.5"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                             <nil key="textColor"/>
                                             <nil key="highlightedColor"/>
                                         </label>
-                                        <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" insetsLayoutMarginsFromSafeArea="NO" text="12 books" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="n6g-7y-1pM">
+                                        <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" insetsLayoutMarginsFromSafeArea="NO" text="12 books" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="syK-HQ-NO1">
                                             <rect key="frame" x="16" y="25.5" width="50.5" height="14.5"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <fontDescription key="fontDescription" type="system" pointSize="12"/>
@@ -43,35 +43,25 @@
                                 </tableViewCellContentView>
                             </tableViewCell>
                         </prototypes>
-                        <sections/>
                         <connections>
-                            <outlet property="dataSource" destination="oDc-K2-tFF" id="ZSp-ed-fK7"/>
-                            <outlet property="delegate" destination="oDc-K2-tFF" id="iOf-sx-QAL"/>
+                            <outlet property="dataSource" destination="5p4-2p-vlZ" id="YEh-oY-zcg"/>
+                            <outlet property="delegate" destination="5p4-2p-vlZ" id="m8O-6h-Amg"/>
                         </connections>
                     </tableView>
-                    <toolbarItems>
-                        <barButtonItem title="Select Many" id="7c9-3y-Q1Z">
+                    <navigationItem key="navigationItem" title="Add To List" id="kqT-WT-0zz">
+                        <barButtonItem key="rightBarButtonItem" enabled="NO" style="done" systemItem="done" id="sqJ-fK-8tP">
                             <connections>
-                                <action selector="addModeTapped:" destination="oDc-K2-tFF" id="RYr-71-Irv"/>
+                                <action selector="doneButtonTapped:" destination="5p4-2p-vlZ" id="o4l-RZ-n4O"/>
                             </connections>
                         </barButtonItem>
-                        <barButtonItem style="plain" systemItem="flexibleSpace" id="omL-On-gq8"/>
-                        <barButtonItem enabled="NO" title="Add To Lists" style="done" id="2Ek-Eu-yDW">
-                            <connections>
-                                <action selector="addManyTapped:" destination="oDc-K2-tFF" id="U8t-TX-HYS"/>
-                            </connections>
-                        </barButtonItem>
-                    </toolbarItems>
-                    <navigationItem key="navigationItem" title="Add To List" id="JI4-Bj-I6q"/>
-                    <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
+                    </navigationItem>
                     <connections>
-                        <outlet property="addModeButton" destination="7c9-3y-Q1Z" id="dbF-fy-Sat"/>
-                        <outlet property="bottomBarDoneButton" destination="2Ek-Eu-yDW" id="2ud-Xo-g0B"/>
+                        <outlet property="doneButton" destination="sqJ-fK-8tP" id="TKv-bl-jks"/>
                     </connections>
                 </tableViewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="d26-M3-DXc" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="qgV-Lk-8yT" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="297" y="-693"/>
+            <point key="canvasLocation" x="297" y="-698"/>
         </scene>
         <!--Manage Lists-->
         <scene sceneID="QBa-T8-mA5">
@@ -118,7 +108,7 @@
                                             </subviews>
                                         </tableViewCellContentView>
                                         <connections>
-                                            <segue destination="oDc-K2-tFF" kind="show" id="WhW-WM-xC9"/>
+                                            <segue destination="5p4-2p-vlZ" kind="show" id="pY5-QR-mkJ"/>
                                         </connections>
                                     </tableViewCell>
                                 </cells>
@@ -175,7 +165,7 @@
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
                     <connections>
-                        <segue destination="e6T-Lg-X13" kind="relationship" relationship="rootViewController" id="eSs-MS-sV0"/>
+                        <segue destination="e6T-Lg-X13" kind="relationship" relationship="rootViewController" id="zQ9-kf-JyV"/>
                     </connections>
                 </navigationController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="5Yg-m1-l1Z" userLabel="First Responder" sceneMemberID="firstResponder"/>
