@@ -62,7 +62,7 @@ PODS:
     - PromisesObjC (= 1.2.7)
   - SimulatorStatusMagic (2.4.1)
   - SVProgressHUD (2.2.5)
-  - Swifter (1.4.6)
+  - Swifter (1.4.5)
   - SwiftyJSON (4.3.0)
   - SwiftyStoreKit (0.14.2)
 
@@ -77,7 +77,7 @@ DEPENDENCIES:
   - PromisesSwift (~> 1.2)
   - SimulatorStatusMagic
   - SVProgressHUD (~> 2.2)
-  - Swifter (~> 1.4.5)
+  - Swifter (= 1.4.5)
   - SwiftyJSON (~> 4.0)
   - SwiftyStoreKit (~> 0.13)
 
@@ -134,10 +134,10 @@ SPEC CHECKSUMS:
   PromisesSwift: b27f410f9ea693753cfd4cfd8ac1c60a471f137b
   SimulatorStatusMagic: 28d4a9d1a500ac7cea0b2b5a43c1c6ddb40ba56c
   SVProgressHUD: 1428aafac632c1f86f62aa4243ec12008d7a51d6
-  Swifter: 2ed278fbf7b16cbe97269eb56d8e8749b1ec4042
+  Swifter: eb2bc1d192a1c09169c7fefd01971565fa940521
   SwiftyJSON: 6faa0040f8b59dead0ee07436cbf76b73c08fd08
   SwiftyStoreKit: cc399645796b094022fb650c148a0aed25995873
 
-PODFILE CHECKSUM: 2c6bf5857789169982f13b6e24184627ee3cc63c
+PODFILE CHECKSUM: f2b3543ebe3168a3c9cdd172ad6380e6b3fadd99
 
 COCOAPODS: 1.6.0
