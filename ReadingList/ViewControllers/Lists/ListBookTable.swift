@@ -17,6 +17,15 @@ enum ListBooksSource {
         }
     }
 
+    func numberOfSections() -> Int {
+        switch self {
+        case .controller(let controller):
+            return controller.sections!.count
+        case .orderedSet(let set):
+            return set.isEmpty ? 0 : 1
+        }
+    }
+
     func book(at indexPath: IndexPath) -> Book {
         switch self {
         case .controller(let controller):
@@ -234,12 +243,7 @@ class ListBookTable: UITableViewController {
     }
 
     override func numberOfSections(in tableView: UITableView) -> Int {
-        switch listBookSource! {
-        case .controller(let controller):
-            return controller.sections!.count
-        case .orderedSet(let set):
-            return set.isEmpty ? 0 : 1
-        }
+        return listBookSource.numberOfSections()
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -275,9 +279,8 @@ class ListBookTable: UITableViewController {
                 let mutableSet = set.mutableCopy() as! NSMutableOrderedSet
                 mutableSet.remove(bookToRemove)
                 self.listBookSource = .orderedSet(mutableSet)
-            }
-            if case .orderedSet(let set) = self.listBookSource! {
-                if set.isEmpty {
+
+                if mutableSet.isEmpty {
                     tableView.deleteSections(IndexSet(arrayLiteral: 0), with: .automatic)
                     tableView.reloadEmptyDataSet()
                 } else {
@@ -295,6 +298,7 @@ class ListBookTable: UITableViewController {
 
     override func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
         guard list.order == .listCustom else { assertionFailure(); return }
+        guard case .orderedSet = listBookSource! else { assertionFailure(); return }
         guard sourceIndexPath != destinationIndexPath else { return }
         ignoringSaveNotifications {
             var books = list.books.map { $0 as! Book }
@@ -302,8 +306,11 @@ class ListBookTable: UITableViewController {
             books.insert(movedBook, at: destinationIndexPath.row)
             list.books = NSOrderedSet(array: books)
             list.managedObjectContext!.saveAndLogIfErrored()
+
+            // Regenerate the table source
+            self.listBookSource = .orderedSet(list.books)
         }
-        UserEngagement.logEvent(.reorederList)
+        UserEngagement.logEvent(.reorderList)
     }
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {

@@ -64,7 +64,7 @@ class UserEngagement {
         case addBookToList = "Add_Book_To_List"
         case bulkAddBookToList = "Bulk_Add_Book_To_List"
         case removeBookFromList = "Remove_Book_From_List"
-        case reorederList = "Reorder_List"
+        case reorderList = "Reorder_List"
         case deleteList = "Delete_List"
         case changeListSortOrder = "Change_List_Sort_Order"
         case renameList = "Rename_List"
