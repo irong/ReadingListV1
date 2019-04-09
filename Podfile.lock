@@ -73,7 +73,7 @@ DEPENDENCIES:
   - Eureka (~> 5.0)
   - Fabric
   - Firebase/Core
-  - ImageRow (from `https://github.com/AndrewBennet/ImageRow.git`)
+  - ImageRow (from `https://github.com/EurekaCommunity/ImageRow.git`, commit `296d79b`)
   - PromisesSwift (~> 1.2)
   - SimulatorStatusMagic
   - SVProgressHUD (~> 2.2)
@@ -106,15 +106,16 @@ EXTERNAL SOURCES:
   CHCSVParser:
     :git: https://github.com/davedelong/CHCSVParser.git
   ImageRow:
-    :git: https://github.com/AndrewBennet/ImageRow.git
+    :commit: 296d79b
+    :git: https://github.com/EurekaCommunity/ImageRow.git
 
 CHECKOUT OPTIONS:
   CHCSVParser:
     :commit: a6c23dab9ca633a8ba791463c9e9d3e1ff991a98
     :git: https://github.com/davedelong/CHCSVParser.git
   ImageRow:
-    :commit: 899c0988e1d437776616b5521bfe10df25e6a35b
-    :git: https://github.com/AndrewBennet/ImageRow.git
+    :commit: 296d79b
+    :git: https://github.com/EurekaCommunity/ImageRow.git
 
 SPEC CHECKSUMS:
   CHCSVParser: 64da26e2b4ddbf7527f7f03120bf91d83d28f354
@@ -138,6 +139,6 @@ SPEC CHECKSUMS:
   SwiftyJSON: 6faa0040f8b59dead0ee07436cbf76b73c08fd08
   SwiftyStoreKit: cc399645796b094022fb650c148a0aed25995873
 
-PODFILE CHECKSUM: f2b3543ebe3168a3c9cdd172ad6380e6b3fadd99
+PODFILE CHECKSUM: ded102c01f6c7ef597c4c772a0284d6e3a8292df
 
 COCOAPODS: 1.6.0
