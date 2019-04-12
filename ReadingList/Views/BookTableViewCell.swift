@@ -58,7 +58,7 @@ class BookTableViewCell: UITableViewCell {
             // Configure the reading progress display
             if let currentPage = book.currentPage, let pageCount = book.pageCount, currentPage > 0 {
                 let progress = Float(currentPage) / Float(pageCount)
-                let progressText = currentPage > pageCount ? "100%" : "\(100 * currentPage / pageCount)%"
+                let progressText = currentPage > pageCount ? "100%" : "\(100 * (currentPage / pageCount))%"
                 configureReadingProgress(text: progressText, progress: progress)
             }
         }
