@@ -23,15 +23,19 @@ extension UIAlertController {
     }
 
     static func selectOrder(_ orderable: Orderable, onChange: @escaping () -> Void) -> UIAlertController {
-        let alert = UIAlertController(title: "Choose Order", message: nil, preferredStyle: .actionSheet)
+        return selectOption(BookSort.allCases, title: "Choose Order", selected: orderable.getSort()) { sortOrder in
+            orderable.setSort(sortOrder)
+            onChange()
+        }
+    }
 
-        let selectedSort = orderable.getSort()
-        for sortOrder in BookSort.allCases where orderable.supports(sortOrder) {
-            let title = selectedSort == sortOrder ? "  \(sortOrder) ✓" : sortOrder.description
+    static func selectOption<Option>(_ options: [Option], title: String, selected: Option, _ onChange: @escaping (Option) -> Void) -> UIAlertController where Option: CustomStringConvertible, Option: Equatable {
+        let alert = UIAlertController(title: title, message: nil, preferredStyle: .actionSheet)
+        for option in options {
+            let title = selected == option ? "  \(option.description) ✓" : option.description
             alert.addAction(UIAlertAction(title: title, style: .default) { _ in
-                if selectedSort == sortOrder { return }
-                orderable.setSort(sortOrder)
-                onChange()
+                if selected == option { return }
+                onChange(option)
             })
         }
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))

@@ -11,6 +11,18 @@ extension List: Sortable {
     }
 }
 
+enum ListSortOrder: Int, CustomStringConvertible, CaseIterable, UserSettingType {
+    case custom = 0
+    case alphabetical = 1
+
+    var description: String {
+        switch self {
+        case .custom: return "Custom"
+        case .alphabetical: return "Alphabetical"
+        }
+    }
+}
+
 class Organize: UITableViewController {
 
     var resultsController: NSFetchedResultsController<List>!
@@ -22,6 +34,7 @@ class Organize: UITableViewController {
 
         clearsSelectionOnViewWillAppear = true
 
+        tableView.register(BookTableHeader.self)
         tableView.emptyDataSetSource = self
         tableView.emptyDataSetDelegate = self
 
@@ -34,7 +47,15 @@ class Organize: UITableViewController {
         navigationItem.searchController = searchController
 
         let fetchRequest = NSManagedObject.fetchRequest(List.self, batch: 25)
-        fetchRequest.sortDescriptors = [NSSortDescriptor(\List.sort), NSSortDescriptor(\List.name)]
+        var sortDescriptors = [NSSortDescriptor(\List.name)]
+        switch UserDefaults.standard[.listSortOrder] {
+        case .custom:
+            sortDescriptors.insert(NSSortDescriptor(\List.sort), at: 0)
+        case .alphabetical:
+            break
+        }
+        fetchRequest.sortDescriptors = sortDescriptors
+
         resultsController = NSFetchedResultsController<List>(fetchRequest: fetchRequest, managedObjectContext: PersistentStoreManager.container.viewContext, sectionNameKeyPath: nil, cacheName: nil)
         try! resultsController.performFetch()
         resultsController.delegate = tableView
@@ -71,6 +92,19 @@ class Organize: UITableViewController {
         cell.detailTextLabel!.text = "\(list.books.count) book\(list.books.count == 1 ? "" : "s")"
         cell.defaultInitialise(withTheme: UserDefaults.standard[.theme])
         return cell
+    }
+
+    override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        guard section == 0 && tableView.numberOfRows(inSection: 0) > 0 else { return nil }
+        let header = tableView.dequeue(BookTableHeader.self)
+        configureHeader(header, at: section)
+        header.onSortButtonTap = { [unowned self] in
+            let alert = UIAlertController.selectOption(ListSortOrder.allCases, title: "Choose Order", selected: UserDefaults.standard[.listSortOrder]) { sortOrder in
+                UserDefaults.standard[.listSortOrder] = sortOrder
+            }
+            self.present(alert, animated: true)
+        }
+        return header
     }
 
     override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
@@ -131,12 +165,6 @@ class Organize: UITableViewController {
         present(confirmDelete, animated: true, completion: nil)
     }
 
-    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        guard section == 0 else { return nil }
-        let listCount = resultsController.sections?[0].numberOfObjects ?? 0
-        return listCount == 0 ? nil : "Your lists"
-    }
-
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if let listBookTable = segue.destination as? ListBookTable {
             guard let cell = sender as? UITableViewCell, let index = tableView.indexPath(for: cell) else { preconditionFailure() }
@@ -153,19 +181,34 @@ class Organize: UITableViewController {
         // No segue in edit mode
         return !tableView.isEditing
     }
-}
 
-extension Organize {
     override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
+        guard UserDefaults.standard[.listSortOrder] == .custom else { return false }
         return resultsController.sections![0].numberOfObjects > 1
     }
 
     override func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
+        guard UserDefaults.standard[.listSortOrder] == .custom else {
+            assertionFailure()
+            return
+        }
         resultsController.delegate = nil
         sortManager.move(objectAt: sourceIndexPath, to: destinationIndexPath)
         try! resultsController.performFetch()
         PersistentStoreManager.container.viewContext.saveAndLogIfErrored()
         resultsController.delegate = tableView
+    }
+}
+
+extension Organize: HeaderConfigurable {
+    func configureHeader(_ header: UITableViewHeaderFooterView, at index: Int) {
+        guard let header = header as? BookTableHeader else { preconditionFailure() }
+        let numberOfRows = tableView.numberOfRows(inSection: index)
+        if numberOfRows == 0 {
+            header.removeFromSuperview()
+        } else {
+            header.configure(labelText: "YOUR LISTS", enableSort: !isEditing && !searchController.isActive)
+        }
     }
 }
 

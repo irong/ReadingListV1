@@ -34,6 +34,7 @@ extension UserSettingsCollection {
     static let userEngagementCount = UserSetting<Int>("userEngagementCount", defaultValue: 0)
 
     static let searchLanguageRestriction = UserSetting<LanguageIso639_1?>("searchLanguageRestriction")
+    static let listSortOrder = UserSetting<ListSortOrder>("listSortOrder", defaultValue: .custom)
 }
 
 extension LanguageIso639_1: UserSettingType { }
