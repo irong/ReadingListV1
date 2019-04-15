@@ -46,6 +46,23 @@ class Organize: UITableViewController {
         searchController.searchResultsUpdater = self
         navigationItem.searchController = searchController
 
+        resultsController = buildResultsController()
+        try! resultsController.performFetch()
+
+        navigationItem.leftBarButtonItem = editButtonItem
+
+        NotificationCenter.default.addObserver(self, selector: #selector(refetch), name: NSNotification.Name.PersistentStoreBatchOperationOccurred, object: nil)
+
+        monitorThemeSetting()
+    }
+
+    private func buildResultsController() -> NSFetchedResultsController<List> {
+        let controller = NSFetchedResultsController<List>(fetchRequest: fetchRequest(), managedObjectContext: PersistentStoreManager.container.viewContext, sectionNameKeyPath: nil, cacheName: nil)
+        controller.delegate = tableView
+        return controller
+    }
+
+    private func fetchRequest() -> NSFetchRequest<List> {
         let fetchRequest = NSManagedObject.fetchRequest(List.self, batch: 25)
         var sortDescriptors = [NSSortDescriptor(\List.name)]
         switch UserDefaults.standard[.listSortOrder] {
@@ -55,16 +72,7 @@ class Organize: UITableViewController {
             break
         }
         fetchRequest.sortDescriptors = sortDescriptors
-
-        resultsController = NSFetchedResultsController<List>(fetchRequest: fetchRequest, managedObjectContext: PersistentStoreManager.container.viewContext, sectionNameKeyPath: nil, cacheName: nil)
-        try! resultsController.performFetch()
-        resultsController.delegate = tableView
-
-        navigationItem.leftBarButtonItem = editButtonItem
-
-        NotificationCenter.default.addObserver(self, selector: #selector(refetch), name: NSNotification.Name.PersistentStoreBatchOperationOccurred, object: nil)
-
-        monitorThemeSetting()
+        return fetchRequest
     }
 
     override func setEditing(_ editing: Bool, animated: Bool) {
@@ -99,8 +107,11 @@ class Organize: UITableViewController {
         let header = tableView.dequeue(BookTableHeader.self)
         configureHeader(header, at: section)
         header.onSortButtonTap = { [unowned self] in
-            let alert = UIAlertController.selectOption(ListSortOrder.allCases, title: "Choose Order", selected: UserDefaults.standard[.listSortOrder]) { sortOrder in
+            let alert = UIAlertController.selectOption(ListSortOrder.allCases, title: "Choose Order", selected: UserDefaults.standard[.listSortOrder]) { [unowned self] sortOrder in
                 UserDefaults.standard[.listSortOrder] = sortOrder
+                self.resultsController = self.buildResultsController()
+                try! self.resultsController.performFetch()
+                tableView.reloadData()
             }
             self.present(alert, animated: true)
         }
