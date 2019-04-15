@@ -23,7 +23,7 @@ extension UIAlertController {
     }
 
     static func selectOrder(_ orderable: Orderable, onChange: @escaping () -> Void) -> UIAlertController {
-        return selectOption(BookSort.allCases, title: "Choose Order", selected: orderable.getSort()) { sortOrder in
+        return selectOption(BookSort.allCases.filter { orderable.supports($0) }, title: "Choose Order", selected: orderable.getSort()) { sortOrder in
             orderable.setSort(sortOrder)
             onChange()
         }
