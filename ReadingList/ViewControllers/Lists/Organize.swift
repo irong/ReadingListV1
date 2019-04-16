@@ -58,7 +58,7 @@ class Organize: UITableViewController {
 
     private func buildResultsController() -> NSFetchedResultsController<List> {
         let controller = NSFetchedResultsController<List>(fetchRequest: fetchRequest(), managedObjectContext: PersistentStoreManager.container.viewContext, sectionNameKeyPath: nil, cacheName: nil)
-        controller.delegate = tableView
+        controller.delegate = self
         return controller
     }
 
@@ -78,6 +78,7 @@ class Organize: UITableViewController {
     override func setEditing(_ editing: Bool, animated: Bool) {
         super.setEditing(editing, animated: animated)
         searchController.searchBar.isEnabled = !editing
+        reloadHeaders()
     }
 
     @objc func refetch() {
@@ -211,6 +212,25 @@ class Organize: UITableViewController {
     }
 }
 
+extension Organize: NSFetchedResultsControllerDelegate {
+    func controllerWillChangeContent(_: NSFetchedResultsController<NSFetchRequestResult>) {
+        tableView.beginUpdates()
+    }
+
+    func controllerDidChangeContent(_: NSFetchedResultsController<NSFetchRequestResult>) {
+        tableView.endUpdates()
+        reloadHeaders()
+    }
+
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
+        tableView.controller(controller, didChange: anObject, at: indexPath, for: type, newIndexPath: newIndexPath)
+    }
+
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange sectionInfo: NSFetchedResultsSectionInfo, atSectionIndex sectionIndex: Int, for type: NSFetchedResultsChangeType) {
+        tableView.controller(controller, didChange: sectionInfo, atSectionIndex: sectionIndex, for: type)
+    }
+}
+
 extension Organize: HeaderConfigurable {
     func configureHeader(_ header: UITableViewHeaderFooterView, at index: Int) {
         guard let header = header as? BookTableHeader else { preconditionFailure() }
@@ -237,8 +257,8 @@ extension Organize: UISearchResultsUpdating {
         if resultsController.fetchRequest.predicate != searchTextPredicate {
             resultsController.fetchRequest.predicate = searchTextPredicate
             try! resultsController.performFetch()
-            tableView.reloadData()
         }
+        tableView.reloadData()
     }
 }
 
