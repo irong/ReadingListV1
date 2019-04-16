@@ -3,7 +3,7 @@ use_frameworks!
 
 target 'ReadingList' do
   pod 'DZNEmptyDataSet', '~> 1.8'
-  pod 'SwiftyJSON', '~> 4.0'
+  pod 'SwiftyJSON', '~> 5.0'
   pod 'Eureka', '~> 5.0'
   pod 'ImageRow', :git => 'https://github.com/EurekaCommunity/ImageRow.git', :commit => '296d79b'
   pod 'SVProgressHUD', '~> 2.2'
@@ -18,7 +18,7 @@ target 'ReadingList' do
 
   target 'ReadingList_UnitTests' do
     inherit! :complete
-    pod 'SwiftyJSON', '~> 4.0'
+    pod 'SwiftyJSON', '~> 5.0'
   end
   target 'ReadingList_UITests' do
     inherit! :complete
