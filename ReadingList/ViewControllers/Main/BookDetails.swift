@@ -95,7 +95,8 @@ class BookDetails: UIViewController, UIScrollViewDelegate {
         let pageNumberText: String?
         if let currentPage = book.currentPage {
             if let totalPages = book.pageCount, currentPage <= totalPages, currentPage > 0 {
-                pageNumberText = "\(currentPage) (\(100 * (currentPage / totalPages))% complete)"
+                let progress = Float(currentPage) / Float(totalPages)
+                pageNumberText = "\(currentPage) (\(Int(100 * progress))% complete)"
             } else {
                 pageNumberText = "\(currentPage)"
             }
