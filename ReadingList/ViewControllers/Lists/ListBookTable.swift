@@ -388,9 +388,7 @@ extension ListBookTable: DZNEmptyDataSetSource {
     func description(forEmptyDataSet scrollView: UIScrollView!) -> NSAttributedString! {
         if searchController.hasActiveSearchTerms {
             return applyDescriptionAttributes(
-                NSMutableAttributedString("Try changing your search, or add a new list by tapping the ", font: descriptionFont)
-                .appending("+", font: boldDescriptionFont)
-                .appending(" button above", font: descriptionFont)
+                NSMutableAttributedString("Try changing your search, or add another book to this list", font: descriptionFont)
             )
         }
         return applyDescriptionAttributes(
