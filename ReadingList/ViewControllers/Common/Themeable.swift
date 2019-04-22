@@ -5,7 +5,7 @@ import ImageRow
 import SafariServices
 import ReadingList_Foundation
 
-@objc enum Theme: Int, UserSettingType {
+@objc enum Theme: Int, UserSettingType, CaseIterable {
     case normal = 1
     case dark = 2
     case black = 3
@@ -23,6 +23,14 @@ extension UIColor {
 }
 
 extension Theme {
+    var name: String {
+        switch self {
+        case .normal: return "Default"
+        case .dark: return "Dark"
+        case .black: return "Black"
+        }
+    }
+
     var isDark: Bool {
         return self == .dark || self == .black
     }

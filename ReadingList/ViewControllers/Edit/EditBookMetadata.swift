@@ -13,6 +13,13 @@ class EditBookMetadata: FormViewController {
     private var isAddingNewBook: Bool!
     var isInNavigationFlow = false
 
+    private var shouldPrepopulateLastLanguageSelection: Bool {
+        // We want to prepopulate the last selected language only if we are adding a new manual book: we don't want to
+        // automatically alter the metadata of a Google Search result, or set the language of a book being edited which
+        // happens to not have a language set.
+        return UserDefaults.standard[.prepopulateLastLanguageSelection] && isAddingNewBook && book.googleBooksId == nil
+    }
+
     convenience init(bookToEditID: NSManagedObjectID) {
         self.init()
         self.isAddingNewBook = false
@@ -64,6 +71,11 @@ class EditBookMetadata: FormViewController {
 
         // Just to prevent having to reference `self` in the onChange handlers...
         let book = self.book!
+
+        // Prepopulate last selected language, if appropriate to do so. Do this before the configuration of the form so that the form is accurate
+        if shouldPrepopulateLastLanguageSelection {
+            book.language = UserDefaults.standard[.lastSelectedLanguage]
+        }
 
         form +++ Section(header: "Title", footer: "")
             <<< TextRow {
@@ -274,6 +286,10 @@ class EditBookMetadata: FormViewController {
 
     @objc func donePressed() {
         guard book.isValidForUpdate() else { return }
+
+        if book.changedValues().keys.contains(Book.Key.languageCode.rawValue) {
+            UserDefaults.standard[.lastSelectedLanguage] = book.language
+        }
         editBookContext.saveIfChanged()
         dismiss(animated: true) {
             UserEngagement.onReviewTrigger()

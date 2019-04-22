@@ -16,16 +16,31 @@ class General: FormViewController {
                 UserEngagement.onReviewTrigger()
             }
         }
-            <<< themeRow(.normal, name: "Default")
-            <<< themeRow(.dark, name: "Dark")
-            <<< themeRow(.black, name: "Black")
+            <<< Theme.allCases.map { theme in
+                ListCheckRow<Theme> {
+                    $0.title = theme.name
+                    $0.selectableValue = theme
+                    $0.value = UserDefaults.standard[.theme] == theme ? theme : nil
+                }
+            }
 
-            +++ Section(header: "Search Results", footer: """
+            +++ Section(header: "Language", footer: """
                 By default, Reading List prioritises search results based on their language and your location. To instead \
                 restrict search results to be of a specific language only, select a language above.
                 """)
+                <<< SwitchRow {
+                    $0.title = "Remember Last Selection"
+                    $0.value = UserDefaults.standard[.prepopulateLastLanguageSelection]
+                    $0.onChange {
+                        guard let newValue = $0.value else { return }
+                        UserDefaults.standard[.prepopulateLastLanguageSelection] = newValue
+                        if !newValue {
+                            UserDefaults.standard[.lastSelectedLanguage] = nil
+                        }
+                    }
+                }
                 <<< PickerInlineRow<LanguageSelection> {
-                    $0.title = "Language Restriction"
+                    $0.title = "Restrict Search Results"
                     $0.options = [.none] + LanguageIso639_1.allCases.filter { $0.canFilterGoogleSearchResults }.map { .some($0) }
                     $0.value = {
                         if let languageRestriction = UserDefaults.standard[.searchLanguageRestriction] {
@@ -68,14 +83,6 @@ class General: FormViewController {
                 }
 
         monitorThemeSetting()
-    }
-
-    func themeRow(_ theme: Theme, name: String) -> ListCheckRow<Theme> {
-        return ListCheckRow<Theme> {
-            $0.title = name
-            $0.selectableValue = theme
-            $0.value = UserDefaults.standard[.theme] == theme ? theme : nil
-        }
     }
 
     func crashReportsSwitchChanged(_ sender: _SwitchRow) {
