@@ -41,16 +41,16 @@ class ScanBarcode: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
 
         cameraPreviewView.layoutIfNeeded()
 
-        if session?.isRunning == false {
-            session!.startRunning()
+        if let session = session, !session.isRunning {
+            session.startRunning()
         }
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
 
-        if session?.isRunning == true {
-            session!.stopRunning()
+        if let session = session, session.isRunning {
+            session.stopRunning()
         }
     }
 
@@ -86,24 +86,24 @@ class ScanBarcode: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
         session = AVCaptureSession()
 
         // Check that we can add the input and output to the session
-        guard session!.canAddInput(input) && session!.canAddOutput(output) else {
+        guard let session = session, session.canAddInput(input) && session.canAddOutput(output) else {
             presentInfoAlert(title: "Error ⚠️", message: "The camera could not be used. Sorry about that.")
             feedbackGenerator.notificationOccurred(.error); return
         }
 
         // Prepare the metadata output and add to the session
-        session!.addInput(input)
+        session.addInput(input)
         output.setMetadataObjectsDelegate(self, queue: DispatchQueue.global(qos: .userInteractive))
-        session!.addOutput(output)
+        session.addOutput(output)
 
         // This line must be after session outputs are added
         output.metadataObjectTypes = [.ean13]
 
         // Begin the capture session.
-        session!.startRunning()
+        session.startRunning()
 
         // We want to view what the camera is seeing
-        previewLayer = AVCaptureVideoPreviewLayer(session: session!)
+        previewLayer = AVCaptureVideoPreviewLayer(session: session)
         previewLayer!.videoGravity = AVLayerVideoGravity.resizeAspectFill
         previewLayer!.frame = view.bounds
         setVideoOrientation()
