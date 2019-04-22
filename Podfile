@@ -11,7 +11,6 @@ target 'ReadingList' do
   pod 'CHCSVParser', :git => 'https://github.com/davedelong/CHCSVParser.git'
   pod 'PromisesSwift', '~> 1.2'
   pod 'SimulatorStatusMagic', :configurations => ['Debug']
-  pod 'Swifter', '1.4.5', :configurations => ['Debug']
   pod 'Fabric'
   pod 'Crashlytics'
   pod 'Firebase/Core'
@@ -19,12 +18,15 @@ target 'ReadingList' do
   target 'ReadingList_UnitTests' do
     inherit! :complete
     pod 'SwiftyJSON', '~> 5.0'
+    pod 'Swifter', :git => 'https://github.com/httpswift/swifter.git', :commit => '7e07b39034dcaf095e62ab51c35486d361cd8b1e'
   end
   target 'ReadingList_UITests' do
     inherit! :complete
+    pod 'Swifter', :git => 'https://github.com/httpswift/swifter.git', :commit => '7e07b39034dcaf095e62ab51c35486d361cd8b1e'
   end
   target 'ReadingList_Screenshots' do
     inherit! :complete
+    pod 'Swifter', :git => 'https://github.com/httpswift/swifter.git', :commit => '7e07b39034dcaf095e62ab51c35486d361cd8b1e'
   end
 
   # Remove an Xcode warning about automatically settings build architecture
