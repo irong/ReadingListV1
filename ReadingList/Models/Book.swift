@@ -51,6 +51,14 @@ class Book: NSManagedObject {
         currentPage = nil
     }
 
+    func setDefaultReadDates(for readState: BookReadState) {
+        switch readState {
+        case .toRead: setToRead()
+        case .reading: setReading(started: Date())
+        case .finished: setFinished(started: Date(), finished: Date())
+        }
+    }
+
     /**
      Enumerates the attributes which are not represented as standard NSManaged variables. These are usually
      the optional numerical attributes, which are much more convenient to use when handled manually in their
