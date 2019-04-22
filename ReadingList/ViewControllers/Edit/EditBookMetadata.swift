@@ -8,27 +8,35 @@ import ReadingList_Foundation
 
 class EditBookMetadata: FormViewController {
 
-    private var editBookContext = PersistentStoreManager.container.viewContext.childContext()
+    private var editBookContext: NSManagedObjectContext!
     private var book: Book!
     private var isAddingNewBook: Bool!
+    var isInNavigationFlow = false
 
     convenience init(bookToEditID: NSManagedObjectID) {
         self.init()
         self.isAddingNewBook = false
+        self.editBookContext = PersistentStoreManager.container.viewContext.childContext()
         self.book = (editBookContext.object(with: bookToEditID) as! Book)
     }
 
     convenience init(bookToCreateReadState: BookReadState) {
         self.init()
-        self.isAddingNewBook = true
+        self.editBookContext = PersistentStoreManager.container.viewContext.childContext()
         self.book = Book(context: editBookContext)
-        if bookToCreateReadState == .reading {
-            book.setReading(started: Date())
-        }
-        if bookToCreateReadState == .finished {
-            book.setFinished(started: Date(), finished: Date())
-        }
         self.book.manualBookId = UUID().uuidString
+        self.book.setDefaultReadDates(for: bookToCreateReadState)
+        self.isAddingNewBook = true
+    }
+
+    convenience init(bookToCreate: Book, scratchpadContext: NSManagedObjectContext) {
+        self.init()
+        self.isAddingNewBook = true
+        self.editBookContext = scratchpadContext
+        self.book = bookToCreate
+        // If we are editing the metadata of a book we have already created in a temporary context, we must be
+        // within a navigation flow. Remember this, so we don't set the left bar button to be a Cancel button
+        self.isInNavigationFlow = true
     }
 
     let isbnRowKey = "isbn"
@@ -186,7 +194,9 @@ class EditBookMetadata: FormViewController {
     }
 
     func configureNavigationItem() {
-        navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(cancelPressed))
+        if !isInNavigationFlow {
+            navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(cancelPressed))
+        }
         if isAddingNewBook {
             navigationItem.title = "Add Book"
             navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Next", style: .plain, target: self, action: #selector(presentEditReadingState))

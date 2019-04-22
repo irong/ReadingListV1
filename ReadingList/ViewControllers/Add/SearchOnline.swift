@@ -91,7 +91,14 @@ class SearchOnline: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeue(BookTableViewCell.self, for: indexPath)
         cell.configureFrom(tableItems[indexPath.row])
+        cell.accessoryType = .detailButton
         return cell
+    }
+
+    override func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath) {
+        fetch(searchResult: tableItems[indexPath.row]) { book, context in
+            EditBookMetadata(bookToCreate: book, scratchpadContext: context)
+        }
     }
 
     override func viewDidLayoutSubviews() {
@@ -132,7 +139,9 @@ class SearchOnline: UITableViewController {
             addAllButton.title = "Add \(count) Book\(count == 1 ? "" : "s")"
             addAllButton.isEnabled = true
         } else {
-            fetchAndSegue(searchResult: searchResult)
+            fetch(searchResult: searchResult) { book, context in
+                EditBookReadState(newUnsavedBook: book, scratchpadContext: context)
+            }
         }
     }
 
@@ -211,7 +220,7 @@ class SearchOnline: UITableViewController {
             }
     }
 
-    func fetchAndSegue(searchResult: SearchResult) {
+    func fetch(searchResult: SearchResult, segueTo nextVc: @escaping (Book, NSManagedObjectContext) -> UIViewController) {
         UserEngagement.logEvent(.searchOnline)
         SVProgressHUD.show(withStatus: "Loading...")
         let editContext = PersistentStoreManager.container.viewContext.childContext()
@@ -223,8 +232,7 @@ class SearchOnline: UITableViewController {
             }
             .then(on: .main) { book in
                 guard let navigationController = self.navigationController else { return }
-                let editPage = EditBookReadState(newUnsavedBook: book, scratchpadContext: editContext)
-                navigationController.pushViewController(editPage, animated: true)
+                navigationController.pushViewController(nextVc(book, editContext), animated: true)
             }
     }
 
@@ -246,7 +254,12 @@ class SearchOnline: UITableViewController {
         guard tableView.isEditing, let selectedRows = tableView.indexPathsForSelectedRows, !selectedRows.isEmpty else { return }
 
         // If there is only 1 cell selected, we might as well proceed as we would in single selection mode
-        guard selectedRows.count > 1 else { fetchAndSegue(searchResult: tableItems[selectedRows.first!.row]); return }
+        guard selectedRows.count > 1 else {
+            fetch(searchResult: tableItems[selectedRows.first!.row]) { book, context in
+                EditBookReadState(newUnsavedBook: book, scratchpadContext: context)
+            }
+            return
+        }
 
         let alert = UIAlertController(title: "Add \(selectedRows.count) Books", message: "Are you sure you want to add all \(selectedRows.count) selected books? They will be added to the 'To Read' section.", preferredStyle: .actionSheet)
         alert.addAction(UIAlertAction(title: "Add All", style: .default) { _ in
