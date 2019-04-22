@@ -7,20 +7,25 @@ class General: FormViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        form +++ SelectableSection<ListCheckRow<Theme>>(header: "Theme", footer: "Change the appearance of Reading List.",
-                                                        selectionType: .singleSelection(enableDeselection: false)) {
-            $0.onSelectSelectableRow = { _, row in
-                UserDefaults.standard[.theme] = row.value!
-                NotificationCenter.default.post(name: .ThemeSettingChanged, object: nil)
-                UserEngagement.logEvent(.changeTheme)
-                UserEngagement.onReviewTrigger()
+        form +++ Section(header: "Appearance", footer: "Change the appearance of Reading List.")
+            <<< AlertRow<Theme> {
+                $0.title = "Theme"
+                $0.selectorTitle = "Select a theme"
+                $0.options = Theme.allCases
+                $0.value = UserDefaults.standard[.theme]
+                $0.onChange { row in
+                    UserDefaults.standard[.theme] = row.value!
+                    NotificationCenter.default.post(name: .ThemeSettingChanged, object: nil)
+                    UserEngagement.logEvent(.changeTheme)
+                    UserEngagement.onReviewTrigger()
+                }
             }
-        }
-            <<< Theme.allCases.map { theme in
-                ListCheckRow<Theme> {
-                    $0.title = theme.name
-                    $0.selectableValue = theme
-                    $0.value = UserDefaults.standard[.theme] == theme ? theme : nil
+            <<< SwitchRow {
+                $0.title = "Expand Descriptions"
+                $0.value = UserDefaults.standard[.showExpandedDescription]
+                $0.onChange { row in
+                    guard let newValue = row.value else { return }
+                    UserDefaults.standard[.showExpandedDescription] = newValue
                 }
             }
 

@@ -163,6 +163,11 @@ class BookDetails: UIViewController, UIScrollViewDelegate {
         bookDescription.font = UIFont.gillSans(forTextStyle: .subheadline)
         bookNotes.font = UIFont.gillSans(forTextStyle: .subheadline)
 
+        // A setting allows the full book description label to be shown on load
+        if UserDefaults.standard[.showExpandedDescription] {
+            bookDescription.numberOfLines = 0
+        }
+
         // Watch for changes in the managed object context
         NotificationCenter.default.addObserver(self, selector: #selector(saveOccurred(_:)), name: .NSManagedObjectContextDidSave, object: PersistentStoreManager.container.viewContext)
 
