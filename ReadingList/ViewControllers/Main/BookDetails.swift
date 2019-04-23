@@ -94,14 +94,16 @@ class BookDetails: UIViewController, UIScrollViewDelegate {
         setTextOrHideLine(tableValues[3], readTimeText)
         let pageNumberText: String?
         if let currentPage = book.currentPage {
-            if let totalPages = book.pageCount, currentPage <= totalPages, currentPage > 0 {
-                let progress = Float(currentPage) / Float(totalPages)
-                pageNumberText = "\(currentPage) (\(Int(100 * progress))% complete)"
+            if let currentPercentage = book.currentPercentage {
+                pageNumberText = "\(currentPage) (\(currentPercentage)% complete)"
             } else {
                 pageNumberText = "\(currentPage)"
             }
-        } else { pageNumberText = nil }
-
+        } else if let currentPercentage = book.currentPercentage {
+            pageNumberText = "\(currentPercentage)%"
+        } else {
+            pageNumberText = nil
+        }
         setTextOrHideLine(tableValues[4], pageNumberText)
 
         ratingStarsStackView.superview!.superview!.superview!.isHidden = book.rating == nil

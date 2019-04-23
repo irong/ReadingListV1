@@ -13,6 +13,9 @@ class Book: NSManagedObject {
     @NSManaged private(set) var readState: BookReadState
     @NSManaged private(set) var startedReading: Date?
     @NSManaged private(set) var finishedReading: Date?
+
+    /// Whether the last set read progress was set by a page number or by percentage
+    @NSManaged private(set) var currentProgressIsPage: Bool
     @NSManaged var sort: Int32
 
     @NSManaged var googleBooksId: String?
@@ -32,6 +35,7 @@ class Book: NSManagedObject {
         startedReading = nil
         finishedReading = nil
         currentPage = nil
+        currentPercentage = nil
     }
 
     func setReading(started: Date) {
@@ -49,6 +53,7 @@ class Book: NSManagedObject {
             finishedReading = started
         }
         currentPage = nil
+        currentPercentage = nil
     }
 
     func setDefaultReadDates(for readState: BookReadState) {
@@ -56,6 +61,47 @@ class Book: NSManagedObject {
         case .toRead: setToRead()
         case .reading: setReading(started: Date())
         case .finished: setFinished(started: Date(), finished: Date())
+        }
+    }
+
+    func setProgress(_ progress: Int32?, isPercentage: Bool) {
+        guard let progress = progress else {
+            currentPage = nil
+            currentPercentage = nil
+            return
+        }
+
+        let sanitizedProgress: Int32
+        if progress < 0 {
+            sanitizedProgress = 0
+        } else if isPercentage && progress > 100 {
+            sanitizedProgress = 100
+        } else {
+            sanitizedProgress = progress
+        }
+
+        currentProgressIsPage = !isPercentage
+        if currentProgressIsPage {
+            currentPage = sanitizedProgress
+        } else {
+            currentPercentage = Int16(sanitizedProgress)
+        }
+        updateComputedProgressData()
+    }
+
+    func updateComputedProgressData() {
+        if currentProgressIsPage {
+            if let pageCount = pageCount, let currentPage = currentPage {
+                currentPercentage = min(100, Int16(round((Float(currentPage) / Float(pageCount)) * 100)))
+            } else {
+                currentPercentage = nil
+            }
+        } else {
+            if let pageCount = pageCount, let currentPercentage = currentPercentage {
+                currentPage = Int32(round(Float(pageCount) * (Float(currentPercentage) / 100)))
+            } else {
+                currentPage = nil
+            }
         }
     }
 
@@ -69,6 +115,7 @@ class Book: NSManagedObject {
         case isbn13 = "isbn13"
         case pageCount = "pageCount"
         case currentPage = "currentPage"
+        case currentPercentage = "currentPercentage"
         case rating = "rating"
         case languageCode = "languageCode"
     } //swiftlint:enable redundant_string_enum_value
@@ -99,12 +146,20 @@ class Book: NSManagedObject {
 
     var pageCount: Int32? {
         get { return safelyGetPrimitiveValue(.pageCount) as! Int32? }
-        set { safelySetPrimitiveValue(newValue, .pageCount) }
+        set {
+            safelySetPrimitiveValue(newValue, .pageCount)
+            updateComputedProgressData()
+        }
     }
 
-    var currentPage: Int32? {
+    private(set) var currentPage: Int32? {
         get { return safelyGetPrimitiveValue(.currentPage) as! Int32? }
         set { safelySetPrimitiveValue(newValue, .currentPage) }
+    }
+
+    private(set) var currentPercentage: Int16? {
+        get { return safelyGetPrimitiveValue(.currentPercentage) as! Int16? }
+        set { safelySetPrimitiveValue(newValue, .currentPercentage) }
     }
 
     var rating: Int16? {

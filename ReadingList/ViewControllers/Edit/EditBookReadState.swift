@@ -69,7 +69,7 @@ class EditBookReadState: FormViewController {
                 $0.title = "Current Page"
                 $0.value = book.currentPage
                 $0.onChange { [unowned self] cell in
-                    self.book.currentPage = cell.value
+                    self.book.setProgress(cell.value, isPercentage: false)
                 }
                 $0.hidden = Condition.function([readStateKey]) { [unowned self] form in
                     (form.rowBy(tag: self.readStateKey) as! SegmentedRow<BookReadState>).value != .reading
@@ -94,7 +94,7 @@ class EditBookReadState: FormViewController {
             book.setToRead()
         } else if readState == .reading {
             book.setReading(started: (form.rowBy(tag: startedReadingKey) as! DateRow).value ?? Date())
-            book.currentPage = (form.rowBy(tag: currentPageKey) as! Int32Row).value
+            book.setProgress((form.rowBy(tag: currentPageKey) as! Int32Row).value, isPercentage: false)
         } else {
             book.setFinished(started: (form.rowBy(tag: startedReadingKey) as! DateRow).value ?? Date(),
                              finished: (form.rowBy(tag: finishedReadingKey) as! DateRow).value ?? Date())

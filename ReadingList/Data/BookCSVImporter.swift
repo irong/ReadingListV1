@@ -73,7 +73,11 @@ class BookCSVParserDelegate: CSVParserDelegate {
         book.manualBookId = book.googleBooksId == nil ? UUID().uuidString : nil
         book.isbn13 = ISBN13(values["ISBN-13"])?.int
         book.pageCount = Int32(values["Page Count"])
-        book.currentPage = Int32(values["Current Page"])
+        if let page = Int32(values["Current Page"]) {
+            book.setProgress(page, isPercentage: false)
+        } else if let percentage = Int32(values["Current Percentage"]) {
+            book.setProgress(percentage, isPercentage: true)
+        }
         book.notes = values["Notes"]?.replacingOccurrences(of: "\r\n", with: "\n")
         book.publicationDate = Date(iso: values["Publication Date"])
         book.publisher = values["Publisher"]
