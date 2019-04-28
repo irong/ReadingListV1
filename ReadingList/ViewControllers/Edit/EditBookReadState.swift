@@ -65,15 +65,16 @@ class EditBookReadState: FormViewController {
                     (form.rowBy(tag: self.readStateKey) as! SegmentedRow<BookReadState>).value != .finished
                 }
             }
-            <<< Int32Row(currentPageKey) {
-                $0.title = "Current Page"
+            +++ Section(header: "Progress", footer: "")
+            <<< BookProgressRow(currentPageKey) { _ in
+                /*$0.title = "Current Page"
                 $0.value = book.currentPage
                 $0.onChange { [unowned self] cell in
                     self.book.setProgress(cell.value, isPercentage: false)
                 }
                 $0.hidden = Condition.function([readStateKey]) { [unowned self] form in
                     (form.rowBy(tag: self.readStateKey) as! SegmentedRow<BookReadState>).value != .reading
-                }
+                }*/
             }
 
         monitorThemeSetting()
@@ -83,8 +84,8 @@ class EditBookReadState: FormViewController {
         super.viewDidAppear(animated)
         // If we are editing a book (not adding one), pre-select the current page field
         if self.book.readState == .reading && self.book.changedValues().isEmpty {
-            let currentPageRow = self.form.rowBy(tag: currentPageKey) as! Int32Row
-            currentPageRow.cell.textField.becomeFirstResponder()
+            //let currentPageRow = self.form.rowBy(tag: currentPageKey) as! Int32Row
+            //currentPageRow.cell.textField.becomeFirstResponder()
         }
     }
 
@@ -94,7 +95,7 @@ class EditBookReadState: FormViewController {
             book.setToRead()
         } else if readState == .reading {
             book.setReading(started: (form.rowBy(tag: startedReadingKey) as! DateRow).value ?? Date())
-            book.setProgress((form.rowBy(tag: currentPageKey) as! Int32Row).value, isPercentage: false)
+            //book.setProgress((form.rowBy(tag: currentPageKey) as! Int32Row).value, isPercentage: false)
         } else {
             book.setFinished(started: (form.rowBy(tag: startedReadingKey) as! DateRow).value ?? Date(),
                              finished: (form.rowBy(tag: finishedReadingKey) as! DateRow).value ?? Date())
