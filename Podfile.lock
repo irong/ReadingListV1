@@ -32,23 +32,23 @@ PODS:
     - GoogleUtilities/Network (~> 5.2)
     - "GoogleUtilities/NSData+zlib (~> 5.2)"
     - nanopb (~> 0.3)
-  - GoogleUtilities/AppDelegateSwizzler (5.7.0):
+  - GoogleUtilities/AppDelegateSwizzler (5.8.0):
     - GoogleUtilities/Environment
     - GoogleUtilities/Logger
     - GoogleUtilities/Network
-  - GoogleUtilities/Environment (5.7.0)
-  - GoogleUtilities/Logger (5.7.0):
+  - GoogleUtilities/Environment (5.8.0)
+  - GoogleUtilities/Logger (5.8.0):
     - GoogleUtilities/Environment
-  - GoogleUtilities/MethodSwizzler (5.7.0):
+  - GoogleUtilities/MethodSwizzler (5.8.0):
     - GoogleUtilities/Logger
-  - GoogleUtilities/Network (5.7.0):
+  - GoogleUtilities/Network (5.8.0):
     - GoogleUtilities/Logger
     - "GoogleUtilities/NSData+zlib"
     - GoogleUtilities/Reachability
-  - "GoogleUtilities/NSData+zlib (5.7.0)"
-  - GoogleUtilities/Reachability (5.7.0):
+  - "GoogleUtilities/NSData+zlib (5.8.0)"
+  - GoogleUtilities/Reachability (5.8.0):
     - GoogleUtilities/Logger
-  - GoogleUtilities/UserDefaults (5.7.0):
+  - GoogleUtilities/UserDefaults (5.8.0):
     - GoogleUtilities/Logger
   - ImageRow (4.0.0):
     - Eureka (~> 5.0)
@@ -57,14 +57,14 @@ PODS:
     - nanopb/encode (= 0.3.901)
   - nanopb/decode (0.3.901)
   - nanopb/encode (0.3.901)
-  - PromisesObjC (1.2.7)
-  - PromisesSwift (1.2.7):
-    - PromisesObjC (= 1.2.7)
+  - PromisesObjC (1.2.8)
+  - PromisesSwift (1.2.8):
+    - PromisesObjC (= 1.2.8)
   - SimulatorStatusMagic (2.4.1)
   - SVProgressHUD (2.2.5)
   - Swifter (1.4.6)
   - SwiftyJSON (5.0.0)
-  - SwiftyStoreKit (0.14.2)
+  - SwiftyStoreKit (0.15.0)
 
 DEPENDENCIES:
   - CHCSVParser (from `https://github.com/davedelong/CHCSVParser.git`)
@@ -73,13 +73,13 @@ DEPENDENCIES:
   - Eureka (~> 5.0)
   - Fabric
   - Firebase/Core
-  - ImageRow (from `https://github.com/EurekaCommunity/ImageRow.git`, commit `296d79b`)
+  - ImageRow (~> 4.0)
   - PromisesSwift (~> 1.2)
   - SimulatorStatusMagic
   - SVProgressHUD (~> 2.2)
-  - Swifter (from `https://github.com/httpswift/swifter.git`, commit `7e07b39034dcaf095e62ab51c35486d361cd8b1e`)
+  - Swifter (from `https://github.com/httpswift/swifter.git`, branch `stable`)
   - SwiftyJSON (~> 5.0)
-  - SwiftyStoreKit (~> 0.13)
+  - SwiftyStoreKit (from `https://github.com/bizz84/SwiftyStoreKit.git`, branch `develop`)
 
 SPEC REPOS:
   https://github.com/cocoapods/specs.git:
@@ -93,34 +93,34 @@ SPEC REPOS:
     - FirebaseInstanceID
     - GoogleAppMeasurement
     - GoogleUtilities
+    - ImageRow
     - nanopb
     - PromisesObjC
     - PromisesSwift
     - SimulatorStatusMagic
     - SVProgressHUD
     - SwiftyJSON
-    - SwiftyStoreKit
 
 EXTERNAL SOURCES:
   CHCSVParser:
     :git: https://github.com/davedelong/CHCSVParser.git
-  ImageRow:
-    :commit: 296d79b
-    :git: https://github.com/EurekaCommunity/ImageRow.git
   Swifter:
-    :commit: 7e07b39034dcaf095e62ab51c35486d361cd8b1e
+    :branch: stable
     :git: https://github.com/httpswift/swifter.git
+  SwiftyStoreKit:
+    :branch: develop
+    :git: https://github.com/bizz84/SwiftyStoreKit.git
 
 CHECKOUT OPTIONS:
   CHCSVParser:
     :commit: 58c701ef9eddaf48b11aa59b48f61f241d7b43f9
     :git: https://github.com/davedelong/CHCSVParser.git
-  ImageRow:
-    :commit: 296d79b
-    :git: https://github.com/EurekaCommunity/ImageRow.git
   Swifter:
-    :commit: 7e07b39034dcaf095e62ab51c35486d361cd8b1e
+    :commit: ad20738cd87b015d6e0588fbbf20240e29f92f85
     :git: https://github.com/httpswift/swifter.git
+  SwiftyStoreKit:
+    :commit: d0de0ec60fa947db2c38dba16a8f7e65dda65ea5
+    :git: https://github.com/bizz84/SwiftyStoreKit.git
 
 SPEC CHECKSUMS:
   CHCSVParser: 64da26e2b4ddbf7527f7f03120bf91d83d28f354
@@ -133,17 +133,17 @@ SPEC CHECKSUMS:
   FirebaseCore: f1a9a8be1aee4bf71a2fc0f4096df6788bdfda61
   FirebaseInstanceID: a122b0c258720cf250551bb2bedf48c699f80d90
   GoogleAppMeasurement: ffe513e90551844a739e7bcbb1d2aca1c28a4338
-  GoogleUtilities: 273e67030e0de313e7304f6dcfa96fc5214f6c23
+  GoogleUtilities: 04fce34bcd5620c1ee76fb79172105c74a4df335
   ImageRow: e65b2e1a33f89062bf2a553a2aad61d975eb7428
   nanopb: 2901f78ea1b7b4015c860c2fdd1ea2fee1a18d48
-  PromisesObjC: 7b28ddd1e78cce8f80f1ada927d2217663a9c672
-  PromisesSwift: b27f410f9ea693753cfd4cfd8ac1c60a471f137b
+  PromisesObjC: c119f3cd559f50b7ae681fa59dc1acd19173b7e6
+  PromisesSwift: 37bad6f4daddb02f7c9c531efe91e8b21c13ee2f
   SimulatorStatusMagic: 28d4a9d1a500ac7cea0b2b5a43c1c6ddb40ba56c
   SVProgressHUD: 1428aafac632c1f86f62aa4243ec12008d7a51d6
-  Swifter: 2ed278fbf7b16cbe97269eb56d8e8749b1ec4042
+  Swifter: cc201faa7647351d0ea14a3bdc5c9e676737026a
   SwiftyJSON: 36413e04c44ee145039d332b4f4e2d3e8d6c4db7
-  SwiftyStoreKit: cc399645796b094022fb650c148a0aed25995873
+  SwiftyStoreKit: 033d06b6f87955405d3f844a18a7687c2438592a
 
-PODFILE CHECKSUM: a126d678a1c1ffea64cd0bd8a3d25db645c57b88
+PODFILE CHECKSUM: 93b2b7708bb2a0721f98c3f163c74c02d408dd31
 
 COCOAPODS: 1.6.0

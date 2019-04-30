@@ -5,9 +5,9 @@ target 'ReadingList' do
   pod 'DZNEmptyDataSet', '~> 1.8'
   pod 'SwiftyJSON', '~> 5.0'
   pod 'Eureka', '~> 5.0'
-  pod 'ImageRow', :git => 'https://github.com/EurekaCommunity/ImageRow.git', :commit => '296d79b'
+  pod 'ImageRow', '~> 4.0'
   pod 'SVProgressHUD', '~> 2.2'
-  pod 'SwiftyStoreKit', '~> 0.13'
+  pod 'SwiftyStoreKit', :git => 'https://github.com/bizz84/SwiftyStoreKit.git', :branch => 'develop'
   pod 'CHCSVParser', :git => 'https://github.com/davedelong/CHCSVParser.git'
   pod 'PromisesSwift', '~> 1.2'
   pod 'SimulatorStatusMagic', :configurations => ['Debug']
@@ -18,15 +18,15 @@ target 'ReadingList' do
   target 'ReadingList_UnitTests' do
     inherit! :complete
     pod 'SwiftyJSON', '~> 5.0'
-    pod 'Swifter', :git => 'https://github.com/httpswift/swifter.git', :commit => '7e07b39034dcaf095e62ab51c35486d361cd8b1e'
+    pod 'Swifter', :git => 'https://github.com/httpswift/swifter.git', :branch => 'stable'
   end
   target 'ReadingList_UITests' do
     inherit! :complete
-    pod 'Swifter', :git => 'https://github.com/httpswift/swifter.git', :commit => '7e07b39034dcaf095e62ab51c35486d361cd8b1e'
+    pod 'Swifter', :git => 'https://github.com/httpswift/swifter.git', :branch => 'stable'
   end
   target 'ReadingList_Screenshots' do
     inherit! :complete
-    pod 'Swifter', :git => 'https://github.com/httpswift/swifter.git', :commit => '7e07b39034dcaf095e62ab51c35486d361cd8b1e'
+    pod 'Swifter', :git => 'https://github.com/httpswift/swifter.git', :branch => 'stable'
   end
 
   # Remove an Xcode warning about automatically settings build architecture
