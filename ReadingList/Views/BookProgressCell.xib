@@ -33,7 +33,7 @@
                     <fontDescription key="fontDescription" type="system" pointSize="16"/>
                     <textInputTraits key="textInputTraits"/>
                     <connections>
-                        <action selector="textFieldEdited:" destination="iN0-l3-epB" eventType="editingDidEnd" id="RHT-aQ-CHg"/>
+                        <action selector="textFieldChanged:" destination="iN0-l3-epB" eventType="editingChanged" id="Otu-g1-Tvs"/>
                     </connections>
                 </textField>
             </subviews>
@@ -48,7 +48,7 @@
             <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
             <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>
             <connections>
-                <outlet property="textField" destination="L6S-PQ-DFK" id="lo7-vo-VKW"/>
+                <outlet property="textField" destination="L6S-PQ-DFK" id="vzf-E2-afD"/>
             </connections>
             <point key="canvasLocation" x="47.826086956521742" y="34.821428571428569"/>
         </view>

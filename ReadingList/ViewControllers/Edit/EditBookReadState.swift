@@ -36,6 +36,7 @@ class EditBookReadState: FormViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(validate), name: .NSManagedObjectContextObjectsDidChange, object: editContext)
 
         let now = Date()
+        let progress = Progress(percentage: Int(book.currentPercentage), page: Int(self.book.currentPage), authorityIsPercentage: !self.book.currentProgressIsPage)
 
         form +++ Section(header: "Reading Log", footer: "")
             <<< SegmentedRow<BookReadState>(readStateKey) {
@@ -66,7 +67,15 @@ class EditBookReadState: FormViewController {
                 }
             }
             +++ Section(header: "Progress", footer: "")
-            <<< BookProgressRow(currentPageKey) { _ in
+            <<< BookProgressRow(currentPageKey, initializer: {
+                $0.value = progress
+                $0.onChange {
+                    guard let value = $0.value else {
+                        self.book.setProgress(nil, isPercentage: false)
+                        return
+                    }
+                    //self.book.setProgress(value.authorityIsPercentage ? value.percentage
+                }
                 /*$0.title = "Current Page"
                 $0.value = book.currentPage
                 $0.onChange { [unowned self] cell in
@@ -75,7 +84,7 @@ class EditBookReadState: FormViewController {
                 $0.hidden = Condition.function([readStateKey]) { [unowned self] form in
                     (form.rowBy(tag: self.readStateKey) as! SegmentedRow<BookReadState>).value != .reading
                 }*/
-            }
+            })
 
         monitorThemeSetting()
     }
