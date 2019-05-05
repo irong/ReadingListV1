@@ -68,6 +68,7 @@
                         <constraints>
                             <constraint firstAttribute="height" constant="2" id="e9T-QP-wi9"/>
                         </constraints>
+                        <color key="trackTintColor" white="0.75" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                     </progressView>
                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="50%" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="0DL-Pw-yOn" userLabel="Reading Progress Label">
                         <rect key="frame" x="341" y="59" width="26" height="18"/>
