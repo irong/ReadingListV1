@@ -6,7 +6,7 @@
         <attribute name="bookDescription" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="coverImage" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES" syncable="YES"/>
         <attribute name="currentPage" optional="YES" attributeType="Integer 32" minValueString="0" usesScalarValueType="YES" syncable="YES"/>
-        <attribute name="currentPercentage" optional="YES" attributeType="Integer 16" minValueString="0" maxValueString="100" usesScalarValueType="YES" syncable="YES"/>
+        <attribute name="currentPercentage" optional="YES" attributeType="Integer 32" minValueString="0" maxValueString="100" usesScalarValueType="YES" syncable="YES"/>
         <attribute name="currentProgressIsPage" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES" syncable="YES"/>
         <attribute name="finishedReading" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="googleBooksId" optional="YES" attributeType="String" syncable="YES"/>

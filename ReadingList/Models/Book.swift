@@ -64,35 +64,36 @@ class Book: NSManagedObject {
         }
     }
 
-    func setProgress(_ progress: Int32?, isPercentage: Bool) {
+    func setProgress(_ progress: Progress?) {
         guard let progress = progress else {
             currentPage = nil
             currentPercentage = nil
             return
         }
-
-        let sanitizedProgress: Int32
-        if progress < 0 {
-            sanitizedProgress = 0
-        } else if isPercentage && progress > 100 {
-            sanitizedProgress = 100
-        } else {
-            sanitizedProgress = progress
+        switch progress {
+        case .page(let newPageNumber):
+            guard let newPageNumber = newPageNumber else {
+                currentPage = nil
+                return
+            }
+            currentPage = max(0, newPageNumber)
+            currentProgressIsPage = true
+        case .percentage(let newPercentage):
+            guard let newPercentage = newPercentage else {
+                currentPercentage = nil
+                return
+            }
+            currentPercentage = max(0, min(100, newPercentage))
+            currentProgressIsPage = false
         }
 
-        currentProgressIsPage = !isPercentage
-        if currentProgressIsPage {
-            currentPage = sanitizedProgress
-        } else {
-            currentPercentage = Int16(sanitizedProgress)
-        }
         updateComputedProgressData()
     }
 
     func updateComputedProgressData() {
         if currentProgressIsPage {
             if let pageCount = pageCount, let currentPage = currentPage {
-                currentPercentage = min(100, Int16(round((Float(currentPage) / Float(pageCount)) * 100)))
+                currentPercentage = min(100, Int32(round((Float(currentPage) / Float(pageCount)) * 100)))
             } else {
                 currentPercentage = nil
             }
@@ -103,6 +104,11 @@ class Book: NSManagedObject {
                 currentPage = nil
             }
         }
+    }
+
+    var progressType: ProgressType {
+        get { return currentProgressIsPage ? .page : .percentage }
+        set { currentProgressIsPage = newValue == .page }
     }
 
     /**
@@ -157,8 +163,8 @@ class Book: NSManagedObject {
         set { safelySetPrimitiveValue(newValue, .currentPage) }
     }
 
-    private(set) var currentPercentage: Int16? {
-        get { return safelyGetPrimitiveValue(.currentPercentage) as! Int16? }
+    private(set) var currentPercentage: Int32? {
+        get { return safelyGetPrimitiveValue(.currentPercentage) as! Int32? }
         set { safelySetPrimitiveValue(newValue, .currentPercentage) }
     }
 

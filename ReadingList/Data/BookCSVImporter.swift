@@ -74,9 +74,9 @@ class BookCSVParserDelegate: CSVParserDelegate {
         book.isbn13 = ISBN13(values["ISBN-13"])?.int
         book.pageCount = Int32(values["Page Count"])
         if let page = Int32(values["Current Page"]) {
-            book.setProgress(page, isPercentage: false)
+            book.setProgress(.page(page))
         } else if let percentage = Int32(values["Current Percentage"]) {
-            book.setProgress(percentage, isPercentage: true)
+            book.setProgress(.percentage(percentage))
         }
         book.notes = values["Notes"]?.replacingOccurrences(of: "\r\n", with: "\n")
         book.publicationDate = Date(iso: values["Publication Date"])

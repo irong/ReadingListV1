@@ -13,6 +13,7 @@ class EditBookReadState: FormViewController {
     private let readStateKey = "readState"
     private let startedReadingKey = "startedReading"
     private let finishedReadingKey = "finishedReading"
+    private let progressTypeKey = "progressType"
 
     convenience init(existingBookID: NSManagedObjectID) {
         self.init()
@@ -36,7 +37,6 @@ class EditBookReadState: FormViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(validate), name: .NSManagedObjectContextObjectsDidChange, object: editContext)
 
         let now = Date()
-        let progress = Progress(percentage: Int(book.currentPercentage), page: Int(self.book.currentPage), authorityIsPercentage: !self.book.currentProgressIsPage)
 
         form +++ Section(header: "Reading Log", footer: "")
             <<< SegmentedRow<BookReadState>(readStateKey) {
@@ -66,25 +66,44 @@ class EditBookReadState: FormViewController {
                     (form.rowBy(tag: self.readStateKey) as! SegmentedRow<BookReadState>).value != .finished
                 }
             }
-            +++ Section(header: "Progress", footer: "")
-            <<< BookProgressRow(currentPageKey, initializer: {
-                $0.value = progress
-                $0.onChange {
-                    guard let value = $0.value else {
-                        self.book.setProgress(nil, isPercentage: false)
-                        return
-                    }
-                    //self.book.setProgress(value.authorityIsPercentage ? value.percentage
-                }
-                /*$0.title = "Current Page"
-                $0.value = book.currentPage
-                $0.onChange { [unowned self] cell in
-                    self.book.setProgress(cell.value, isPercentage: false)
-                }
+            +++ Section(header: "Progress", footer: "") {
                 $0.hidden = Condition.function([readStateKey]) { [unowned self] form in
                     (form.rowBy(tag: self.readStateKey) as! SegmentedRow<BookReadState>).value != .reading
-                }*/
-            })
+                }
+            }
+            <<< SegmentedRow<ProgressType>(progressTypeKey) {
+                $0.title = "Type  "
+                $0.options = [.page, .percentage]
+                $0.value = book.currentProgressIsPage ? .page : .percentage
+                $0.onChange { [unowned self] row in
+                    guard let type = row.value else { return }
+                    self.book.progressType = type
+                }
+            }
+            <<< Int32Row {
+                $0.title = "Current Page Number"
+                $0.value = self.book.currentPage
+                $0.hidden = Condition.function([progressTypeKey]) { [unowned self] form in
+                    (form.rowBy(tag: self.progressTypeKey) as! SegmentedRow<ProgressType>).value != .page
+                }
+                $0.onChange { [unowned self] row in
+                    self.book.setProgress(.page(row.value))
+                }
+            }
+            <<< Int32Row {
+                $0.title = "Current Percentage"
+                $0.value = self.book.currentPercentage
+                $0.hidden = Condition.function([progressTypeKey]) { [unowned self] form in
+                    (form.rowBy(tag: self.progressTypeKey) as! SegmentedRow<ProgressType>).value != .percentage
+                }
+                $0.onChange { [unowned self] row in
+                    self.book.setProgress(.percentage(row.value))
+                }
+                $0.displayValueFor = {
+                    guard let value = $0 else { return nil }
+                    return "\(value)%"
+                }
+            }
 
         monitorThemeSetting()
     }
