@@ -72,25 +72,25 @@ class Book: NSManagedObject {
         }
         switch progress {
         case .page(let newPageNumber):
-            guard let newPageNumber = newPageNumber else {
+            progressType = .page
+            if let newPageNumber = newPageNumber {
+                currentPage = max(0, newPageNumber)
+            } else {
                 currentPage = nil
-                return
             }
-            currentPage = max(0, newPageNumber)
-            currentProgressIsPage = true
         case .percentage(let newPercentage):
-            guard let newPercentage = newPercentage else {
+            progressType = .percentage
+            if let newPercentage = newPercentage {
+                currentPercentage = max(0, min(100, newPercentage))
+            } else {
                 currentPercentage = nil
-                return
             }
-            currentPercentage = max(0, min(100, newPercentage))
-            currentProgressIsPage = false
         }
 
         updateComputedProgressData()
     }
 
-    func updateComputedProgressData() {
+    private func updateComputedProgressData() {
         if currentProgressIsPage {
             if let pageCount = pageCount, let currentPage = currentPage {
                 currentPercentage = min(100, Int32(round((Float(currentPage) / Float(pageCount)) * 100)))

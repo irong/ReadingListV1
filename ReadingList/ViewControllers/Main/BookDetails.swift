@@ -92,17 +92,25 @@ class BookDetails: UIViewController, UIScrollViewDelegate {
             }
         }
         setTextOrHideLine(tableValues[3], readTimeText)
+
         let pageNumberText: String?
-        if let currentPage = book.currentPage {
-            if let currentPercentage = book.currentPercentage {
-                pageNumberText = "\(currentPage) (\(currentPercentage)% complete)"
+        switch book.progressType {
+        case .page:
+            if let page = book.currentPage {
+                if let percentage = book.currentPercentage {
+                    pageNumberText = "Page \(page) (\(percentage)%)"
+                } else {
+                    pageNumberText = "Page \(page)"
+                }
             } else {
-                pageNumberText = "\(currentPage)"
+                pageNumberText = nil
             }
-        } else if let currentPercentage = book.currentPercentage {
-            pageNumberText = "\(currentPercentage)%"
-        } else {
-            pageNumberText = nil
+        case .percentage:
+            if let percent = book.currentPercentage {
+                pageNumberText = "\(percent)%"
+            } else {
+                pageNumberText = nil
+            }
         }
         setTextOrHideLine(tableValues[4], pageNumberText)
 
