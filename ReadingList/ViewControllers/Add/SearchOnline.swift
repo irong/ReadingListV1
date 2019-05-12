@@ -96,9 +96,23 @@ class SearchOnline: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, accessoryButtonTappedForRowWith indexPath: IndexPath) {
+        let searchResult = tableItems[indexPath.row]
+        if alertIfDuplicate(searchResult, indexPath: indexPath) { return }
         fetch(searchResult: tableItems[indexPath.row]) { book, context in
             EditBookMetadata(bookToCreate: book, scratchpadContext: context)
         }
+    }
+
+    /**
+     Checks whether the specified result already exists as a book, returning true if it does.
+     If it does exist, a duplicate book alert is presented from the provided index path.
+    */
+    private func alertIfDuplicate(_ searchResult: SearchResult, indexPath: IndexPath) -> Bool {
+        if let existingBook = Book.get(fromContext: PersistentStoreManager.container.viewContext, googleBooksId: searchResult.id, isbn: searchResult.isbn13) {
+            presentDuplicateBookAlert(book: existingBook, fromSelectedIndex: indexPath)
+            return true
+        }
+        return false
     }
 
     override func viewDidLayoutSubviews() {
@@ -127,11 +141,7 @@ class SearchOnline: UITableViewController {
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let searchResult = tableItems[indexPath.row]
-
-        // Duplicate check
-        if let existingBook = Book.get(fromContext: PersistentStoreManager.container.viewContext, googleBooksId: searchResult.id, isbn: searchResult.isbn13) {
-            presentDuplicateBookAlert(book: existingBook, fromSelectedIndex: indexPath); return
-        }
+        if alertIfDuplicate(searchResult, indexPath: indexPath) { return }
 
         // If we are in multiple selection mode (i.e. Edit mode), switch the Add All button on; otherwise, fetch and segue
         if tableView.isEditing {
