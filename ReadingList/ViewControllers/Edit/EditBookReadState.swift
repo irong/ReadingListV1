@@ -14,6 +14,8 @@ class EditBookReadState: FormViewController {
     private let startedReadingKey = "startedReading"
     private let finishedReadingKey = "finishedReading"
     private let progressTypeKey = "progressType"
+    private let progressPageKey = "progressPage"
+    private let progressPercentageKey = "progressPercentage"
 
     convenience init(existingBookID: NSManagedObjectID) {
         self.init()
@@ -77,10 +79,17 @@ class EditBookReadState: FormViewController {
                 $0.value = book.currentProgressIsPage ? .page : .percentage
                 $0.onChange { [unowned self] row in
                     guard let type = row.value else { return }
-                    self.book.progressType = type
+                    switch type {
+                    case .page:
+                        let page = (self.form.rowBy(tag: self.progressPageKey) as! Int32Row).value
+                        self.book.setProgress(.page(page))
+                    case .percentage:
+                        let percent = (self.form.rowBy(tag: self.progressPercentageKey) as! Int32Row).value
+                        self.book.setProgress(.percentage(percent))
+                    }
                 }
             }
-            <<< Int32Row {
+            <<< Int32Row(progressPageKey) {
                 $0.title = "Current Page Number"
                 $0.value = self.book.currentPage
                 $0.hidden = Condition.function([progressTypeKey]) { [unowned self] form in
@@ -90,7 +99,7 @@ class EditBookReadState: FormViewController {
                     self.book.setProgress(.page(row.value))
                 }
             }
-            <<< Int32Row {
+            <<< Int32Row(progressPercentageKey) {
                 $0.title = "Current Percentage"
                 $0.value = self.book.currentPercentage
                 $0.hidden = Condition.function([progressTypeKey]) { [unowned self] form in

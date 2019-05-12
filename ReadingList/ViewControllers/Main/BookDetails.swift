@@ -94,7 +94,7 @@ class BookDetails: UIViewController, UIScrollViewDelegate {
         setTextOrHideLine(tableValues[3], readTimeText)
 
         let pageNumberText: String?
-        switch book.progressType {
+        switch book.progressAuthority {
         case .page:
             if let page = book.currentPage {
                 if let percentage = book.currentPercentage {
@@ -107,7 +107,11 @@ class BookDetails: UIViewController, UIScrollViewDelegate {
             }
         case .percentage:
             if let percent = book.currentPercentage {
-                pageNumberText = "\(percent)%"
+                if let page = book.currentPage {
+                    pageNumberText = "\(percent)% (page \(page))"
+                } else {
+                    pageNumberText = "\(percent)%"
+                }
             } else {
                 pageNumberText = nil
             }

@@ -72,14 +72,14 @@ class Book: NSManagedObject {
         }
         switch progress {
         case .page(let newPageNumber):
-            progressType = .page
+            progressAuthority = .page
             if let newPageNumber = newPageNumber {
                 currentPage = max(0, newPageNumber)
             } else {
                 currentPage = nil
             }
         case .percentage(let newPercentage):
-            progressType = .percentage
+            progressAuthority = .percentage
             if let newPercentage = newPercentage {
                 currentPercentage = max(0, min(100, newPercentage))
             } else {
@@ -106,7 +106,7 @@ class Book: NSManagedObject {
         }
     }
 
-    var progressType: ProgressType {
+    private(set) var progressAuthority: ProgressType {
         get { return currentProgressIsPage ? .page : .percentage }
         set { currentProgressIsPage = newValue == .page }
     }
