@@ -76,7 +76,7 @@ class EditBookReadState: FormViewController {
             <<< SegmentedRow<ProgressType>(progressTypeKey) {
                 $0.title = "Type  "
                 $0.options = [.page, .percentage]
-                $0.value = book.currentProgressIsPage ? .page : .percentage
+                $0.value = book.currentPage == nil && book.currentPercentage == nil ? UserDefaults.standard[.defaultProgressType] :  book.progressAuthority
                 $0.onChange { [unowned self] row in
                     guard let type = row.value else { return }
                     switch type {
