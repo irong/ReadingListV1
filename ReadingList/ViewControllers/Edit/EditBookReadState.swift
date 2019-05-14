@@ -137,6 +137,13 @@ class EditBookReadState: FormViewController {
         if newBook || book.changedValues().keys.contains(#keyPath(Book.readState)) {
             book.updateSortIndex()
         }
+        // If we have been adding a new manual book with a language, remember this language.
+        // Note: this has a limitation that it does not detect manually selected languages from a book added from an
+        // online search (after tapping the detail button), since we are unable to determine whether the language
+        // currently set in the book is equal to what was present in the search result. This is acceptable for now.
+        if let language = book.language, book.manualBookId != nil && newBook {
+            UserDefaults.standard[.lastSelectedLanguage] = language
+        }
         editContext.saveIfChanged()
 
         // FUTURE: Figure out a better way to solve this problem.
