@@ -24,20 +24,12 @@ class General: FormViewController {
                 }
             }
 
-            +++ SelectableSection<ListCheckRow<ProgressType>>(header: "Progress", footer: "Choose whether to default to Page Number or Percentage when setting progress.", selectionType: .singleSelection(enableDeselection: false)) {
-                $0.onSelectSelectableRow = { _, row in
-                    UserDefaults.standard[.defaultProgressType] = row.value ?? .page
-                }
-            }
-                <<< ListCheckRow<ProgressType> {
-                    $0.title = "Page Number"
-                    $0.selectableValue = .page
-                    $0.value = UserDefaults.standard[.defaultProgressType] == .page ? .page : nil
-                }
-                <<< ListCheckRow<ProgressType> {
-                    $0.title = "Percentage"
-                    $0.selectableValue = .percentage
-                    $0.value = UserDefaults.standard[.defaultProgressType] == .percentage ? .percentage : nil
+            +++ Section(header: "Progress", footer: "Choose whether to default to Page Number or Percentage when setting progress.")
+                <<< PushRow<ProgressType> {
+                    $0.title = "Default Type"
+                    $0.options = [.page, .percentage]
+                    $0.selectorTitle = "Choose progress type"
+                    $0.value = UserDefaults.standard[.defaultProgressType]
                 }
 
             +++ Section(header: "Language", footer: """

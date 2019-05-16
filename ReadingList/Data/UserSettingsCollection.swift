@@ -38,7 +38,7 @@ extension UserSettingsCollection {
     static let lastSelectedLanguage = UserSetting<LanguageIso639_1?>("lastSelectedLanguage")
 
     static let listSortOrder = UserSetting<ListSortOrder>("listSortOrder", defaultValue: .alphabetical)
-    
+
     static let defaultProgressType = UserSetting<ProgressType>("defaultProgressType", defaultValue: .page)
 }
 
