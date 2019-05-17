@@ -7,7 +7,7 @@ target 'ReadingList' do
   pod 'Eureka', '~> 5.0'
   pod 'ImageRow', '~> 4.0'
   pod 'SVProgressHUD', '~> 2.2'
-  pod 'SwiftyStoreKit', :git => 'https://github.com/bizz84/SwiftyStoreKit.git', :branch => 'develop'
+  pod 'SwiftyStoreKit', '~> 0.15'
   pod 'CHCSVParser', :git => 'https://github.com/davedelong/CHCSVParser.git'
   pod 'PromisesSwift', '~> 1.2'
   pod 'SimulatorStatusMagic', :configurations => ['Debug']

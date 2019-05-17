@@ -79,7 +79,7 @@ DEPENDENCIES:
   - SVProgressHUD (~> 2.2)
   - Swifter (from `https://github.com/httpswift/swifter.git`, branch `stable`)
   - SwiftyJSON (~> 5.0)
-  - SwiftyStoreKit (from `https://github.com/bizz84/SwiftyStoreKit.git`, branch `develop`)
+  - SwiftyStoreKit (~> 0.15)
 
 SPEC REPOS:
   https://github.com/cocoapods/specs.git:
@@ -100,6 +100,7 @@ SPEC REPOS:
     - SimulatorStatusMagic
     - SVProgressHUD
     - SwiftyJSON
+    - SwiftyStoreKit
 
 EXTERNAL SOURCES:
   CHCSVParser:
@@ -107,9 +108,6 @@ EXTERNAL SOURCES:
   Swifter:
     :branch: stable
     :git: https://github.com/httpswift/swifter.git
-  SwiftyStoreKit:
-    :branch: develop
-    :git: https://github.com/bizz84/SwiftyStoreKit.git
 
 CHECKOUT OPTIONS:
   CHCSVParser:
@@ -118,9 +116,6 @@ CHECKOUT OPTIONS:
   Swifter:
     :commit: 56c89eaac4473d64ebea9e13a8fbc186f75bbb53
     :git: https://github.com/httpswift/swifter.git
-  SwiftyStoreKit:
-    :commit: d0de0ec60fa947db2c38dba16a8f7e65dda65ea5
-    :git: https://github.com/bizz84/SwiftyStoreKit.git
 
 SPEC CHECKSUMS:
   CHCSVParser: 64da26e2b4ddbf7527f7f03120bf91d83d28f354
@@ -144,6 +139,6 @@ SPEC CHECKSUMS:
   SwiftyJSON: 36413e04c44ee145039d332b4f4e2d3e8d6c4db7
   SwiftyStoreKit: 033d06b6f87955405d3f844a18a7687c2438592a
 
-PODFILE CHECKSUM: 93b2b7708bb2a0721f98c3f163c74c02d408dd31
+PODFILE CHECKSUM: 4a7db019d815c0c65334240075dad987b3b4e750
 
 COCOAPODS: 1.6.0
