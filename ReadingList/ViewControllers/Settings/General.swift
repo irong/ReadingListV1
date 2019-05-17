@@ -8,16 +8,20 @@ class General: FormViewController {
         super.viewDidLoad()
 
         form +++ Section(header: "Appearance", footer: "Change the appearance of Reading List.")
-            <<< AlertRow<Theme> {
+            <<< ThemedPushRow<Theme> {
                 $0.title = "Theme"
-                $0.selectorTitle = "Select a theme"
                 $0.options = Theme.allCases
                 $0.value = UserDefaults.standard[.theme]
                 $0.onChange { row in
-                    UserDefaults.standard[.theme] = row.value!
-                    NotificationCenter.default.post(name: .ThemeSettingChanged, object: nil)
-                    UserEngagement.logEvent(.changeTheme)
-                    UserEngagement.onReviewTrigger()
+                    guard let theme = row.value else { return }
+                    // Half a second seems long enough for the animation to have completed; if we change the theme while
+                    // the animation is still running, we get stuck with an incorrect coloured navigation item. Could
+                    // not find a workaround, so settled for a slightly longer delay before theme transition.
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        UserDefaults.standard[.theme] = theme
+                        NotificationCenter.default.post(name: .ThemeSettingChanged, object: nil)
+                        UserEngagement.logEvent(.changeTheme)
+                    }
                 }
             }
             <<< SwitchRow {

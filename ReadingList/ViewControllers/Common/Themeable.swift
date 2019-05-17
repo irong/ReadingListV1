@@ -278,6 +278,22 @@ class ThemedNavigationController: UINavigationController, ThemeableViewControlle
     }
 }
 
+class ThemedSelectorViewController<T: Equatable>: SelectorViewController<SelectorRow<PushSelectorCell<T>>> {
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        monitorThemeSetting()
+    }
+}
+
+final class ThemedPushRow<T: Equatable> : _PushRow<PushSelectorCell<T>>, RowType {
+    required init(tag: String?) {
+        super.init(tag: tag)
+        presentationMode = .show(controllerProvider: .callback { ThemedSelectorViewController() }) {
+            $0.navigationController?.popViewController(animated: true)
+        }
+    }
+}
+
 extension UINavigationBar {
     func initialise(withTheme theme: Theme) {
         barStyle = theme.barStyle
@@ -333,7 +349,8 @@ extension Theme {
 
         SwitchRow.defaultCellUpdate = initialiseCell(_:_:)
         DateRow.defaultCellUpdate = initialiseCell(_:_:)
-        AlertRow<Theme>.defaultCellUpdate = initialiseCell(_:_:)
+        ThemedPushRow<Theme>.defaultCellUpdate = initialiseCell(_:_:)
+        ListCheckRow<Theme>.defaultCellUpdate = initialiseCell(_:_:)
         ImageRow.defaultCellUpdate = initialiseCell(_:_:)
         SegmentedRow<BookReadState>.defaultCellUpdate = initialiseCell(_:_:)
         LabelRow.defaultCellUpdate = initialiseCell(_:_:)
