@@ -295,15 +295,13 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
     }
 
     @IBAction private func addWasPressed(_ sender: UIBarButtonItem) {
-        func storyboardAction(title: String, storyboard: UIStoryboard) -> UIAlertAction {
-            return UIAlertAction(title: title, style: .default) { _ in
-                self.present(storyboard.rootAsFormSheet(), animated: true, completion: nil)
-            }
-        }
-
         let optionsAlert = UIAlertController(title: "Add New Book", message: nil, preferredStyle: .actionSheet)
-        optionsAlert.addAction(storyboardAction(title: "Scan Barcode", storyboard: .ScanBarcode))
-        optionsAlert.addAction(storyboardAction(title: "Search Online", storyboard: .SearchOnline))
+        optionsAlert.addAction(UIAlertAction(title: "Scan Barcode", style: .default) { _ in
+            self.present(UIStoryboard.ScanBarcode.rootAsFormSheet(), animated: true, completion: nil)
+        })
+        optionsAlert.addAction(UIAlertAction(title: "Search Online", style: .default) { _ in
+            self.present(UIStoryboard.SearchOnline.rootAsFormSheet(), animated: true, completion: nil)
+        })
         optionsAlert.addAction(UIAlertAction(title: "Add Manually", style: .default) { _ in
             self.present(EditBookMetadata(bookToCreateReadState: .toRead).inThemedNavController(), animated: true, completion: nil)
         })
@@ -314,18 +312,32 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
     }
 
     override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { _, _, callback in
-            let confirm = self.confirmDeleteAlert(indexPaths: [indexPath], callback: callback)
-            confirm.popoverPresentationController?.setSourceCell(atIndexPath: indexPath, inTable: tableView)
-            self.present(confirm, animated: true, completion: nil)
-        }
-        deleteAction.image = #imageLiteral(resourceName: "Trash")
-        let editAction = UIContextualAction(style: .normal, title: "Edit") { _, _, callback in
-            self.present(EditBookMetadata(bookToEditID: self.resultsController.object(at: indexPath).objectID).inThemedNavController(), animated: true)
-            callback(true)
-        }
-        editAction.image = #imageLiteral(resourceName: "Literature")
-        return UISwipeActionsConfiguration(performFirstActionWithFullSwipe: false, actions: [deleteAction, editAction])
+        return UISwipeActionsConfiguration(performFirstActionWithFullSwipe: false, actions: [
+            UIContextualAction(style: .destructive, title: "Delete", image: #imageLiteral(resourceName: "Trash")) { _, view, callback in
+                let confirm = self.confirmDeleteAlert(indexPaths: [indexPath], callback: callback)
+                confirm.popoverPresentationController?.sourceView = view
+                self.present(confirm, animated: true, completion: nil)
+            },
+            UIContextualAction(style: .normal, title: "More", image: #imageLiteral(resourceName: "More")) { _, view, callback in
+                let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+                alert.addAction(UIAlertAction(title: "Manage Lists", style: .default) { _ in
+                    let book = self.resultsController.object(at: indexPath)
+                    self.present(ManageLists.getAppropriateVcForManagingLists([book]) {
+                        self.setEditing(false, animated: true)
+                    }, animated: true)
+                    callback(true)
+                })
+                alert.addAction(UIAlertAction(title: "Edit Book", style: .default) { _ in
+                    self.present(EditBookMetadata(bookToEditID: self.resultsController.object(at: indexPath).objectID).inThemedNavController(), animated: true)
+                    callback(true)
+                })
+                alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
+                    callback(true)
+                })
+                alert.popoverPresentationController?.sourceView = view
+                self.present(alert, animated: true)
+            }
+        ])
     }
 
     override func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
