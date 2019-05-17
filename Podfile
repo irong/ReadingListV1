@@ -29,13 +29,4 @@ target 'ReadingList' do
     pod 'Swifter', :git => 'https://github.com/httpswift/swifter.git', :branch => 'stable'
   end
 
-  # Remove an Xcode warning about automatically settings build architecture
-  post_install do |installer|
-    installer.pods_project.targets.each do |target|
-      target.build_configurations.each do |config|
-        config.build_settings.delete 'ARCHS'
-      end
-    end
-  end
-
 end

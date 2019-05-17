@@ -41,7 +41,7 @@ class RemoveFromExistingLists: UITableViewController {
     override func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath) -> [UITableViewRowAction]? {
         return [UITableViewRowAction(style: .destructive, title: "Remove", color: .red) { _, indexPath in
             let list = self.resultsController.object(at: indexPath)
-            list.removeBooks(NSSet(object: self.book))
+            list.removeBooks(NSSet(object: self.book!))
             list.managedObjectContext!.saveAndLogIfErrored()
             UserEngagement.logEvent(.removeBookFromList)
         }]
