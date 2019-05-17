@@ -177,8 +177,10 @@ class BookDetails: UIViewController, UIScrollViewDelegate {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
 
-        // In "regular" size classed devices, the description text can be less truncated
-        if traitCollection.horizontalSizeClass == .regular && traitCollection.verticalSizeClass == .regular {
+        if UserDefaults.standard[.showExpandedDescription] {
+            bookDescription.numberOfLines = 0
+        } else if traitCollection.horizontalSizeClass == .regular && traitCollection.verticalSizeClass == .regular {
+            // In "regular" size classed devices, the description text can be less truncated
             bookDescription.numberOfLines = 8
         }
     }
