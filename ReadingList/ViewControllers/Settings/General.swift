@@ -7,7 +7,7 @@ class General: FormViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        form +++ Section(header: "Appearance", footer: "Change the appearance of Reading List.")
+        form +++ Section(header: "Appearance", footer: "Enable Expanded Descriptions to automatically show each book's full description.")
             <<< ThemedPushRow<Theme> {
                 $0.title = "Theme"
                 $0.options = Theme.allCases
@@ -25,7 +25,7 @@ class General: FormViewController {
                 }
             }
             <<< SwitchRow {
-                $0.title = "Expand Descriptions"
+                $0.title = "Expanded Descriptions"
                 $0.value = UserDefaults.standard[.showExpandedDescription]
                 $0.onChange { row in
                     guard let newValue = row.value else { return }
