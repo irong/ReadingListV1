@@ -212,7 +212,13 @@
                             <outlet property="delegate" destination="AZW-20-Ksg" id="YiX-sm-Afq"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" title="Remove From Lists" id="PMg-3E-2o3"/>
+                    <navigationItem key="navigationItem" title="Remove From Lists" id="PMg-3E-2o3">
+                        <barButtonItem key="rightBarButtonItem" style="done" systemItem="done" id="d5i-p0-RWJ">
+                            <connections>
+                                <action selector="doneTapped:" destination="AZW-20-Ksg" id="iXY-SY-zcx"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="ftJ-zs-ZwG" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>

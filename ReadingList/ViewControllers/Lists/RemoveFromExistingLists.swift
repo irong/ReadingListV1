@@ -20,6 +20,10 @@ class RemoveFromExistingLists: UITableViewController {
         monitorThemeSetting()
     }
 
+    @IBAction private func doneTapped(_ sender: Any) {
+        navigationController?.dismiss(animated: true)
+    }
+
     override func numberOfSections(in tableView: UITableView) -> Int {
         return resultsController.sections!.count
     }
