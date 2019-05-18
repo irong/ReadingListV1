@@ -182,7 +182,7 @@ extension UITabBarController: ThemeableViewController {
 
 extension UIToolbar {
     func initialise(withTheme theme: Theme) {
-        backgroundColor = theme.viewBackgroundColor
+        barStyle = theme.barStyle
     }
 }
 

@@ -1,4 +1,5 @@
 import Foundation
+import AVFoundation
 import os.log
 
 public extension String {
@@ -147,6 +148,14 @@ public extension FileManager {
                 os_log("Unable to remove temporary file %{public}s: %{public}s", type: .error, url.path, error.localizedDescription)
             }
         }
+    }
+}
+
+public extension AVCaptureVideoPreviewLayer {
+    convenience init(_ session: AVCaptureSession, gravity: AVLayerVideoGravity, frame: CGRect) {
+        self.init(session: session)
+        self.frame = frame
+        videoGravity = gravity
     }
 }
 

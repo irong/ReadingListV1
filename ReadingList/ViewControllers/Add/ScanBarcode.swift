@@ -2,6 +2,7 @@ import UIKit
 import AVFoundation
 import SVProgressHUD
 import ReadingList_Foundation
+import os.log
 
 class NonRotatingNavigationController: ThemedNavigationController {
     override var shouldAutorotate: Bool {
@@ -16,12 +17,23 @@ class ScanBarcode: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
     var previewLayer: AVCaptureVideoPreviewLayer?
     let feedbackGenerator = UINotificationFeedbackGenerator()
 
+    @IBOutlet private weak var torchButton: UIBarButtonItem!
     @IBOutlet private weak var cameraPreviewView: UIView!
     @IBOutlet private weak var previewOverlay: UIView!
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        if let device = AVCaptureDevice.default(for: .video), device.hasTorch { } else {
+            torchButton.setHidden(true)
+        }
+
         feedbackGenerator.prepare()
+
+        // To help with development, debug simulator builds detect taps on the screen and in response bring
+        // up a dialog box to enter an ISBN to simulate a barcode scan.
+        #if DEBUG && targetEnvironment(simulator)
+        view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onViewTap(_:))))
+        #endif
 
         // Setup the camera preview asynchronously
         DispatchQueue.main.async {
@@ -31,14 +43,43 @@ class ScanBarcode: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
         }
     }
 
+    #if DEBUG && targetEnvironment(simulator)
+    @objc func onViewTap(_ recognizer: UILongPressGestureRecognizer) {
+        present(TextBoxAlert(title: "ISBN", initialValue: "978", keyboardType: .numberPad) {
+            guard let isbn = $0 else { return }
+            self.respondToCapturedIsbn(isbn)
+        }, animated: true)
+    }
+    #endif
+
     @IBAction private func cancelWasPressed(_ sender: AnyObject) {
         SVProgressHUD.dismiss()
         dismiss(animated: true, completion: nil)
     }
 
+    @IBAction private func torchPressed(_ sender: UIBarButtonItem) {
+        guard let device = AVCaptureDevice.default(for: .video) else { return }
+        guard device.hasTorch else { return }
+
+        do {
+            try device.lockForConfiguration()
+            defer {
+                device.unlockForConfiguration()
+            }
+            if device.torchMode == .on {
+                device.torchMode = .off
+                sender.image = #imageLiteral(resourceName: "Torch")
+            } else {
+                try device.setTorchModeOn(level: 1.0)
+                sender.image = #imageLiteral(resourceName: "TorchFilled")
+            }
+        } catch {
+            os_log("Error toggling torch state", type: .error)
+        }
+    }
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-
         cameraPreviewView.layoutIfNeeded()
 
         if let session = session, !session.isRunning {
@@ -72,8 +113,11 @@ class ScanBarcode: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
         if CommandLine.arguments.contains("--UITests") { return }
         #endif
 
-        guard let camera = AVCaptureDevice.default(for: AVMediaType.video), let input = try? AVCaptureDeviceInput(device: camera) else {
-            presentCameraPermissionsAlert(); return
+        guard let camera = AVCaptureDevice.default(for: .video), let input = try? AVCaptureDeviceInput(device: camera) else {
+            #if !(DEBUG && targetEnvironment(simulator))
+            presentCameraPermissionsAlert()
+            #endif
+            return
         }
 
         // Try to focus the camera if possible
@@ -103,9 +147,7 @@ class ScanBarcode: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
         session.startRunning()
 
         // We want to view what the camera is seeing
-        previewLayer = AVCaptureVideoPreviewLayer(session: session)
-        previewLayer!.videoGravity = AVLayerVideoGravity.resizeAspectFill
-        previewLayer!.frame = view.bounds
+        previewLayer = AVCaptureVideoPreviewLayer(session, gravity: .resizeAspectFill, frame: view.bounds)
         setVideoOrientation()
 
         cameraPreviewView.layer.addSublayer(previewLayer!)

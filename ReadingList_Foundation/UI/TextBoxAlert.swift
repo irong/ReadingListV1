@@ -10,13 +10,14 @@ public class TextBoxAlert: UIAlertController {
     var textValidator: ((String?) -> Bool)?
 
     public convenience init(title: String, message: String? = nil, initialValue: String? = nil, placeholder: String? = nil,
-                            keyboardAppearance: UIKeyboardAppearance = .default, textValidator: ((String?) -> Bool)? = nil, onOK: @escaping (String?) -> Void) {
+                            keyboardAppearance: UIKeyboardAppearance = .default, keyboardType: UIKeyboardType = .default, textValidator: ((String?) -> Bool)? = nil, onOK: @escaping (String?) -> Void) {
         self.init(title: title, message: message, preferredStyle: .alert)
         self.textValidator = textValidator
 
         addTextField { [unowned self] textField in
             textField.addTarget(self, action: #selector(self.textFieldDidChange), for: .editingChanged)
             textField.autocapitalizationType = .words
+            textField.keyboardType = keyboardType
             textField.keyboardAppearance = keyboardAppearance
             textField.placeholder = placeholder
             textField.text = initialValue
