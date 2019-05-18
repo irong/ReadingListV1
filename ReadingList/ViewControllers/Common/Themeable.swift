@@ -285,7 +285,7 @@ class ThemedSelectorViewController<T: Equatable>: SelectorViewController<Selecto
     }
 }
 
-final class ThemedPushRow<T: Equatable> : _PushRow<PushSelectorCell<T>>, RowType {
+final class ThemedPushRow<T: Equatable>: _PushRow<PushSelectorCell<T>>, RowType {
     required init(tag: String?) {
         super.init(tag: tag)
         presentationMode = .show(controllerProvider: .callback { ThemedSelectorViewController() }) {
