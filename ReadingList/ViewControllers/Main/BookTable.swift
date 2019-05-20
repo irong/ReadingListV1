@@ -322,13 +322,17 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
                 let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
                 alert.addAction(UIAlertAction(title: "Manage Lists", style: .default) { _ in
                     let book = self.resultsController.object(at: indexPath)
-                    self.present(ManageLists.getAppropriateVcForManagingLists([book]) {
-                        self.setEditing(false, animated: true)
-                    }, animated: true)
+                    self.present(ManageLists.getAppropriateVcForManagingLists([book]), animated: true)
+                    callback(true)
+                })
+                alert.addAction(UIAlertAction(title: "Update Notes", style: .default) { _ in
+                    let book = self.resultsController.object(at: indexPath)
+                    self.present(EditBookNotes(existingBookID: book.objectID).inThemedNavController(), animated: true)
                     callback(true)
                 })
                 alert.addAction(UIAlertAction(title: "Edit Book", style: .default) { _ in
-                    self.present(EditBookMetadata(bookToEditID: self.resultsController.object(at: indexPath).objectID).inThemedNavController(), animated: true)
+                    let book = self.resultsController.object(at: indexPath)
+                    self.present(EditBookMetadata(bookToEditID: book.objectID).inThemedNavController(), animated: true)
                     callback(true)
                 })
                 alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
