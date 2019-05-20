@@ -269,7 +269,7 @@ class BookDetails: UIViewController, UIScrollViewDelegate {
     @IBAction private func shareButtonPressed(_ sender: UIBarButtonItem) {
         guard let book = book else { return }
 
-        let activityViewController = UIActivityViewController(activityItems: ["\(book.title)\n\(book.authors.fullNames))"], applicationActivities: nil)
+        let activityViewController = UIActivityViewController(activityItems: ["\(book.title)\n\(book.authors.fullNames)"], applicationActivities: nil)
         activityViewController.popoverPresentationController?.barButtonItem = sender
         activityViewController.excludedActivityTypes = [.assignToContact, .saveToCameraRoll, .addToReadingList,
                                                         .postToFlickr, .postToVimeo, .openInIBooks, .markupAsPDF]
