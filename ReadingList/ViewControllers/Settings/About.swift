@@ -94,39 +94,3 @@ extension About: MFMailComposeViewControllerDelegate {
         dismiss(animated: true)
     }
 }
-
-class Attributions: UITableViewController {
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        tableView.rowHeight = UITableView.automaticDimension
-        monitorThemeSetting()
-    }
-
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = super.tableView(tableView, cellForRowAt: indexPath)
-        let theme = UserDefaults.standard[.theme]
-        cell.defaultInitialise(withTheme: theme)
-        cell.contentView.subviews.forEach {
-            guard let label = $0 as? UILabel else { return }
-            label.textColor = theme.titleTextColor
-        }
-        return cell
-    }
-
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        guard indexPath.section == 0 else { return }
-        switch indexPath.row {
-        case 0: presentThemedSafariViewController(URL(string: "https://icons8.com")!)
-        case 1: presentThemedSafariViewController(URL(string: "https://github.com/xmartlabs/Eureka")!)
-        case 2: presentThemedSafariViewController(URL(string: "https://github.com/dzenbot/DZNEmptyDataSet")!)
-        case 3: presentThemedSafariViewController(URL(string: "https://github.com/SwiftyJSON/SwiftyJSON")!)
-        case 4: presentThemedSafariViewController(URL(string: "https://github.com/SVProgressHUD/SVProgressHUD")!)
-        case 5: presentThemedSafariViewController(URL(string: "https://github.com/davedelong/CHCSVParser")!)
-        case 6: presentThemedSafariViewController(URL(string: "https://github.com/bizz84/SwiftyStoreKit")!)
-        case 7: presentThemedSafariViewController(URL(string: "https://github.com/google/promises")!)
-        default: return
-        }
-        tableView.deselectRow(at: indexPath, animated: true)
-    }
-}
