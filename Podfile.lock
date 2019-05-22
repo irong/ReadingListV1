@@ -1,5 +1,6 @@
 PODS:
   - CHCSVParser (2.1.0)
+  - Cosmos (19.0.3)
   - Crashlytics (3.13.1):
     - Fabric (~> 1.10.1)
   - DZNEmptyDataSet (1.8.1)
@@ -68,6 +69,7 @@ PODS:
 
 DEPENDENCIES:
   - CHCSVParser (from `https://github.com/davedelong/CHCSVParser.git`)
+  - Cosmos (~> 19.0)
   - Crashlytics
   - DZNEmptyDataSet (~> 1.8)
   - Eureka (~> 5.0)
@@ -83,6 +85,7 @@ DEPENDENCIES:
 
 SPEC REPOS:
   https://github.com/cocoapods/specs.git:
+    - Cosmos
     - Crashlytics
     - DZNEmptyDataSet
     - Eureka
@@ -119,6 +122,7 @@ CHECKOUT OPTIONS:
 
 SPEC CHECKSUMS:
   CHCSVParser: 64da26e2b4ddbf7527f7f03120bf91d83d28f354
+  Cosmos: a6fb17284281fa12cf4c85c2efecd440a215ec44
   Crashlytics: 5aa8e90dcbf2f34898b4f5a0037787531246cca0
   DZNEmptyDataSet: 9525833b9e68ac21c30253e1d3d7076cc828eaa7
   Eureka: 0f64f477ec8ef6201c6fec143d60ff5c201cf654
@@ -139,6 +143,6 @@ SPEC CHECKSUMS:
   SwiftyJSON: 36413e04c44ee145039d332b4f4e2d3e8d6c4db7
   SwiftyStoreKit: 033d06b6f87955405d3f844a18a7687c2438592a
 
-PODFILE CHECKSUM: 49809f2c0a380ba48613675c267e38665147163d
+PODFILE CHECKSUM: 1f692aa563a9d7d35045eb9c27a388cd5fe32046
 
 COCOAPODS: 1.6.0
