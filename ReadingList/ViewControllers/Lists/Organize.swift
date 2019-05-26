@@ -107,12 +107,16 @@ class Organize: UITableViewController {
         guard section == 0 && tableView.numberOfRows(inSection: 0) > 0 else { return nil }
         let header = tableView.dequeue(BookTableHeader.self)
         configureHeader(header, at: section)
-        header.onSortButtonTap = { [unowned self] in
+        header.onSortButtonTap = { [unowned self] button in
             let alert = UIAlertController.selectOption(ListSortOrder.allCases, title: "Choose Order", selected: UserDefaults.standard[.listSortOrder]) { [unowned self] sortOrder in
                 UserDefaults.standard[.listSortOrder] = sortOrder
                 self.resultsController = self.buildResultsController()
                 try! self.resultsController.performFetch()
                 tableView.reloadData()
+            }
+            if let popover = alert.popoverPresentationController {
+                popover.sourceView = button
+                popover.sourceRect = button.bounds
             }
             self.present(alert, animated: true)
         }

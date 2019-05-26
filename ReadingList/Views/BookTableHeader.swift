@@ -5,7 +5,7 @@ class BookTableHeader: UITableViewHeaderFooterView {
 
     var orderable: Orderable?
     weak var presenter: UITableViewController?
-    var onSortButtonTap: (() -> Void)?
+    var onSortButtonTap: ((_ sender: UIButton) -> Void)?
     var onSortChanged: (() -> Void)?
 
     @IBOutlet private weak var label: UILabel!
@@ -13,7 +13,7 @@ class BookTableHeader: UITableViewHeaderFooterView {
 
     @IBAction private func sortButtonTapped(_ sender: UIButton) {
         if let onSortButtonTap = onSortButtonTap {
-            onSortButtonTap()
+            onSortButtonTap(sender)
         } else if let orderable = orderable, let presenter = presenter {
             let alert = UIAlertController.selectOrder(orderable) { [unowned self] in
                 self.onSortChanged?()
