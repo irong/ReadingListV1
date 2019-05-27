@@ -29,8 +29,7 @@ class About: UITableViewController {
         case 0: presentThemedSafariViewController(URL(string: "https://www.readinglist.app")!)
         case 1: share(indexPath)
         case 2: contact(indexPath)
-        case 3: About.joinBeta()
-        case 4: presentThemedSafariViewController(URL(string: "https://github.com/AndrewBennet/readinglist")!)
+        case 3: presentThemedSafariViewController(URL(string: "https://github.com/AndrewBennet/readinglist")!)
         default: return
         }
         tableView.deselectRow(at: indexPath, animated: true)
@@ -62,10 +61,6 @@ class About: UITableViewController {
         controller.popoverPresentationController?.setSourceCell(atIndexPath: indexPath, inTable: tableView, arrowDirections: [.up, .down])
 
         present(controller, animated: true)
-    }
-
-    static func joinBeta() {
-        UIApplication.shared.open(URL(string: "https://testflight.apple.com/join/kBS5mVao")!, options: [:], completionHandler: nil)
     }
 
     private func presentContactMailComposeWindow() {
