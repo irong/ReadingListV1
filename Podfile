@@ -7,9 +7,10 @@ target 'ReadingList' do
   pod 'Eureka', '~> 5.0'
   pod 'ImageRow', '~> 4.0'
   pod 'SVProgressHUD', '~> 2.2'
-  pod 'SwiftyStoreKit', :git => 'https://github.com/bizz84/SwiftyStoreKit.git', :branch => 'develop'
+  pod 'SwiftyStoreKit', '~> 0.15'
   pod 'CHCSVParser', :git => 'https://github.com/davedelong/CHCSVParser.git'
   pod 'PromisesSwift', '~> 1.2'
+  pod 'Cosmos', '~> 19.0'
   pod 'SimulatorStatusMagic', :configurations => ['Debug']
   pod 'Fabric'
   pod 'Crashlytics'
@@ -27,15 +28,6 @@ target 'ReadingList' do
   target 'ReadingList_Screenshots' do
     inherit! :complete
     pod 'Swifter', :git => 'https://github.com/httpswift/swifter.git', :branch => 'stable'
-  end
-
-  # Remove an Xcode warning about automatically settings build architecture
-  post_install do |installer|
-    installer.pods_project.targets.each do |target|
-      target.build_configurations.each do |config|
-        config.build_settings.delete 'ARCHS'
-      end
-    end
   end
 
 end

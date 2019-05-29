@@ -12,7 +12,8 @@ public class MockServer {
             server.get[path] = { incomingRequest in
                 guard let mockedRequest = mockedApiCalls.first(where: { mockRequest in
                     // The incoming request path starts with a '/' - drop this.
-                    mockRequest.request.pathAndQuery == String(incomingRequest.path.dropFirst())
+                    mockRequest.request.path == String(incomingRequest.path.dropFirst())
+                        && (mockRequest.request.queryString ?? "") == incomingRequest.queryParams.map { "\($0.0)=\($0.1)" }.joined(separator: "&")
                 }) else {
                     return .notFound
                 }

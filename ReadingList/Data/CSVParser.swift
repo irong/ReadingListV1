@@ -30,7 +30,8 @@ public class CSVParser: NSObject, CHCSVParserDelegate {
         parser.delegate = self
     }
 
-    public var delegate: CSVParserDelegate? //swiftlint:disable:this weak_delegate (weakness not required in pratice)
+    public var delegate: CSVParserDelegate? //swiftlint:disable:this weak_delegate
+                                            // (weakness not required in pratice)
 
     public func begin() { parser.parse() }
     public func stop() { parser.cancelParsing() }

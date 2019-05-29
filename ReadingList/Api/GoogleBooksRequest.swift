@@ -14,7 +14,7 @@ enum GoogleBooksRequest {
         case small = 2
     }
 
-    private static let apiBaseUrl = URL(string: { //swiftlint:disable:this trailing_closure
+    private static let apiBaseUrl = URL(string: {
         #if DEBUG
         if CommandLine.arguments.contains("--UITests_MockHttpCalls") {
             return "http://localhost:8080/"
@@ -22,7 +22,7 @@ enum GoogleBooksRequest {
         #endif
         return "https://www.googleapis.com/"
     }())!
-    private static let googleBooksBaseUrl = URL(string: { //swiftlint:disable:this trailing_closure
+    private static let googleBooksBaseUrl = URL(string: {
         #if DEBUG
         if CommandLine.arguments.contains("--UITests_MockHttpCalls") {
             return "http://localhost:8080/"

@@ -71,26 +71,15 @@ class AddToExistingLists: UITableViewController {
 
     @IBAction private func doneButtonTapped(_ sender: UIBarButtonItem) {
         guard let selectedRows = tableView.indexPathsForSelectedRows else { return }
-        let bookSubject = books.count == 1 ? "this book" : "all \(books.count) books"
-        let alert = UIAlertController(
-            title: "Add To \(selectedRows.count == 1 ? "List" : "\(selectedRows.count) Lists")",
-            message: "Are you sure you want to add \(bookSubject) to the \(selectedRows.count) selected List\(selectedRows.count == 1 ? "" : "s")?",
-            preferredStyle: .actionSheet
-        )
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-        alert.addAction(UIAlertAction(title: "Add To \(selectedRows.count > 1 ? "All" : "List")", style: .default) { [unowned self] _ in
-            let lists = selectedRows.map { self.resultsController.object(at: $0) }
-            let bookSet = NSOrderedSet(set: self.books)
-            PersistentStoreManager.container.viewContext.performAndSave {
-                for list in lists {
-                    list.addBooks(bookSet)
-                }
+        let lists = selectedRows.map { self.resultsController.object(at: $0) }
+        let bookSet = NSOrderedSet(set: self.books)
+        PersistentStoreManager.container.viewContext.performAndSave {
+            for list in lists {
+                list.addBooks(bookSet)
             }
-            self.navigationController?.dismiss(animated: true, completion: self.onComplete)
-            UserEngagement.logEvent(.bulkAddBookToList)
-        })
-
-        present(alert, animated: true, completion: nil)
+        }
+        self.navigationController?.dismiss(animated: true, completion: self.onComplete)
+        UserEngagement.logEvent(.bulkAddBookToList)
     }
 
     private func getBookListOverlap(_ list: List) -> Int {

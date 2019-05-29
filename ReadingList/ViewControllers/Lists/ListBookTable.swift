@@ -221,7 +221,7 @@ class ListBookTable: UITableViewController {
         guard !ignoreNotifications else { return }
         guard let userInfo = notification.userInfo else { return }
 
-        if (userInfo[NSDeletedObjectsKey] as? NSSet)?.contains(list) == true {
+        if (userInfo[NSDeletedObjectsKey] as? NSSet)?.contains(list!) == true {
             // If the list was deleted, pop back. This can't happen through any normal means at the moment.
             navigationController?.popViewController(animated: false)
             return

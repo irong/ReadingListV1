@@ -20,6 +20,10 @@ class RemoveFromExistingLists: UITableViewController {
         monitorThemeSetting()
     }
 
+    @IBAction private func doneTapped(_ sender: Any) {
+        navigationController?.dismiss(animated: true)
+    }
+
     override func numberOfSections(in tableView: UITableView) -> Int {
         return resultsController.sections!.count
     }
@@ -41,7 +45,7 @@ class RemoveFromExistingLists: UITableViewController {
     override func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath) -> [UITableViewRowAction]? {
         return [UITableViewRowAction(style: .destructive, title: "Remove", color: .red) { _, indexPath in
             let list = self.resultsController.object(at: indexPath)
-            list.removeBooks(NSSet(object: self.book))
+            list.removeBooks(NSSet(object: self.book!))
             list.managedObjectContext!.saveAndLogIfErrored()
             UserEngagement.logEvent(.removeBookFromList)
         }]

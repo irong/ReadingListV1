@@ -7,20 +7,29 @@ class General: FormViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        form +++ SelectableSection<ListCheckRow<Theme>>(header: "Theme", footer: "Change the appearance of Reading List.",
-                                                        selectionType: .singleSelection(enableDeselection: false)) {
-            $0.onSelectSelectableRow = { _, row in
-                UserDefaults.standard[.theme] = row.value!
-                NotificationCenter.default.post(name: .ThemeSettingChanged, object: nil)
-                UserEngagement.logEvent(.changeTheme)
-                UserEngagement.onReviewTrigger()
+        form +++ Section(header: "Appearance", footer: "Enable Expanded Descriptions to automatically show each book's full description.")
+            <<< ThemedPushRow<Theme> {
+                $0.title = "Theme"
+                $0.options = Theme.allCases
+                $0.value = UserDefaults.standard[.theme]
+                $0.onChange { row in
+                    guard let theme = row.value else { return }
+                    // Half a second seems long enough for the animation to have completed; if we change the theme while
+                    // the animation is still running, we get stuck with an incorrect coloured navigation item. Could
+                    // not find a workaround, so settled for a slightly longer delay before theme transition.
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        UserDefaults.standard[.theme] = theme
+                        NotificationCenter.default.post(name: .ThemeSettingChanged, object: nil)
+                        UserEngagement.logEvent(.changeTheme)
+                    }
+                }
             }
-        }
-            <<< Theme.allCases.map { theme in
-                ListCheckRow<Theme> {
-                    $0.title = theme.name
-                    $0.selectableValue = theme
-                    $0.value = UserDefaults.standard[.theme] == theme ? theme : nil
+            <<< SwitchRow {
+                $0.title = "Expanded Descriptions"
+                $0.value = UserDefaults.standard[.showExpandedDescription]
+                $0.onChange { row in
+                    guard let newValue = row.value else { return }
+                    UserDefaults.standard[.showExpandedDescription] = newValue
                 }
             }
 
