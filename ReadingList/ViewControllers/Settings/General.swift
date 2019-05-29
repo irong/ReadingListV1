@@ -34,11 +34,14 @@ class General: FormViewController {
             }
 
             +++ Section(header: "Progress", footer: "Choose whether to default to Page Number or Percentage when setting progress.")
-                <<< PushRow<ProgressType> {
-                    $0.title = "Default Type"
+                <<< ThemedPushRow<ProgressType> {
+                    $0.title = "Default Progress Type"
                     $0.options = [.page, .percentage]
-                    $0.selectorTitle = "Choose progress type"
                     $0.value = UserDefaults.standard[.defaultProgressType]
+                    $0.onChange {
+                        guard let newValue = $0.value else { return }
+                        UserDefaults.standard[.defaultProgressType] = newValue
+                    }
                 }
 
             +++ Section(header: "Language", footer: """
