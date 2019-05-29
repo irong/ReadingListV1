@@ -121,7 +121,7 @@ class BookDetails: UIViewController, UIScrollViewDelegate {
 
         ratingView.superview!.superview!.superview!.isHidden = book.rating == nil
         if let rating = book.rating {
-            ratingView.rating = Double(rating)
+            ratingView.rating = Double(rating) / 2
         } else {
             ratingView.rating = 0
         }

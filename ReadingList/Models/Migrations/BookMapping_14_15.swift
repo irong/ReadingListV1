@@ -9,4 +9,9 @@ class BookMapping_14_15: NSEntityMigrationPolicy { //swiftlint:disable:this type
         let percentage = Int32(round((Float(currentPage.int32Value) / Float(totalPages.int32Value)) * 100))
         return NSNumber(value: percentage)
     }
+
+    @objc func rating(forRating rating: NSNumber?) -> NSNumber? {
+        guard let rating = rating else { return nil }
+        return NSNumber(value: rating.int16Value * 2)
+    }
 }

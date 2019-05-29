@@ -3,7 +3,7 @@ import UIKit
 import Eureka
 import Cosmos
 
-public class StarRatingCell: Cell<Int16>, CellType {
+public class StarRatingCell: Cell<Double>, CellType {
 
     @IBOutlet weak var leftLabel: UILabel! //swiftlint:disable:this private_outlet
     @IBOutlet private weak var cosmosView: CosmosView!
@@ -11,9 +11,9 @@ public class StarRatingCell: Cell<Int16>, CellType {
     public override func setup() {
         super.setup()
         height = { 50 }
-        cosmosView.rating = Double(row.value ?? 0)
+        cosmosView.rating = row.value ?? 0
         cosmosView.didFinishTouchingCosmos = { rating in
-            self.row.value = rating == 0 ? nil : Int16(floor(rating))
+            self.row.value = rating == 0 ? nil : rating
         }
         selectionStyle = .none
     }

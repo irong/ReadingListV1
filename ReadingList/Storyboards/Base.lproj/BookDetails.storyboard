@@ -761,6 +761,9 @@
                                                                                         <rect key="frame" x="72.333333333333343" y="0.0" width="289.66666666666663" height="20"/>
                                                                                         <userDefinedRuntimeAttributes>
                                                                                             <userDefinedRuntimeAttribute type="boolean" keyPath="updateOnTouch" value="NO"/>
+                                                                                            <userDefinedRuntimeAttribute type="number" keyPath="fillMode">
+                                                                                                <integer key="value" value="1"/>
+                                                                                            </userDefinedRuntimeAttribute>
                                                                                         </userDefinedRuntimeAttributes>
                                                                                     </view>
                                                                                 </subviews>

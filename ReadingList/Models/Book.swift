@@ -21,6 +21,7 @@ class Book: NSManagedObject {
     @NSManaged var googleBooksId: String?
     @NSManaged var manualBookId: String?
     @NSManaged var title: String
+    @NSManaged var subtitle: String?
     @NSManaged private(set) var authorSort: String
     @NSManaged var publicationDate: Date?
     @NSManaged var publisher: String?
@@ -168,6 +169,7 @@ class Book: NSManagedObject {
         set { safelySetPrimitiveValue(newValue, .currentPercentage) }
     }
 
+    /// A rating out of 10
     var rating: Int16? {
         get { return safelyGetPrimitiveValue(.rating) as! Int16? }
         set { safelySetPrimitiveValue(newValue, .rating) }
