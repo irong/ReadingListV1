@@ -1,6 +1,7 @@
 import Foundation
 import UIKit
 import CoreData
+import Cosmos
 import ReadingList_Foundation
 
 class BookDetails: UIViewController, UIScrollViewDelegate {
@@ -12,7 +13,6 @@ class BookDetails: UIViewController, UIScrollViewDelegate {
     @IBOutlet private var titleAuthorHeadings: [UILabel]!
     @IBOutlet private weak var bookDescription: ExpandableLabel!
 
-    @IBOutlet private weak var ratingStarsStackView: UIStackView!
     @IBOutlet private var tableValues: [UILabel]!
     @IBOutlet private var tableSubHeadings: [UILabel]!
 
@@ -25,6 +25,7 @@ class BookDetails: UIViewController, UIScrollViewDelegate {
     @IBOutlet private weak var noLists: UILabel!
     @IBOutlet private weak var noNotes: UILabel!
     @IBOutlet private weak var bookNotes: ExpandableLabel!
+    @IBOutlet private weak var ratingView: CosmosView!
 
     var didShowNavigationItemTitle = false
 
@@ -104,11 +105,11 @@ class BookDetails: UIViewController, UIScrollViewDelegate {
 
         setTextOrHideLine(tableValues[4], pageNumberText)
 
-        ratingStarsStackView.superview!.superview!.superview!.isHidden = book.rating == nil
+        ratingView.superview!.superview!.superview!.isHidden = book.rating == nil
         if let rating = book.rating {
-            for (index, star) in ratingStarsStackView.arrangedSubviews[...4].enumerated() {
-                star.isHidden = index + 1 > rating
-            }
+            ratingView.rating = Double(rating)
+        } else {
+            ratingView.rating = 0
         }
 
         bookNotes.isHidden = book.notes == nil
@@ -342,7 +343,7 @@ extension BookDetails: ThemeableViewController {
         tableValues.forEach { $0.textColor = theme.titleTextColor }
         separatorLines.forEach { $0.backgroundColor = theme.cellSeparatorColor }
         listsStack.arrangedSubviews.forEach { ($0 as! UILabel).textColor = theme.titleTextColor }
-        ratingStarsStackView.arrangedSubviews.compactMap { $0 as? UIImageView }.forEach { $0.tintColor = theme.titleTextColor }
+        //ratingStarsStackView.arrangedSubviews.compactMap { $0 as? UIImageView }.forEach { $0.tintColor = theme.titleTextColor }
     }
 }
 

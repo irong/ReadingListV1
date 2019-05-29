@@ -10,6 +10,7 @@ target 'ReadingList' do
   pod 'SwiftyStoreKit', '~> 0.15'
   pod 'CHCSVParser', :git => 'https://github.com/davedelong/CHCSVParser.git'
   pod 'PromisesSwift', '~> 1.2'
+  pod 'Cosmos', '~> 19.0'
   pod 'SimulatorStatusMagic', :configurations => ['Debug']
   pod 'Fabric'
   pod 'Crashlytics'
