@@ -47,7 +47,7 @@ class BookDetails: UIViewController, UIScrollViewDelegate {
         setViewEnabled(true)
 
         cover.image = UIImage(optionalData: book.coverImage) ?? #imageLiteral(resourceName: "CoverPlaceholder")
-        titleAuthorHeadings[0].text = book.title
+        titleAuthorHeadings[0].text = book.titleAndSubtitle
         titleAuthorHeadings[1].text = book.authors.fullNames
         (navigationItem.titleView as! UINavigationBarLabel).setTitle(book.title)
 

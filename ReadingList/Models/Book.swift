@@ -200,11 +200,20 @@ class Book: NSManagedObject {
 }
 
 extension Book {
+    
+    var titleAndSubtitle: String {
+        if let subtitle = subtitle {
+            return "\(title): \(subtitle)"
+        } else {
+            return title
+        }
+    }
 
     // FUTURE: make a convenience init which takes a fetch result?
     func populate(fromFetchResult fetchResult: FetchResult) {
         googleBooksId = fetchResult.id
         title = fetchResult.title
+        subtitle = fetchResult.subtitle
         authors = fetchResult.authors
         bookDescription = fetchResult.description
         subjects = Set(fetchResult.subjects.map { Subject.getOrCreate(inContext: self.managedObjectContext!, withName: $0) })

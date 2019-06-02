@@ -31,7 +31,7 @@ enum GoogleBooksRequest {
         return "https://books.google.com/"
     }())!
 
-    private static let searchResultFields = "items(id,volumeInfo(title,authors,industryIdentifiers,categories,imageLinks/thumbnail))"
+    private static let searchResultFields = "items(id,volumeInfo(title,subtitle,authors,industryIdentifiers,categories,imageLinks/thumbnail))"
 
     var baseUrl: URL {
         switch self {

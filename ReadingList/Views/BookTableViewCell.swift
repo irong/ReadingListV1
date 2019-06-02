@@ -45,7 +45,7 @@ class BookTableViewCell: UITableViewCell {
     }
 
     func configureFrom(_ book: Book, includeReadDates: Bool = true) {
-        titleLabel.text = book.title
+        titleLabel.text = book.titleAndSubtitle
         authorsLabel.text = book.authors.fullNames
         bookCover.image = UIImage(optionalData: book.coverImage) ?? #imageLiteral(resourceName: "CoverPlaceholder")
         if includeReadDates {
@@ -75,7 +75,13 @@ class BookTableViewCell: UITableViewCell {
     }
 
     func configureFrom(_ searchResult: SearchResult) {
-        titleLabel.text = searchResult.title
+        titleLabel.text = {
+            if let subtitle = searchResult.subtitle {
+                return "\(searchResult.title): \(subtitle)"
+            } else {
+                return searchResult.title
+            }
+        }()
         authorsLabel.text = searchResult.authors.fullNames
 
         guard let coverURL = searchResult.thumbnailCoverUrl else { bookCover.image = #imageLiteral(resourceName: "CoverPlaceholder"); return }

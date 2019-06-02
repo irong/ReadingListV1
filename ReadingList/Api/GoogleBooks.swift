@@ -126,6 +126,7 @@ class GoogleBooksParser {
         guard !authors.isEmpty else { return nil }
 
         let result = SearchResult(id: id, title: title, authors: authors)
+        result.subtitle = item["volumeInfo", "subtitle"].string
 
         // Convert the thumbnail URL to HTTPS
         if let thumbnailUrlString = item["volumeInfo", "imageLinks", "thumbnail"].string,
@@ -189,6 +190,7 @@ class GoogleBooksParser {
 class SearchResult {
     let id: String
     var title: String
+    var subtitle: String?
     var authors: [Author]
     var isbn13: String?
     var thumbnailCoverUrl: URL?
@@ -211,6 +213,7 @@ class SearchResult {
 class FetchResult {
     let id: String
     var title: String
+    var subtitle: String?
     var authors = [Author]()
     var isbn13: ISBN13?
     var description: String?
@@ -227,6 +230,7 @@ class FetchResult {
     init(fromSearchResult searchResult: SearchResult) {
         id = searchResult.id
         title = searchResult.title
+        subtitle = searchResult.subtitle
         authors = searchResult.authors
         isbn13 = ISBN13(searchResult.isbn13)
     }
