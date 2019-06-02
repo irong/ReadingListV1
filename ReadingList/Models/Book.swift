@@ -30,6 +30,12 @@ class Book: NSManagedObject {
     @NSManaged var notes: String?
     @NSManaged var subjects: Set<Subject>
     @NSManaged private(set) var lists: Set<List>
+    @NSManaged private(set) var addedWhen: Date?
+
+    override func awakeFromInsert() {
+        super.awakeFromInsert()
+        addedWhen = Date()
+    }
 
     func setToRead() {
         readState = .toRead
