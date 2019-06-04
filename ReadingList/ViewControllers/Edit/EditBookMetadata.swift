@@ -67,7 +67,7 @@ class EditBookMetadata: FormViewController {
         configureNavigationItem()
 
         // Watch the book object for changes and validate the form
-        NotificationCenter.default.addObserver(self, selector: #selector(validate), name: .NSManagedObjectContextObjectsDidChange, object: editBookContext)
+        NotificationCenter.default.addObserver(self, selector: #selector(validateBook), name: .NSManagedObjectContextObjectsDidChange, object: editBookContext)
 
         // Just to prevent having to reference `self` in the onChange handlers...
         let book = self.book!
@@ -200,7 +200,7 @@ class EditBookMetadata: FormViewController {
         #endif
 
         // Validate on start
-        validate()
+        validateBook()
 
         monitorThemeSetting()
     }
@@ -265,7 +265,7 @@ class EditBookMetadata: FormViewController {
         }
     }
 
-    @objc func validate() {
+    @objc func validateBook() {
         navigationItem.rightBarButtonItem!.isEnabled = book.isValidForUpdate()
     }
 
