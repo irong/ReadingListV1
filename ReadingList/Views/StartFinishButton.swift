@@ -9,8 +9,8 @@ class StartFinishButton: BorderedButton {
         case none
     }
 
-    var startColor = UIColor.buttonBlue
-    var finishColor = UIColor.flatGreen
+    var startColor = UIColor(.buttonBlue)
+    var finishColor = UIColor(.buttonGreen)
 
     func setState(_ state: ButtonState) {
         switch state {

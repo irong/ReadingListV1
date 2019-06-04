@@ -11,17 +11,6 @@ import ReadingList_Foundation
     case black = 3
 }
 
-extension UIColor {
-    static var customHexColorCache = [UInt32: UIColor]()
-
-    static func hex(_ hex: UInt32) -> UIColor {
-        if let cachedColor = UIColor.customHexColorCache[hex] { return cachedColor }
-        let color = UIColor(fromHex: hex)
-        customHexColorCache[hex] = color
-        return color
-    }
-}
-
 extension Theme: CustomStringConvertible {
     var description: String {
         switch self {
@@ -32,6 +21,27 @@ extension Theme: CustomStringConvertible {
     }
 }
 
+enum ColorAsset: String {
+    case buttonBlue = "ButtonBlue"
+    case buttonGreen = "ButtonGreen"
+    case darkButtonBlue = "DarkButtonBlue"
+    case darkButtonGreen = "DarkButtonGreen"
+    case subtitleText = "SubtitleText"
+    case veryDark = "VeryDark"
+    case extremelyDark = "ExtremelyDark"
+    case veryLight = "VeryLight"
+    case placeholderText = "PlaceholderText"
+    case darkPlaceholderText = "DarkPlaceholderText"
+    case blackPlaceholderText = "BlackPlaceholderText"
+    case lightBlueCellSelection = "LightBlueCellSelection"
+}
+
+extension UIColor {
+    convenience init(_ assetName: ColorAsset) {
+        self.init(named: assetName.rawValue)!
+    }
+}
+
 extension Theme {
 
     var isDark: Bool {
@@ -39,11 +49,11 @@ extension Theme {
     }
 
     var tint: UIColor {
-        return isDark ? UIColor.hex(0x136cd6) : .buttonBlue
+        return isDark ? UIColor(.darkButtonBlue) : UIColor(.buttonBlue)
     }
 
     var greenButtonColor: UIColor {
-        return isDark ? UIColor.hex(0x2ca55d) : .flatGreen
+        return isDark ? UIColor(.darkButtonGreen) : UIColor(.buttonGreen)
     }
 
     var keyboardAppearance: UIKeyboardAppearance {
@@ -64,7 +74,7 @@ extension Theme {
 
     var subtitleTextColor: UIColor {
         switch self {
-        case .normal: return UIColor.hex(0x686868)
+        case .normal: return UIColor(.subtitleText)
         case .dark: return .lightGray
         case .black: return .lightGray
         }
@@ -72,17 +82,17 @@ extension Theme {
 
     var placeholderTextColor: UIColor {
         switch self {
-        case .normal: return UIColor.hex(0xCDCDD3)
-        case .dark: return UIColor.hex(0x404040)
-        case .black: return UIColor.hex(0x363636)
+        case .normal: return UIColor(.placeholderText)
+        case .dark: return UIColor(.darkPlaceholderText)
+        case .black: return UIColor(.blackPlaceholderText)
         }
     }
 
     var tableBackgroundColor: UIColor {
         switch self {
         case .normal: return .groupTableViewBackground
-        case .dark: return UIColor.hex(0x282828)
-        case .black: return UIColor.hex(0x080808)
+        case .dark: return UIColor(.veryDark)
+        case .black: return UIColor(.extremelyDark)
         }
     }
 
@@ -92,24 +102,24 @@ extension Theme {
 
     var selectedCellBackgroundColor: UIColor {
         switch self {
-        case .normal: return UIColor.hex(0xD9D9D9)
+        case .normal: return UIColor(.veryLight)
         case .dark: return .black
-        case .black: return UIColor.hex(0x191919)
+        case .black: return UIColor(.veryDark)
         }
     }
 
     var cellSeparatorColor: UIColor {
         switch self {
-        case .normal: return UIColor.hex(0xD6D6D6)
-        case .dark: return UIColor.hex(0x4A4A4A)
-        case .black: return UIColor.hex(0x282828)
+        case .normal: return UIColor(.veryLight)
+        case .dark: return UIColor(.veryDark)
+        case .black: return UIColor(.veryDark)
         }
     }
 
     var viewBackgroundColor: UIColor {
         switch self {
         case .normal: return .white
-        case .dark: return UIColor.hex(0x191919)
+        case .dark: return UIColor(.veryDark)
         case .black: return .black
         }
     }

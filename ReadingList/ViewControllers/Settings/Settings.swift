@@ -68,7 +68,7 @@ class Settings: UITableViewController {
         cell.defaultInitialise(withTheme: UserDefaults.standard[.theme])
         if splitViewController?.isSplit == true {
             // In split mode, change the cells a little to look more like the standard iOS settings app
-            cell.selectedBackgroundView = UIView(backgroundColor: UIColor(fromHex: 5350396))
+            cell.selectedBackgroundView = UIView(backgroundColor: UIColor(.lightBlueCellSelection))
             cell.textLabel!.highlightedTextColor = .white
             cell.accessoryType = .none
         }
