@@ -284,7 +284,7 @@ class BookDetails: UIViewController, UIScrollViewDelegate {
     @IBAction private func shareButtonPressed(_ sender: UIBarButtonItem) {
         guard let book = book else { return }
 
-        let activityViewController = UIActivityViewController(activityItems: ["\(book.title)\n\(book.authors.fullNames)"], applicationActivities: nil)
+        let activityViewController = UIActivityViewController(activityItems: ["\(book.titleAndSubtitle)\n\(book.authors.fullNames)"], applicationActivities: nil)
         activityViewController.popoverPresentationController?.barButtonItem = sender
         activityViewController.excludedActivityTypes = [.assignToContact, .saveToCameraRoll, .addToReadingList,
                                                         .postToFlickr, .postToVimeo, .openInIBooks, .markupAsPDF]
@@ -357,7 +357,6 @@ extension BookDetails: ThemeableViewController {
         tableValues.forEach { $0.textColor = theme.titleTextColor }
         separatorLines.forEach { $0.backgroundColor = theme.cellSeparatorColor }
         listsStack.arrangedSubviews.forEach { ($0 as! UILabel).textColor = theme.titleTextColor }
-        //ratingStarsStackView.arrangedSubviews.compactMap { $0 as? UIImageView }.forEach { $0.tintColor = theme.titleTextColor }
     }
 }
 
