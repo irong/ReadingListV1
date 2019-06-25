@@ -206,7 +206,7 @@ class Book: NSManagedObject {
 }
 
 extension Book {
-    
+
     var titleAndSubtitle: String {
         if let subtitle = subtitle {
             return "\(title): \(subtitle)"
