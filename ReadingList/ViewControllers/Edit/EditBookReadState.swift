@@ -9,7 +9,6 @@ class EditBookReadState: FormViewController {
     private var book: Book!
     private var newBook = false
 
-    private let currentPageKey = "currentPage"
     private let readStateKey = "readState"
     private let startedReadingKey = "startedReading"
     private let finishedReadingKey = "finishedReading"
@@ -76,17 +75,10 @@ class EditBookReadState: FormViewController {
             <<< SegmentedRow<ProgressType>(progressTypeKey) {
                 $0.title = "Type  "
                 $0.options = [.page, .percentage]
-                $0.value = book.currentPage == nil && book.currentPercentage == nil ? UserDefaults.standard[.defaultProgressType] :  book.progressAuthority
+                $0.value = book.currentPage == nil && book.currentPercentage == nil ? UserDefaults.standard[.defaultProgressType] : book.progressAuthority
                 $0.onChange { [unowned self] row in
                     guard let type = row.value else { return }
-                    switch type {
-                    case .page:
-                        let page = (self.form.rowBy(tag: self.progressPageKey) as! Int32Row).value
-                        self.book.setProgress(.page(page))
-                    case .percentage:
-                        let percent = (self.form.rowBy(tag: self.progressPercentageKey) as! Int32Row).value
-                        self.book.setProgress(.percentage(percent))
-                    }
+                    self.updateProgressFromForm(type)
                 }
             }
             <<< Int32Row(progressPageKey) {
@@ -121,21 +113,42 @@ class EditBookReadState: FormViewController {
         super.viewDidAppear(animated)
         // If we are editing a book (not adding one), pre-select the current page field
         if self.book.readState == .reading && self.book.changedValues().isEmpty {
-            //let currentPageRow = self.form.rowBy(tag: currentPageKey) as! Int32Row
-            //currentPageRow.cell.textField.becomeFirstResponder()
+            guard let progressRow = [progressPageKey, progressPercentageKey].map({
+                self.form.rowBy(tag: $0) as! Int32Row
+            }).first(where: { !$0.isHidden }) else {
+                assertionFailure("Neither percentage nor page visible")
+                return
+            }
+            progressRow.cell.textField.becomeFirstResponder()
         }
     }
 
     private func updateBookFromForm() {
-        let readState = (form.rowBy(tag: readStateKey) as! SegmentedRow<BookReadState>).value ?? .toRead
-        if readState == .toRead {
+        guard let readState = (form.rowBy(tag: readStateKey) as! SegmentedRow<BookReadState>).value else {
+            assertionFailure("No read state value")
+            return
+        }
+        switch readState {
+        case .toRead:
             book.setToRead()
-        } else if readState == .reading {
+        case .reading:
             book.setReading(started: (form.rowBy(tag: startedReadingKey) as! DateRow).value ?? Date())
-            //book.setProgress((form.rowBy(tag: currentPageKey) as! Int32Row).value, isPercentage: false)
-        } else {
+            guard let progressType = (form.rowBy(tag: progressTypeKey) as! SegmentedRow<ProgressType>).value else { return }
+            updateProgressFromForm(progressType)
+        case .finished:
             book.setFinished(started: (form.rowBy(tag: startedReadingKey) as! DateRow).value ?? Date(),
                              finished: (form.rowBy(tag: finishedReadingKey) as! DateRow).value ?? Date())
+        }
+    }
+
+    private func updateProgressFromForm(_ progressType: ProgressType) {
+        switch progressType {
+        case .page:
+            let page = (self.form.rowBy(tag: self.progressPageKey) as! Int32Row).value
+            self.book.setProgress(.page(page))
+        case .percentage:
+            let percent = (self.form.rowBy(tag: self.progressPercentageKey) as! Int32Row).value
+            self.book.setProgress(.percentage(percent))
         }
     }
 
