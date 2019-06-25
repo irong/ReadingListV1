@@ -262,20 +262,6 @@ public extension UILabel {
     }
 }
 
-public extension UIColor {
-    convenience init(fromHex hex: UInt32) {
-        self.init(
-            red: CGFloat((hex & 0xFF0000) >> 16) / 255.0,
-            green: CGFloat((hex & 0x00FF00) >> 8) / 255.0,
-            blue: CGFloat(hex & 0x0000FF) / 255.0,
-            alpha: CGFloat(1.0)
-        )
-    }
-
-    static let flatGreen = UIColor(fromHex: 0x2ECC71)
-    static let buttonBlue = UIColor(red: 0, green: 0.478431, blue: 1, alpha: 1)
-}
-
 public extension UIFont {
     func scaled(forTextStyle textStyle: UIFont.TextStyle) -> UIFont {
         let fontSize = UIFont.preferredFont(forTextStyle: textStyle).pointSize

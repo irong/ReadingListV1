@@ -40,7 +40,7 @@ public class ExpandableLabel: UIView {
         }
     }
 
-    public var buttonColor: UIColor = .buttonBlue {
+    public var buttonColor: UIColor = .blue {
         didSet { seeMore.textColor = buttonColor }
     }
 

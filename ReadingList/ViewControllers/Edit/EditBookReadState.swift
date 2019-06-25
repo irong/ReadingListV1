@@ -36,7 +36,7 @@ class EditBookReadState: FormViewController {
         configureNavigationItem()
 
         // Watch the book object for changes and validate the form
-        NotificationCenter.default.addObserver(self, selector: #selector(validate), name: .NSManagedObjectContextObjectsDidChange, object: editContext)
+        NotificationCenter.default.addObserver(self, selector: #selector(validateBook), name: .NSManagedObjectContextObjectsDidChange, object: editContext)
 
         let now = Date()
 
@@ -147,7 +147,7 @@ class EditBookReadState: FormViewController {
         navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(donePressed))
     }
 
-    @objc func validate() {
+    @objc func validateBook() {
         navigationItem.rightBarButtonItem!.isEnabled = book.isValidForUpdate()
     }
 

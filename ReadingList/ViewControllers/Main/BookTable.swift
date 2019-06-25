@@ -374,7 +374,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
             UserEngagement.logEvent(.transitionReadState)
             callback(true)
         }
-        leadingSwipeAction.backgroundColor = readStateOfSection == .toRead ? .buttonBlue : .flatGreen
+        leadingSwipeAction.backgroundColor = readStateOfSection == .toRead ? UIColor(.buttonBlue) : UIColor(.buttonGreen)
         leadingSwipeAction.image = readStateOfSection == .toRead ? #imageLiteral(resourceName: "Play") : #imageLiteral(resourceName: "Complete")
         actions.insert(leadingSwipeAction, at: 0)
 
