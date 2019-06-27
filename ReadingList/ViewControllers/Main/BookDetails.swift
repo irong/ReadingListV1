@@ -47,7 +47,7 @@ class BookDetails: UIViewController, UIScrollViewDelegate {
         setViewEnabled(true)
 
         cover.image = UIImage(optionalData: book.coverImage) ?? #imageLiteral(resourceName: "CoverPlaceholder")
-        titleAuthorHeadings[0].text = book.title
+        titleAuthorHeadings[0].text = book.titleAndSubtitle
         titleAuthorHeadings[1].text = book.authors.fullNames
         (navigationItem.titleView as! UINavigationBarLabel).setTitle(book.title)
 
@@ -93,21 +93,35 @@ class BookDetails: UIViewController, UIScrollViewDelegate {
             }
         }
         setTextOrHideLine(tableValues[3], readTimeText)
-        let pageNumberText: String?
-        if let currentPage = book.currentPage {
-            if let totalPages = book.pageCount, currentPage <= totalPages, currentPage > 0 {
-                let progress = Float(currentPage) / Float(totalPages)
-                pageNumberText = "\(currentPage) (\(Int(100 * progress))% complete)"
-            } else {
-                pageNumberText = "\(currentPage)"
-            }
-        } else { pageNumberText = nil }
 
+        let pageNumberText: String?
+        switch book.progressAuthority {
+        case .page:
+            if let page = book.currentPage {
+                if let percentage = book.currentPercentage {
+                    pageNumberText = "Page \(page) (\(percentage)%)"
+                } else {
+                    pageNumberText = "Page \(page)"
+                }
+            } else {
+                pageNumberText = nil
+            }
+        case .percentage:
+            if let percent = book.currentPercentage {
+                if let page = book.currentPage {
+                    pageNumberText = "\(percent)% (page \(page))"
+                } else {
+                    pageNumberText = "\(percent)%"
+                }
+            } else {
+                pageNumberText = nil
+            }
+        }
         setTextOrHideLine(tableValues[4], pageNumberText)
 
         ratingView.superview!.superview!.superview!.isHidden = book.rating == nil
         if let rating = book.rating {
-            ratingView.rating = Double(rating)
+            ratingView.rating = Double(rating) / 2
         } else {
             ratingView.rating = 0
         }
@@ -270,7 +284,7 @@ class BookDetails: UIViewController, UIScrollViewDelegate {
     @IBAction private func shareButtonPressed(_ sender: UIBarButtonItem) {
         guard let book = book else { return }
 
-        let activityViewController = UIActivityViewController(activityItems: ["\(book.title)\n\(book.authors.fullNames)"], applicationActivities: nil)
+        let activityViewController = UIActivityViewController(activityItems: ["\(book.titleAndSubtitle)\n\(book.authors.fullNames)"], applicationActivities: nil)
         activityViewController.popoverPresentationController?.barButtonItem = sender
         activityViewController.excludedActivityTypes = [.assignToContact, .saveToCameraRoll, .addToReadingList,
                                                         .postToFlickr, .postToVimeo, .openInIBooks, .markupAsPDF]
@@ -343,7 +357,6 @@ extension BookDetails: ThemeableViewController {
         tableValues.forEach { $0.textColor = theme.titleTextColor }
         separatorLines.forEach { $0.backgroundColor = theme.cellSeparatorColor }
         listsStack.arrangedSubviews.forEach { ($0 as! UILabel).textColor = theme.titleTextColor }
-        //ratingStarsStackView.arrangedSubviews.compactMap { $0 as? UIImageView }.forEach { $0.tintColor = theme.titleTextColor }
     }
 }
 

@@ -57,7 +57,7 @@ extension Book {
                 throw BookValidationError.invalidReadDates.NSError()
             }
         }
-        if readState != .reading && currentPage != nil {
+        if readState != .reading && (currentPage != nil || currentPercentage != nil) {
             throw BookValidationError.presentCurrentPage.NSError()
         }
         if googleBooksId == nil && manualBookId == nil {

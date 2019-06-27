@@ -19,9 +19,13 @@ class EditBookNotes: FormViewController {
 
         form +++ Section(header: "Notes", footer: "")
             <<< StarRatingRow { [unowned self] in
-                $0.value = self.book.rating
+                $0.value = Double(self.book.rating ?? 0) / 2
                 $0.onChange { [unowned self] in
-                    self.book.rating = $0.value
+                    if let rating = $0.value {
+                        self.book.rating = Int16(floor(rating * 2))
+                    } else {
+                        self.book.rating = nil
+                    }
                 }
             }
             <<< TextAreaRow {

@@ -39,6 +39,8 @@ extension UserSettingsCollection {
 
     static let listSortOrder = UserSetting<ListSortOrder>("listSortOrder", defaultValue: .alphabetical)
     static let showExpandedDescription = UserSetting<Bool>("showExpandedDescription", defaultValue: false)
+
+    static let defaultProgressType = UserSetting<ProgressType>("defaultProgressType", defaultValue: .page)
 }
 
 extension LanguageIso639_1: UserSettingType { }

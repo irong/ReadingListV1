@@ -22,11 +22,14 @@
                     <nil key="textColor"/>
                     <nil key="highlightedColor"/>
                 </label>
-                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="iJc-FQ-Hug" customClass="CosmosView" customModule="Cosmos">
+                <view contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="iJc-FQ-Hug" customClass="CosmosView" customModule="Cosmos">
                     <rect key="frame" x="144" y="9" width="160" height="28"/>
                     <userDefinedRuntimeAttributes>
                         <userDefinedRuntimeAttribute type="number" keyPath="starSize">
                             <real key="value" value="28"/>
+                        </userDefinedRuntimeAttribute>
+                        <userDefinedRuntimeAttribute type="number" keyPath="fillMode">
+                            <integer key="value" value="1"/>
                         </userDefinedRuntimeAttribute>
                         <userDefinedRuntimeAttribute type="number" keyPath="minTouchRating">
                             <real key="value" value="0.0"/>
@@ -39,7 +42,7 @@
                 <constraint firstItem="ptZ-iH-AEu" firstAttribute="centerY" secondItem="iN0-l3-epB" secondAttribute="centerY" id="KzY-mh-H8I"/>
                 <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="iJc-FQ-Hug" secondAttribute="trailing" constant="16" id="R1w-7I-nc7"/>
                 <constraint firstItem="iJc-FQ-Hug" firstAttribute="centerY" secondItem="iN0-l3-epB" secondAttribute="centerY" id="mN9-CT-VgF"/>
-                <constraint firstItem="ptZ-iH-AEu" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" constant="16" id="y0i-4o-uLW"/>
+                <constraint firstItem="ptZ-iH-AEu" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" constant="18" id="y0i-4o-uLW"/>
             </constraints>
             <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
             <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>

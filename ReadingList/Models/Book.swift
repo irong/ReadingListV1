@@ -13,11 +13,15 @@ class Book: NSManagedObject {
     @NSManaged private(set) var readState: BookReadState
     @NSManaged private(set) var startedReading: Date?
     @NSManaged private(set) var finishedReading: Date?
+
+    /// Whether the last set read progress was set by a page number or by percentage
+    @NSManaged private(set) var currentProgressIsPage: Bool
     @NSManaged var sort: Int32
 
     @NSManaged var googleBooksId: String?
     @NSManaged var manualBookId: String?
     @NSManaged var title: String
+    @NSManaged var subtitle: String?
     @NSManaged private(set) var authorSort: String
     @NSManaged var publicationDate: Date?
     @NSManaged var publisher: String?
@@ -26,12 +30,19 @@ class Book: NSManagedObject {
     @NSManaged var notes: String?
     @NSManaged var subjects: Set<Subject>
     @NSManaged private(set) var lists: Set<List>
+    @NSManaged private(set) var addedWhen: Date?
+
+    override func awakeFromInsert() {
+        super.awakeFromInsert()
+        addedWhen = Date()
+    }
 
     func setToRead() {
         readState = .toRead
         startedReading = nil
         finishedReading = nil
         currentPage = nil
+        currentPercentage = nil
     }
 
     func setReading(started: Date) {
@@ -49,6 +60,7 @@ class Book: NSManagedObject {
             finishedReading = started
         }
         currentPage = nil
+        currentPercentage = nil
     }
 
     func setDefaultReadDates(for readState: BookReadState) {
@@ -57,6 +69,53 @@ class Book: NSManagedObject {
         case .reading: setReading(started: Date())
         case .finished: setFinished(started: Date(), finished: Date())
         }
+    }
+
+    func setProgress(_ progress: Progress?) {
+        guard let progress = progress else {
+            currentPage = nil
+            currentPercentage = nil
+            return
+        }
+        switch progress {
+        case .page(let newPageNumber):
+            progressAuthority = .page
+            if let newPageNumber = newPageNumber {
+                currentPage = max(0, newPageNumber)
+            } else {
+                currentPage = nil
+            }
+        case .percentage(let newPercentage):
+            progressAuthority = .percentage
+            if let newPercentage = newPercentage {
+                currentPercentage = max(0, min(100, newPercentage))
+            } else {
+                currentPercentage = nil
+            }
+        }
+
+        updateComputedProgressData()
+    }
+
+    private func updateComputedProgressData() {
+        if currentProgressIsPage {
+            if let pageCount = pageCount, let currentPage = currentPage {
+                currentPercentage = min(100, Int32(round((Float(currentPage) / Float(pageCount)) * 100)))
+            } else {
+                currentPercentage = nil
+            }
+        } else {
+            if let pageCount = pageCount, let currentPercentage = currentPercentage {
+                currentPage = Int32(round(Float(pageCount) * (Float(currentPercentage) / 100)))
+            } else {
+                currentPage = nil
+            }
+        }
+    }
+
+    private(set) var progressAuthority: ProgressType {
+        get { return currentProgressIsPage ? .page : .percentage }
+        set { currentProgressIsPage = newValue == .page }
     }
 
     /**
@@ -69,6 +128,7 @@ class Book: NSManagedObject {
         case isbn13 = "isbn13"
         case pageCount = "pageCount"
         case currentPage = "currentPage"
+        case currentPercentage = "currentPercentage"
         case rating = "rating"
         case languageCode = "languageCode"
     } //swiftlint:enable redundant_string_enum_value
@@ -99,14 +159,23 @@ class Book: NSManagedObject {
 
     var pageCount: Int32? {
         get { return safelyGetPrimitiveValue(.pageCount) as! Int32? }
-        set { safelySetPrimitiveValue(newValue, .pageCount) }
+        set {
+            safelySetPrimitiveValue(newValue, .pageCount)
+            updateComputedProgressData()
+        }
     }
 
-    var currentPage: Int32? {
+    private(set) var currentPage: Int32? {
         get { return safelyGetPrimitiveValue(.currentPage) as! Int32? }
         set { safelySetPrimitiveValue(newValue, .currentPage) }
     }
 
+    private(set) var currentPercentage: Int32? {
+        get { return safelyGetPrimitiveValue(.currentPercentage) as! Int32? }
+        set { safelySetPrimitiveValue(newValue, .currentPercentage) }
+    }
+
+    /// A rating out of 10
     var rating: Int16? {
         get { return safelyGetPrimitiveValue(.rating) as! Int16? }
         set { safelySetPrimitiveValue(newValue, .rating) }
@@ -138,10 +207,19 @@ class Book: NSManagedObject {
 
 extension Book {
 
+    var titleAndSubtitle: String {
+        if let subtitle = subtitle {
+            return "\(title): \(subtitle)"
+        } else {
+            return title
+        }
+    }
+
     // FUTURE: make a convenience init which takes a fetch result?
     func populate(fromFetchResult fetchResult: FetchResult) {
         googleBooksId = fetchResult.id
         title = fetchResult.title
+        subtitle = fetchResult.subtitle
         authors = fetchResult.authors
         bookDescription = fetchResult.description
         subjects = Set(fetchResult.subjects.map { Subject.getOrCreate(inContext: self.managedObjectContext!, withName: $0) })

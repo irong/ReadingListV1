@@ -86,6 +86,16 @@ public extension Int {
         guard let string = string else { return nil }
         self.init(string)
     }
+
+    init?(_ int16: Int16?) {
+        guard let int16 = int16 else { return nil }
+        self.init(int16)
+    }
+
+    init?(_ int32: Int32?) {
+        guard let int32 = int32 else { return nil }
+        self.init(int32)
+    }
 }
 
 public extension NSSortDescriptor {

@@ -33,6 +33,17 @@ class General: FormViewController {
                 }
             }
 
+            +++ Section(header: "Progress", footer: "Choose whether to default to Page Number or Percentage when setting progress.")
+                <<< ThemedPushRow<ProgressType> {
+                    $0.title = "Default Progress Type"
+                    $0.options = [.page, .percentage]
+                    $0.value = UserDefaults.standard[.defaultProgressType]
+                    $0.onChange {
+                        guard let newValue = $0.value else { return }
+                        UserDefaults.standard[.defaultProgressType] = newValue
+                    }
+                }
+
             +++ Section(header: "Language", footer: """
                 By default, Reading List prioritises search results based on their language and your location. To instead \
                 restrict search results to be of a specific language only, select a language above.

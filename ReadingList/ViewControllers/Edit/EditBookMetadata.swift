@@ -88,6 +88,12 @@ class EditBookMetadata: FormViewController {
             +++ AuthorSection(book: book, navigationController: navigationController!)
 
             +++ Section(header: "Additional Information", footer: "Note: if provided, ISBN-13 must be a valid, 13 digit ISBN.")
+            <<< TextRow {
+                $0.cell.textField.autocapitalizationType = .words
+                $0.title = "Subtitle"
+                $0.value = book.subtitle
+                $0.onChange { book.subtitle = $0.value }
+            }
             <<< Int32Row {
                 $0.title = "Page Count"
                 $0.value = book.pageCount

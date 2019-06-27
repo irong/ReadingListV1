@@ -13,6 +13,7 @@ enum BooksModelVersion: String, CaseIterable {
     case version12 = "books_12"
     case version13 = "books_13"
     case version14 = "books_14"
+    case version15 = "books_15"
 }
 
 extension BooksModelVersion: ModelVersion {

@@ -361,8 +361,11 @@ extension Theme {
         DateRow.defaultCellUpdate = initialiseCell(_:_:)
         ThemedPushRow<Theme>.defaultCellUpdate = initialiseCell(_:_:)
         ListCheckRow<Theme>.defaultCellUpdate = initialiseCell(_:_:)
+        ThemedPushRow<ProgressType>.defaultCellUpdate = initialiseCell(_:_:)
+        ListCheckRow<ProgressType>.defaultCellUpdate = initialiseCell(_:_:)
         ImageRow.defaultCellUpdate = initialiseCell(_:_:)
         SegmentedRow<BookReadState>.defaultCellUpdate = initialiseCell(_:_:)
+        SegmentedRow<ProgressType>.defaultCellUpdate = initialiseCell(_:_:)
         LabelRow.defaultCellUpdate = initialiseCell(_:_:)
         AuthorRow.defaultCellUpdate = initialiseCell(_:_:)
         PickerInlineRow<LanguageSelection>.defaultCellUpdate = { cell, _ in
