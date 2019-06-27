@@ -16,7 +16,20 @@ class BookCSVExport {
             CsvColumn<Book>(header: "Language Code") { $0.language?.rawValue },
             CsvColumn<Book>(header: "Started Reading") { $0.startedReading?.string(withDateFormat: "yyyy-MM-dd") },
             CsvColumn<Book>(header: "Finished Reading") { $0.finishedReading?.string(withDateFormat: "yyyy-MM-dd") },
-            CsvColumn<Book>(header: "Current Page") { $0.currentPage == nil ? nil : String(describing: $0.currentPage!) },
+            CsvColumn<Book>(header: "Current Page") {
+                if let currentPage = $0.currentPage, $0.progressAuthority == .page {
+                    return String(describing: currentPage)
+                } else {
+                    return nil
+                }
+            },
+            CsvColumn<Book>(header: "Current Percentage") {
+                if let currentPercentage = $0.currentPercentage, $0.progressAuthority == .percentage {
+                    return String(describing: currentPercentage)
+                } else {
+                    return nil
+                }
+            },
             CsvColumn<Book>(header: "Rating") { $0.rating == nil ? nil : String(describing: $0.rating!) },
             CsvColumn<Book>(header: "Notes") { $0.notes }
         ]
