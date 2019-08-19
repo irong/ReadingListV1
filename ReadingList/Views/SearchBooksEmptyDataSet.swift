@@ -15,6 +15,7 @@ class SearchBooksEmptyDataset: UIView {
     }
 
     func initialise(fromTheme theme: Theme) {
+        if #available(iOS 13.0, *) { return }
         backgroundColor = theme.tableBackgroundColor
         titleLabel.textColor = theme.titleTextColor
         descriptionLabel.textColor = theme.subtitleTextColor

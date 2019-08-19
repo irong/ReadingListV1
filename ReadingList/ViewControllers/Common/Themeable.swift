@@ -5,6 +5,7 @@ import ImageRow
 import SafariServices
 import ReadingList_Foundation
 
+@available(iOS, obsoleted: 13.0)
 @objc enum Theme: Int, UserSettingType, CaseIterable {
     case normal = 1
     case dark = 2
@@ -42,6 +43,7 @@ extension UIColor {
     }
 }
 
+@available(iOS, obsoleted: 13.0, message: "bla")
 extension Theme {
 
     var isDark: Bool {
@@ -126,7 +128,9 @@ extension Theme {
 }
 
 extension UITableViewCell {
+    @available(iOS, obsoleted: 13.0)
     func defaultInitialise(withTheme theme: Theme) {
+        if #available(iOS 13.0, *) { return }
         backgroundColor = theme.cellBackgroundColor
         textLabel?.textColor = theme.titleTextColor
         detailTextLabel?.textColor = theme.titleTextColor
@@ -141,6 +145,7 @@ fileprivate extension UIViewController {
      Must only called on a ThemableViewController.
     */
     @objc func transitionThemeChange() {
+        if #available(iOS 13.0, *) { return }
         // This function is defined as an extension of UIViewController rather than in ThemableViewController
         // since it must be @objc, and that is not possible in protocol extensions.
         guard let themable = self as? ThemeableViewController else {
@@ -153,13 +158,16 @@ fileprivate extension UIViewController {
     }
 }
 
+@available(iOS, obsoleted: 13.0)
 @objc protocol ThemeableViewController where Self: UIViewController {
     @objc func initialise(withTheme theme: Theme)
     @objc optional func themeSettingDidChange()
 }
 
 extension ThemeableViewController {
+    @available(iOS, obsoleted: 13.0)
     func monitorThemeSetting() {
+        if #available(iOS 13.0, *) { return }
         initialise(withTheme: UserDefaults.standard[.theme])
         NotificationCenter.default.addObserver(self, selector: #selector(transitionThemeChange), name: .ThemeSettingChanged, object: nil)
     }
@@ -197,7 +205,9 @@ extension UIToolbar {
 }
 
 extension UITableViewController: ThemeableViewController {
+    @available(iOS, obsoleted: 13.0)
     func initialise(withTheme theme: Theme) {
+        if #available(iOS 13.0, *) { return }
         navigationItem.searchController?.searchBar.initialise(withTheme: theme)
         tableView.initialise(withTheme: theme)
     }
@@ -225,6 +235,7 @@ extension FormViewController: ThemeableViewController {
     }
 }
 
+@available(iOS, obsoleted: 13.0)
 class ThemedSplitViewController: UISplitViewController, UISplitViewControllerDelegate, ThemeableViewController {
 
     override func viewDidLoad() {
@@ -259,10 +270,15 @@ class ThemedSplitViewController: UISplitViewController, UISplitViewControllerDel
     override var preferredStatusBarStyle: UIStatusBarStyle {
         // This override is placed on the base view controller type - the SplitViewController - so that
         // it only needs to be implemented once.
-        return UserDefaults.standard[.theme].statusBarStyle
+        if #available(iOS 13.0, *) {
+            return super.preferredStatusBarStyle
+        } else {
+            return UserDefaults.standard[.theme].statusBarStyle
+        }
     }
 }
 
+@available(iOS, obsoleted: 13.0)
 class ThemedNavigationController: UINavigationController, ThemeableViewController {
     var hasAppeared = false
 
@@ -280,6 +296,7 @@ class ThemedNavigationController: UINavigationController, ThemeableViewControlle
     }
 
     func initialise(withTheme theme: Theme) {
+        if #available(iOS 13.0, *) { return }
         toolbar?.initialise(withTheme: theme)
         navigationBar.initialise(withTheme: theme)
 
@@ -288,6 +305,7 @@ class ThemedNavigationController: UINavigationController, ThemeableViewControlle
     }
 }
 
+@available(iOS, obsoleted: 13.0)
 class ThemedSelectorViewController<T: Equatable>: SelectorViewController<SelectorRow<PushSelectorCell<T>>> {
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -295,6 +313,7 @@ class ThemedSelectorViewController<T: Equatable>: SelectorViewController<Selecto
     }
 }
 
+@available(iOS, obsoleted: 13.0)
 final class ThemedPushRow<T: Equatable>: _PushRow<PushSelectorCell<T>>, RowType {
     required init(tag: String?) {
         super.init(tag: tag)
@@ -351,12 +370,14 @@ extension StartFinishButton {
 }
 
 extension Theme {
+    @available(iOS, obsoleted: 13.0)
     func configureForms() {
 
         func initialiseCell(_ cell: UITableViewCell, _: Any? = nil) {
             cell.defaultInitialise(withTheme: self)
         }
 
+        if #available(iOS 13.0, *) { return }
         SwitchRow.defaultCellUpdate = initialiseCell(_:_:)
         DateRow.defaultCellUpdate = initialiseCell(_:_:)
         ThemedPushRow<Theme>.defaultCellUpdate = initialiseCell(_:_:)

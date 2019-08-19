@@ -145,7 +145,9 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         let cell = tableView.dequeue(BookTableViewCell.self, for: indexPath)
         let book = resultsController.object(at: indexPath)
         cell.configureFrom(book)
-        cell.initialise(withTheme: UserDefaults.standard[.theme])
+        if #available(iOS 13.0, *) { } else {
+            cell.initialise(withTheme: UserDefaults.standard[.theme])
+        }
         return cell
     }
 

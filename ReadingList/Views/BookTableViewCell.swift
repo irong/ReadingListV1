@@ -27,6 +27,7 @@ class BookTableViewCell: UITableViewCell {
     }
 
     func initialise(withTheme theme: Theme) {
+        if #available(iOS 13.0, *) { return }
         defaultInitialise(withTheme: theme)
         titleLabel.textColor = theme.titleTextColor
         authorsLabel.textColor = theme.subtitleTextColor

@@ -59,13 +59,16 @@ class Settings: UITableViewController {
     }
 
     override func initialise(withTheme theme: Theme) {
+        if #available(iOS 13.0, *) { return }
         super.initialise(withTheme: theme)
         headerLabels.forEach { $0.textColor = theme.titleTextColor }
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
-        cell.defaultInitialise(withTheme: UserDefaults.standard[.theme])
+        if #available(iOS 13.0, *) { } else {
+            cell.defaultInitialise(withTheme: UserDefaults.standard[.theme])
+        }
         if splitViewController?.isSplit == true {
             // In split mode, change the cells a little to look more like the standard iOS settings app
             cell.selectedBackgroundView = UIView(backgroundColor: UIColor(.lightBlueCellSelection))

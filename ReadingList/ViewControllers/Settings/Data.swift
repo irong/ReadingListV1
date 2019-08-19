@@ -25,6 +25,7 @@ class DataVC: UITableViewController {
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
+        if #available(iOS 13.0, *) { return cell }
         // Cannot use the default initialise since it turns the button text a plain colour
         let theme = UserDefaults.standard[.theme]
         cell.backgroundColor = theme.cellBackgroundColor
