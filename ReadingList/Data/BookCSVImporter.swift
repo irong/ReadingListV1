@@ -143,7 +143,7 @@ class BookCSVParserDelegate: CSVParserDelegate {
                 self.context.perform {
                     book.coverImage = data
                 }
-                return
+                os_log("Book supplemented with cover image for ID %s", type: .info, googleID)
             }
         )
     }
@@ -152,22 +152,34 @@ class BookCSVParserDelegate: CSVParserDelegate {
         // FUTURE: Batch save
         context.performAndWait { [unowned self] in
             // Check for duplicates
-            guard Book.get(fromContext: self.context, googleBooksId: values["Google Books ID"], isbn: values["ISBN-13"]) == nil else {
-                os_log("Skipping duplicate book", type: .info)
-                duplicateCount += 1; return
+            if let googleBooksId = values["Google Books ID"], let existingBookByGoogleId = Book.get(fromContext: self.context, googleBooksId: googleBooksId) {
+                os_log("Skipping duplicate book: Google Books ID %s already exists in %{public}s", type: .info, googleBooksId, existingBookByGoogleId.objectID.uriRepresentation().absoluteString)
+                duplicateCount += 1
+                return
+            }
+            if let isbn = values["ISBN-13"], let existingBookByIsbn = Book.get(fromContext: self.context, isbn: isbn) {
+                os_log("Skipping duplicate book: ISBN %s already exists in %{public}s", type: .info, isbn, existingBookByIsbn.objectID.uriRepresentation().absoluteString)
+                duplicateCount += 1
+                return
             }
 
-            guard let newBook = createBook(values) else { invalidCount += 1; return }
+            guard let newBook = createBook(values) else {
+                invalidCount += 1
+                os_log("Invalid data: no book created")
+                return
+            }
             guard let sortManager = cachedSorts[newBook.readState] else { preconditionFailure() }
             newBook.sort = sortManager.getAndIncrementSort()
 
             // If the book is not valid, delete it
+            let objectIdForLogging = newBook.objectID.uriRepresentation().absoluteString
             guard newBook.isValidForUpdate() else {
                 invalidCount += 1
-                os_log("Deleting invalid book", type: .info)
+                os_log("Invalid book: deleting book %{public}s", type: .info, objectIdForLogging)
                 newBook.delete()
                 return
             }
+            os_log("Created %{public}s", objectIdForLogging)
             successCount += 1
 
             // Record the list memberships
@@ -180,6 +192,7 @@ class BookCSVParserDelegate: CSVParserDelegate {
 
             // Supplement the book with the cover image
             if self.includeImages, let googleBookdID = newBook.googleBooksId {
+                os_log("Supplementing book %{public}s with cover image from google ID %s", type: .info, objectIdForLogging, googleBookdID)
                 populateCover(forBook: newBook, withGoogleID: googleBookdID)
             }
         }
@@ -200,8 +213,10 @@ class BookCSVParserDelegate: CSVParserDelegate {
     func completion() {
         all(coverDownloadPromises)
             .always(on: .main) {
+                os_log("All %d book cover download promises completed", type: .info, self.coverDownloadPromises.count)
                 self.context.performAndWait {
                     self.populateLists()
+                    os_log("Saving results of CSV import (%d of %d successful)", self.successCount, self.successCount + self.invalidCount + self.duplicateCount)
                     self.context.saveAndLogIfErrored()
                 }
                 let results = BookCSVImportResults(success: self.successCount, error: self.invalidCount, duplicate: self.duplicateCount)
