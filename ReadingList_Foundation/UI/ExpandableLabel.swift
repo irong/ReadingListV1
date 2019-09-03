@@ -31,7 +31,7 @@ public class ExpandableLabel: UIView {
         didSet { label.textColor = color }
     }
 
-    public var gradientColor: UIColor = .white {
+    @IBInspectable public var gradientColor: UIColor = .white {
         didSet {
             if seeMore.backgroundColor != gradientColor {
                 seeMore.backgroundColor = gradientColor

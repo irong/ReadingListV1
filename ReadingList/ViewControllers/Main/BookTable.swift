@@ -312,15 +312,23 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
 
         self.present(optionsAlert, animated: true, completion: nil)
     }
+    
+    private func whiteTintImage(_ image: UIImage) -> UIImage {
+        if #available(iOS 13.0, *) {
+            return image.withTintColor(.white)
+        } else {
+            return image
+        }
+    }
 
     override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         return UISwipeActionsConfiguration(performFirstActionWithFullSwipe: false, actions: [
-            UIContextualAction(style: .destructive, title: "Delete", image: #imageLiteral(resourceName: "Trash")) { _, view, callback in
+            UIContextualAction(style: .destructive, title: "Delete", image: whiteTintImage(#imageLiteral(resourceName: "Trash"))) { _, view, callback in
                 let confirm = self.confirmDeleteAlert(indexPaths: [indexPath], callback: callback)
                 confirm.popoverPresentationController?.sourceView = view
                 self.present(confirm, animated: true, completion: nil)
             },
-            UIContextualAction(style: .normal, title: "More", image: #imageLiteral(resourceName: "More")) { _, view, callback in
+            UIContextualAction(style: .normal, title: "More", image: whiteTintImage(#imageLiteral(resourceName: "More"))) { _, view, callback in
                 let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
                 alert.addAction(UIAlertAction(title: "Manage Lists", style: .default) { _ in
                     let book = self.resultsController.object(at: indexPath)
@@ -348,7 +356,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
 
     override func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
 
-        var actions = [UIContextualAction(style: .normal, title: "Log", image: #imageLiteral(resourceName: "Timetable")) { _, _, callback in
+        var actions = [UIContextualAction(style: .normal, title: "Log", image: whiteTintImage(#imageLiteral(resourceName: "Timetable"))) { _, _, callback in
             self.present(EditBookReadState(existingBookID: self.resultsController.object(at: indexPath).objectID).inThemedNavController(), animated: true)
             callback(true)
         }]
@@ -377,7 +385,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
             callback(true)
         }
         leadingSwipeAction.backgroundColor = readStateOfSection == .toRead ? UIColor(.buttonBlue) : UIColor(.buttonGreen)
-        leadingSwipeAction.image = readStateOfSection == .toRead ? #imageLiteral(resourceName: "Play") : #imageLiteral(resourceName: "Complete")
+        leadingSwipeAction.image = whiteTintImage(readStateOfSection == .toRead ? #imageLiteral(resourceName: "Play") : #imageLiteral(resourceName: "Complete"))
         actions.insert(leadingSwipeAction, at: 0)
 
         return UISwipeActionsConfiguration(actions: actions)

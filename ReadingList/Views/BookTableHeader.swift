@@ -10,7 +10,7 @@ class BookTableHeader: UITableViewHeaderFooterView {
 
     @IBOutlet private weak var label: UILabel!
     @IBOutlet private weak var sortButton: UIButton!
-
+    
     @IBAction private func sortButtonTapped(_ sender: UIButton) {
         if let onSortButtonTap = onSortButtonTap {
             onSortButtonTap(sender)
@@ -45,7 +45,12 @@ class BookTableHeader: UITableViewHeaderFooterView {
     }
 
     private func initialise(withTheme theme: Theme) {
-        label.textColor = theme.subtitleTextColor
-        sortButton.tintColor = theme.subtitleTextColor
+        if #available(iOS 13.0, *) {
+            label.textColor = .secondaryLabel
+            sortButton.tintColor = .secondaryLabel
+        } else {
+            label.textColor = theme.subtitleTextColor
+            sortButton.tintColor = theme.subtitleTextColor
+        }
     }
 }

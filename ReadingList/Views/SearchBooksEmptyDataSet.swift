@@ -13,6 +13,15 @@ class SearchBooksEmptyDataset: UIView {
         case noResults
         case error
     }
+    
+    override func awakeFromNib() {
+        super.awakeFromNib()
+        if #available(iOS 13.0, *) {
+            backgroundColor = .systemBackground
+            titleLabel.textColor = .label
+            descriptionLabel.textColor = .secondaryLabel
+        }
+    }
 
     func initialise(fromTheme theme: Theme) {
         if #available(iOS 13.0, *) { return }

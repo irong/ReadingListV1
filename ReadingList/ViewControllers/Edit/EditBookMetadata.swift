@@ -137,7 +137,11 @@ class EditBookMetadata: FormViewController {
                 $0.cellStyle = .value1
                 $0.cellUpdate { cell, _ in
                     cell.textLabel!.textAlignment = .left
-                    cell.textLabel!.textColor = UserDefaults.standard[.theme].titleTextColor
+                    if #available(iOS 13.0, *) {
+                        cell.textLabel!.textColor = .label
+                    } else {
+                        cell.textLabel!.textColor = UserDefaults.standard[.theme].titleTextColor
+                    }
                     cell.accessoryType = .disclosureIndicator
                     cell.detailTextLabel?.text = book.subjects.map { $0.name }.sorted().joined(separator: ", ")
                 }

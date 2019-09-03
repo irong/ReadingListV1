@@ -72,7 +72,7 @@ DEPENDENCIES:
   - Cosmos (~> 19.0)
   - Crashlytics
   - DZNEmptyDataSet (~> 1.8)
-  - Eureka (from `https://github.com/waterskier2007/Eureka.git`, branch `ios-13`)
+  - Eureka (from `https://github.com/xmartlabs/Eureka.git`, branch `xcode11`)
   - Fabric
   - Firebase/Core
   - ImageRow (~> 4.0)
@@ -108,8 +108,8 @@ EXTERNAL SOURCES:
   CHCSVParser:
     :git: https://github.com/davedelong/CHCSVParser.git
   Eureka:
-    :branch: ios-13
-    :git: https://github.com/waterskier2007/Eureka.git
+    :branch: xcode11
+    :git: https://github.com/xmartlabs/Eureka.git
   Swifter:
     :branch: stable
     :git: https://github.com/httpswift/swifter.git
@@ -119,8 +119,8 @@ CHECKOUT OPTIONS:
     :commit: 58c701ef9eddaf48b11aa59b48f61f241d7b43f9
     :git: https://github.com/davedelong/CHCSVParser.git
   Eureka:
-    :commit: cc99f9cf1cc8330482f256b54f778cd8742948e9
-    :git: https://github.com/waterskier2007/Eureka.git
+    :commit: 2d4dd97e0b33fb35c8dcf5bae3a4e8fab3958940
+    :git: https://github.com/xmartlabs/Eureka.git
   Swifter:
     :commit: f043c24abc6df1f834731b1a9081c6901b59870c
     :git: https://github.com/httpswift/swifter.git
@@ -130,7 +130,7 @@ SPEC CHECKSUMS:
   Cosmos: a6fb17284281fa12cf4c85c2efecd440a215ec44
   Crashlytics: 611738c7847f8291a1a51084e35987b86ba6b3ee
   DZNEmptyDataSet: 9525833b9e68ac21c30253e1d3d7076cc828eaa7
-  Eureka: 9c662d9418abd6b354692a5abfd319bfe4033a51
+  Eureka: e7b9a83e08867f8336176247bdc4c199b1f68e5e
   Fabric: 706c8b8098fff96c33c0db69cbf81f9c551d0d74
   Firebase: 8432d732974498afd5987e9001a05f90f1a3d625
   FirebaseAnalytics: 470ddab7253b21ad5a40bebd4a9903d7ae19386a
@@ -148,6 +148,6 @@ SPEC CHECKSUMS:
   SwiftyJSON: 36413e04c44ee145039d332b4f4e2d3e8d6c4db7
   SwiftyStoreKit: 033d06b6f87955405d3f844a18a7687c2438592a
 
-PODFILE CHECKSUM: db31c20766132dc2a9cc143dc9d00902f344840f
+PODFILE CHECKSUM: 3f3519f94b347b29a5dd889402d67243175728bf
 
-COCOAPODS: 1.6.0
+COCOAPODS: 1.7.5

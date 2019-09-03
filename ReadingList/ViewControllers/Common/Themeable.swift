@@ -363,7 +363,9 @@ extension UITabBar {
 }
 
 extension StartFinishButton {
+    @available(iOS, obsoleted: 13.0)
     func initialise(withTheme theme: Theme) {
+        if #available(iOS 13.0, *) { return }
         startColor = theme.tint
         finishColor = theme.greenButtonColor
     }

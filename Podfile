@@ -4,7 +4,7 @@ use_frameworks!
 target 'ReadingList' do
   pod 'DZNEmptyDataSet', '~> 1.8'
   pod 'SwiftyJSON', '~> 5.0'
-  pod 'Eureka', :git => 'https://github.com/waterskier2007/Eureka.git', :branch => 'ios-13'
+  pod 'Eureka', :git => 'https://github.com/xmartlabs/Eureka.git', :branch => 'xcode11'
   pod 'ImageRow', '~> 4.0'
   pod 'SVProgressHUD', '~> 2.2'
   pod 'SwiftyStoreKit', '~> 0.15'
