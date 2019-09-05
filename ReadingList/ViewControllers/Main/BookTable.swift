@@ -312,7 +312,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
 
         self.present(optionsAlert, animated: true, completion: nil)
     }
-    
+
     private func whiteTintImage(_ image: UIImage) -> UIImage {
         if #available(iOS 13.0, *) {
             return image.withTintColor(.white)

@@ -10,7 +10,7 @@ extension DZNEmptyDataSetSource {
     func title(_ text: String) -> NSAttributedString {
         let labelColor: UIColor
         if #available(iOS 13.0, *) {
-            labelColor = UIColor.label
+            labelColor = .label
         } else {
             labelColor = UserDefaults.standard[.theme].titleTextColor
         }
@@ -21,7 +21,7 @@ extension DZNEmptyDataSetSource {
     func applyDescriptionAttributes(_ attributedString: NSMutableAttributedString) -> NSMutableAttributedString {
         let labelColor: UIColor
         if #available(iOS 13.0, *) {
-            labelColor = UIColor.secondaryLabel
+            labelColor = .secondaryLabel
         } else {
             labelColor = UserDefaults.standard[.theme].subtitleTextColor
         }

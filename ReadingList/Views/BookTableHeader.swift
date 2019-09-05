@@ -10,7 +10,7 @@ class BookTableHeader: UITableViewHeaderFooterView {
 
     @IBOutlet private weak var label: UILabel!
     @IBOutlet private weak var sortButton: UIButton!
-    
+
     @IBAction private func sortButtonTapped(_ sender: UIButton) {
         if let onSortButtonTap = onSortButtonTap {
             onSortButtonTap(sender)
