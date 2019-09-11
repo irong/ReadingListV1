@@ -44,7 +44,7 @@ extension UIColor {
     }
 }
 
-@available(iOS, obsoleted: 13.0, message: "bla")
+@available(iOS, obsoleted: 13.0)
 extension Theme {
 
     var isDark: Bool {
