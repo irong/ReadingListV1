@@ -28,6 +28,7 @@ enum ColorAsset: String {
     case darkButtonBlue = "DarkButtonBlue"
     case darkButtonGreen = "DarkButtonGreen"
     case subtitleText = "SubtitleText"
+    case dark = "Dark"
     case veryDark = "VeryDark"
     case extremelyDark = "ExtremelyDark"
     case veryLight = "VeryLight"
@@ -93,7 +94,7 @@ extension Theme {
     var tableBackgroundColor: UIColor {
         switch self {
         case .normal: return .groupTableViewBackground
-        case .dark: return UIColor(.veryDark)
+        case .dark: return UIColor(.dark)
         case .black: return UIColor(.extremelyDark)
         }
     }
