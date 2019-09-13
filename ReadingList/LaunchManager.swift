@@ -123,11 +123,14 @@ class LaunchManager {
         #if DEBUG
         Debug.initialiseData()
         #endif
-        self.window.rootViewController = TabBarController()
+        window.rootViewController = TabBarController()
 
-        // Initialise app-level theme, and monitor the set theme
-        self.initialiseTheme()
-        NotificationCenter.default.addObserver(self, selector: #selector(self.initialiseTheme), name: .ThemeSettingChanged, object: nil)
+        // Initialise app-level theme, and monitor the set theme, if on iOS >13
+        if #available(iOS 13.0, *) { } else {
+            initialiseTheme()
+            NotificationCenter.default.addObserver(self, selector: #selector(self.initialiseTheme), name: .ThemeSettingChanged, object: nil)
+        }
+
         UserDefaults.standard[.mostRecentWorkingVersion] = BuildInfo.appConfiguration.fullDescription
     }
 
