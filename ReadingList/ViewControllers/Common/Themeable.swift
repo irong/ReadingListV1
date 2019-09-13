@@ -36,7 +36,7 @@ enum ColorAsset: String {
     case placeholderText = "PlaceholderText"
     case darkPlaceholderText = "DarkPlaceholderText"
     case blackPlaceholderText = "BlackPlaceholderText"
-    case lightBlueCellSelection = "LightBlueCellSelection"
+    case splitViewCellSelection = "SplitViewCellSelection"
 }
 
 extension UIColor {
@@ -205,6 +205,7 @@ extension UIViewController {
 
 extension UITabBarController: ThemeableViewController {
     func initialise(withTheme theme: Theme) {
+        if #available(iOS 13.0, *) { return }
         tabBar.initialise(withTheme: theme)
 
         let useTranslucency = traitCollection.horizontalSizeClass != .regular
@@ -318,7 +319,7 @@ class ThemedNavigationController: UINavigationController, ThemeableViewControlle
         navigationBar.initialise(withTheme: theme)
 
         let translucent = splitViewController?.traitCollection.horizontalSizeClass != .regular
-        navigationBar.setTranslucency(translucent, colorIfNotTranslucent: UserDefaults.standard[.theme].viewBackgroundColor)
+        navigationBar.setTranslucency(true, colorIfNotTranslucent: UserDefaults.standard[.theme].viewBackgroundColor)
     }
 }
 
