@@ -116,6 +116,7 @@ class ListBookTable: UITableViewController {
     }
 
     override func initialise(withTheme theme: Theme) {
+        if #available(iOS 13.0, *) { return }
         super.initialise(withTheme: theme)
         if let listNameField = listNameField {
             listNameField.textColor = theme.titleTextColor
@@ -256,7 +257,9 @@ class ListBookTable: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeue(BookTableViewCell.self, for: indexPath)
         let book = listBookSource.book(at: indexPath)
-        cell.initialise(withTheme: UserDefaults.standard[.theme])
+        if #available(iOS 13.0, *) { } else {
+            cell.initialise(withTheme: UserDefaults.standard[.theme])
+        }
         cell.configureFrom(book, includeReadDates: false)
         return cell
     }

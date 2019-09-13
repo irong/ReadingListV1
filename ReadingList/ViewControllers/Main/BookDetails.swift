@@ -4,7 +4,7 @@ import CoreData
 import Cosmos
 import ReadingList_Foundation
 
-class BookDetails: UIViewController, UIScrollViewDelegate {
+class BookDetails: UIViewController, UIScrollViewDelegate { //swiftlint:disable:this type_body_length
     @IBOutlet private weak var cover: UIImageView!
     @IBOutlet private weak var changeReadStateButton: StartFinishButton!
 
@@ -337,29 +337,28 @@ class BookDetails: UIViewController, UIScrollViewDelegate {
 extension BookDetails: ThemeableViewController {
     @available(iOS, obsoleted: 13.0)
     func initialise(withTheme theme: Theme) {
-        if #available(iOS 13.0, *) { } else {
-            view.backgroundColor = theme.viewBackgroundColor
-            navigationController?.view.backgroundColor = theme.viewBackgroundColor
-            navigationController?.navigationBar.initialise(withTheme: theme)
-            (navigationItem.titleView as! UINavigationBarLabel).textColor = theme.titleTextColor
-            titleAuthorHeadings[0].textColor = theme.titleTextColor
-            titleAuthorHeadings[1].textColor = theme.subtitleTextColor
-            changeReadStateButton.initialise(withTheme: theme)
+        if #available(iOS 13.0, *) { return }
+        view.backgroundColor = theme.viewBackgroundColor
+        navigationController?.view.backgroundColor = theme.viewBackgroundColor
+        navigationController?.navigationBar.initialise(withTheme: theme)
+        (navigationItem.titleView as! UINavigationBarLabel).textColor = theme.titleTextColor
+        titleAuthorHeadings[0].textColor = theme.titleTextColor
+        titleAuthorHeadings[1].textColor = theme.subtitleTextColor
+        changeReadStateButton.initialise(withTheme: theme)
 
-            bookDescription.color = theme.subtitleTextColor
-            bookDescription.gradientColor = theme.viewBackgroundColor
-            bookDescription.buttonColor = theme.tint
-            bookNotes.color = theme.subtitleTextColor
-            bookNotes.gradientColor = theme.viewBackgroundColor
+        bookDescription.color = theme.subtitleTextColor
+        bookDescription.gradientColor = theme.viewBackgroundColor
+        bookDescription.buttonColor = theme.tint
+        bookNotes.color = theme.subtitleTextColor
+        bookNotes.gradientColor = theme.viewBackgroundColor
 
-            amazon.textColor = theme.tint
-            googleBooks.textColor = theme.tint
-            titles.forEach { $0.textColor = theme.titleTextColor }
-            tableSubHeadings.forEach { $0.textColor = theme.subtitleTextColor }
-            tableValues.forEach { $0.textColor = theme.titleTextColor }
-            separatorLines.forEach { $0.backgroundColor = theme.cellSeparatorColor }
-            listsStack.arrangedSubviews.forEach { ($0 as! UILabel).textColor = theme.titleTextColor }
-        }
+        amazon.textColor = theme.tint
+        googleBooks.textColor = theme.tint
+        titles.forEach { $0.textColor = theme.titleTextColor }
+        tableSubHeadings.forEach { $0.textColor = theme.subtitleTextColor }
+        tableValues.forEach { $0.textColor = theme.titleTextColor }
+        separatorLines.forEach { $0.backgroundColor = theme.cellSeparatorColor }
+        listsStack.arrangedSubviews.forEach { ($0 as! UILabel).textColor = theme.titleTextColor }
     }
 }
 

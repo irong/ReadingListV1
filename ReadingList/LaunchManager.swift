@@ -131,7 +131,9 @@ class LaunchManager {
         UserDefaults.standard[.mostRecentWorkingVersion] = BuildInfo.appConfiguration.fullDescription
     }
 
+    @available(iOS, obsoleted: 13.0)
     @objc private func initialiseTheme() {
+        if #available(iOS 13.0, *) { return }
         let theme = UserDefaults.standard[.theme]
         theme.configureForms()
         window.tintColor = theme.tint

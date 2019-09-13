@@ -4,6 +4,7 @@ import Eureka
 import ImageRow
 import SafariServices
 import ReadingList_Foundation
+import os.log
 
 @available(iOS, obsoleted: 13.0)
 @objc enum Theme: Int, UserSettingType, CaseIterable {
@@ -177,14 +178,26 @@ extension ThemeableViewController {
 extension UIViewController {
     func presentThemedSafariViewController(_ url: URL) {
         let safariVC = SFSafariViewController(url: url)
-        if UserDefaults.standard[.theme].isDark {
-            safariVC.preferredBarTintColor = .black
+        // iOS 13 and up has its own theming, no need to set the preferred tint colour
+        if #available(iOS 13.0, *) { } else {
+            if UserDefaults.standard[.theme].isDark {
+                safariVC.preferredBarTintColor = .black
+            }
         }
         present(safariVC, animated: true, completion: nil)
     }
 
+    /**
+    In iOS 13 and up, returns a standard UINavigationController with this controller set as its root. Below iOS 13, the controller is a ThemedNavigationController.
+     */
     func inThemedNavController(modalPresentationStyle: UIModalPresentationStyle = .formSheet) -> UINavigationController {
-        let nav = ThemedNavigationController(rootViewController: self)
+        let nav: UINavigationController
+        if #available(iOS 13.0, *) {
+            // Themed navigation controllers are unnecessary in iOS 13+
+            nav = UINavigationController(rootViewController: self)
+        } else {
+            nav = ThemedNavigationController(rootViewController: self)
+        }
         nav.modalPresentationStyle = modalPresentationStyle
         return nav
     }
@@ -206,9 +219,7 @@ extension UIToolbar {
 }
 
 extension UITableViewController: ThemeableViewController {
-    @available(iOS, obsoleted: 13.0)
     func initialise(withTheme theme: Theme) {
-        if #available(iOS 13.0, *) { return }
         navigationItem.searchController?.searchBar.initialise(withTheme: theme)
         tableView.initialise(withTheme: theme)
     }
@@ -244,7 +255,9 @@ class ThemedSplitViewController: UISplitViewController, UISplitViewControllerDel
         preferredDisplayMode = .allVisible
         delegate = self
 
-        monitorThemeSetting()
+        if #available(iOS 13.0, *) { } else {
+            monitorThemeSetting()
+        }
     }
 
     func splitViewController(_ splitViewController: UISplitViewController, collapseSecondary secondaryViewController: UIViewController, onto primaryViewController: UIViewController) -> Bool {
@@ -254,12 +267,14 @@ class ThemedSplitViewController: UISplitViewController, UISplitViewControllerDel
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         // This is called at app startup
         super.traitCollectionDidChange(previousTraitCollection)
+        if #available(iOS 13.0, *) { return }
         if previousTraitCollection?.horizontalSizeClass != traitCollection.horizontalSizeClass {
             initialise(withTheme: UserDefaults.standard[.theme])
         }
     }
 
     func initialise(withTheme theme: Theme) {
+        if #available(iOS 13.0, *) { return }
         view.backgroundColor = theme.cellSeparatorColor
 
         // This attempts to allieviate this bug: https://stackoverflow.com/q/32507975/5513562
@@ -285,6 +300,7 @@ class ThemedNavigationController: UINavigationController, ThemeableViewControlle
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        if #available(iOS 13.0, *) { return }
 
         // Determine whether the nav bar should be transparent or not from the horizontal
         // size class of the parent split view controller. We can't ask *this* view controller,

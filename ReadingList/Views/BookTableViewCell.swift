@@ -22,11 +22,6 @@ class BookTableViewCell: UITableViewCell {
 
     override func awakeFromNib() {
         super.awakeFromNib()
-        initialise(withTheme: UserDefaults.standard[.theme])
-        resetUI()
-    }
-
-    func initialise(withTheme theme: Theme) {
         if #available(iOS 13.0, *) {
             // Due to a bug, despite the label colours in the XIB editor being set to dynamic
             // colours, they are fixed in the light-mode variant. Reassigning the colours
@@ -36,12 +31,18 @@ class BookTableViewCell: UITableViewCell {
             readTimeLabel?.textColor = .secondaryLabel
             readingProgressLabel.textColor = .secondaryLabel
         } else {
-            defaultInitialise(withTheme: theme)
-            titleLabel.textColor = theme.titleTextColor
-            authorsLabel.textColor = theme.subtitleTextColor
-            readTimeLabel?.textColor = theme.subtitleTextColor
-            readingProgressLabel.textColor = theme.subtitleTextColor
+            initialise(withTheme: UserDefaults.standard[.theme])
         }
+        resetUI()
+    }
+
+    func initialise(withTheme theme: Theme) {
+        if #available(iOS 13.0, *) { return }
+        defaultInitialise(withTheme: theme)
+        titleLabel.textColor = theme.titleTextColor
+        authorsLabel.textColor = theme.subtitleTextColor
+        readTimeLabel?.textColor = theme.subtitleTextColor
+        readingProgressLabel.textColor = theme.subtitleTextColor
     }
 
     override func prepareForReuse() {

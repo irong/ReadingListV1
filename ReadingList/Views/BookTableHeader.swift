@@ -31,7 +31,9 @@ class BookTableHeader: UITableViewHeaderFooterView {
     func configure(labelText: String, enableSort: Bool) {
         label.text = labelText
         sortButton.isEnabled = enableSort
-        initialise(withTheme: UserDefaults.standard[.theme])
+        if #available(iOS 13.0, *) { } else {
+            initialise(withTheme: UserDefaults.standard[.theme])
+        }
     }
 
     func configure(readState: BookReadState, bookCount: Int, enableSort: Bool) {

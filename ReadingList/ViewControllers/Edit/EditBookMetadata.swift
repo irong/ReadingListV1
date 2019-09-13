@@ -183,7 +183,7 @@ class EditBookMetadata: FormViewController {
             }
             <<< ButtonRow(deleteRowKey) {
                 $0.title = "Delete"
-                $0.cellSetup { cell, _ in cell.tintColor = .red }
+                $0.cellSetup { cell, _ in cell.tintColor = .systemRed }
                 $0.onCellSelection { [unowned self] _, _ in
                     self.deletePressed()
                 }
