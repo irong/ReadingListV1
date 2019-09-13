@@ -9,7 +9,7 @@ import Foundation
 public protocol UserSettingType { }
 
 /** Natively storable in UserDefaults */
-protocol DefaultsStorable: UserSettingType { }
+public protocol DefaultsStorable: UserSettingType { }
 
 extension Int: DefaultsStorable {}
 extension Int16: DefaultsStorable {}
