@@ -22,15 +22,7 @@ class BookTableViewCell: UITableViewCell {
 
     override func awakeFromNib() {
         super.awakeFromNib()
-        if #available(iOS 13.0, *) {
-            // Due to a bug, despite the label colours in the XIB editor being set to dynamic
-            // colours, they are fixed in the light-mode variant. Reassigning the colours
-            // seems to solve the problem.
-            titleLabel.textColor = .label
-            authorsLabel.textColor = .secondaryLabel
-            readTimeLabel?.textColor = .secondaryLabel
-            readingProgressLabel.textColor = .secondaryLabel
-        } else {
+        if #available(iOS 13.0, *) { } else {
             initialise(withTheme: UserDefaults.standard[.theme])
         }
         resetUI()
