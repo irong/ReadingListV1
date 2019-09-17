@@ -63,13 +63,7 @@ public class ExpandableLabel: UIView {
         }
     }
 
-    public var buttonColor: UIColor = {
-        if #available(iOS 13.0, *) {
-            return .systemBlue
-        } else {
-            return .blue
-        }
-    }() {
+    public var buttonColor: UIColor = .systemBlue {
         didSet { seeMore.textColor = buttonColor }
     }
 
