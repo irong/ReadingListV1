@@ -47,10 +47,7 @@ class BookTableHeader: UITableViewHeaderFooterView {
     }
 
     private func initialise(withTheme theme: Theme) {
-        if #available(iOS 13.0, *) {
-            label.textColor = .secondaryLabel
-            sortButton.tintColor = .secondaryLabel
-        } else {
+        if #available(iOS 13.0, *) { } else {
             label.textColor = theme.subtitleTextColor
             sortButton.tintColor = theme.subtitleTextColor
         }
