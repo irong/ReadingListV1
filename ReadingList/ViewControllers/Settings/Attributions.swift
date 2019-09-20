@@ -43,7 +43,9 @@ class Attributions: UITableViewController {
         if indexPath.section == 1 {
             let cell = tableView.dequeueReusableCell(withIdentifier: "Basic", for: indexPath)
             guard let textLabel = cell.textLabel else { preconditionFailure() }
-            cell.defaultInitialise(withTheme: UserDefaults.standard[.theme])
+            if #available(iOS 13.0, *) { } else {
+                cell.defaultInitialise(withTheme: UserDefaults.standard[.theme])
+            }
             textLabel.text = """
             Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated \
             documentation files (the "Software"), to deal in the Software without restriction, including without limitation \
@@ -62,7 +64,9 @@ class Attributions: UITableViewController {
 
         let cell = tableView.dequeueReusableCell(withIdentifier: "Attribution", for: indexPath)
         guard let textLabel = cell.textLabel, let detailTextLabel = cell.detailTextLabel else { preconditionFailure() }
-        cell.defaultInitialise(withTheme: UserDefaults.standard[.theme])
+        if #available(iOS 13.0, *) { } else {
+            cell.defaultInitialise(withTheme: UserDefaults.standard[.theme])
+        }
 
         let attribution = attributions[indexPath.row]
         textLabel.text = attribution.title

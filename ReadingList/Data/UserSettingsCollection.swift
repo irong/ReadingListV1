@@ -14,6 +14,7 @@ extension UserSettingsCollection {
 
     static let lastAppliedUpgradeAction = UserSetting<Int?>("lastAppliedUpgradeAction")
 
+    @available(iOS, obsoleted: 13.0)
     static let theme = UserSetting<Theme>("theme", defaultValue: .normal)
 
     static let toReadSort = UserSetting<BookSort>("toReadSortOrder", defaultValue: .custom)

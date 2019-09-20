@@ -22,11 +22,14 @@ class BookTableViewCell: UITableViewCell {
 
     override func awakeFromNib() {
         super.awakeFromNib()
-        initialise(withTheme: UserDefaults.standard[.theme])
+        if #available(iOS 13.0, *) { } else {
+            initialise(withTheme: UserDefaults.standard[.theme])
+        }
         resetUI()
     }
 
     func initialise(withTheme theme: Theme) {
+        if #available(iOS 13.0, *) { return }
         defaultInitialise(withTheme: theme)
         titleLabel.textColor = theme.titleTextColor
         authorsLabel.textColor = theme.subtitleTextColor

@@ -4,7 +4,9 @@ import Eureka
 import ImageRow
 import SafariServices
 import ReadingList_Foundation
+import os.log
 
+@available(iOS, obsoleted: 13.0)
 @objc enum Theme: Int, UserSettingType, CaseIterable {
     case normal = 1
     case dark = 2
@@ -34,7 +36,7 @@ enum ColorAsset: String {
     case placeholderText = "PlaceholderText"
     case darkPlaceholderText = "DarkPlaceholderText"
     case blackPlaceholderText = "BlackPlaceholderText"
-    case lightBlueCellSelection = "LightBlueCellSelection"
+    case splitViewCellSelection = "SplitViewCellSelection"
 }
 
 extension UIColor {
@@ -43,6 +45,7 @@ extension UIColor {
     }
 }
 
+@available(iOS, obsoleted: 13.0)
 extension Theme {
 
     var isDark: Bool {
@@ -127,7 +130,9 @@ extension Theme {
 }
 
 extension UITableViewCell {
+    @available(iOS, obsoleted: 13.0)
     func defaultInitialise(withTheme theme: Theme) {
+        if #available(iOS 13.0, *) { return }
         backgroundColor = theme.cellBackgroundColor
         textLabel?.textColor = theme.titleTextColor
         detailTextLabel?.textColor = theme.titleTextColor
@@ -142,6 +147,7 @@ fileprivate extension UIViewController {
      Must only called on a ThemableViewController.
     */
     @objc func transitionThemeChange() {
+        if #available(iOS 13.0, *) { return }
         // This function is defined as an extension of UIViewController rather than in ThemableViewController
         // since it must be @objc, and that is not possible in protocol extensions.
         guard let themable = self as? ThemeableViewController else {
@@ -154,13 +160,16 @@ fileprivate extension UIViewController {
     }
 }
 
+@available(iOS, obsoleted: 13.0)
 @objc protocol ThemeableViewController where Self: UIViewController {
     @objc func initialise(withTheme theme: Theme)
     @objc optional func themeSettingDidChange()
 }
 
 extension ThemeableViewController {
+    @available(iOS, obsoleted: 13.0)
     func monitorThemeSetting() {
+        if #available(iOS 13.0, *) { return }
         initialise(withTheme: UserDefaults.standard[.theme])
         NotificationCenter.default.addObserver(self, selector: #selector(transitionThemeChange), name: .ThemeSettingChanged, object: nil)
     }
@@ -169,14 +178,26 @@ extension ThemeableViewController {
 extension UIViewController {
     func presentThemedSafariViewController(_ url: URL) {
         let safariVC = SFSafariViewController(url: url)
-        if UserDefaults.standard[.theme].isDark {
-            safariVC.preferredBarTintColor = .black
+        // iOS 13 and up has its own theming, no need to set the preferred tint colour
+        if #available(iOS 13.0, *) { } else {
+            if UserDefaults.standard[.theme].isDark {
+                safariVC.preferredBarTintColor = .black
+            }
         }
         present(safariVC, animated: true, completion: nil)
     }
 
+    /**
+    In iOS 13 and up, returns a standard UINavigationController with this controller set as its root. Below iOS 13, the controller is a ThemedNavigationController.
+     */
     func inThemedNavController(modalPresentationStyle: UIModalPresentationStyle = .formSheet) -> UINavigationController {
-        let nav = ThemedNavigationController(rootViewController: self)
+        let nav: UINavigationController
+        if #available(iOS 13.0, *) {
+            // Themed navigation controllers are unnecessary in iOS 13+
+            nav = UINavigationController(rootViewController: self)
+        } else {
+            nav = ThemedNavigationController(rootViewController: self)
+        }
         nav.modalPresentationStyle = modalPresentationStyle
         return nav
     }
@@ -184,6 +205,7 @@ extension UIViewController {
 
 extension UITabBarController: ThemeableViewController {
     func initialise(withTheme theme: Theme) {
+        if #available(iOS 13.0, *) { return }
         tabBar.initialise(withTheme: theme)
 
         let useTranslucency = traitCollection.horizontalSizeClass != .regular
@@ -226,14 +248,52 @@ extension FormViewController: ThemeableViewController {
     }
 }
 
+@available(iOS, obsoleted: 13.0)
 class ThemedSplitViewController: UISplitViewController, UISplitViewControllerDelegate, ThemeableViewController {
+
+    /**
+        Whether the view has yet appeared. Set to true when viewDidAppear is called.
+     */
+    var hasAppeared = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
         preferredDisplayMode = .allVisible
         delegate = self
 
-        monitorThemeSetting()
+        if #available(iOS 13.0, *) { } else {
+            monitorThemeSetting()
+        }
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        hasAppeared = true
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        // Workarond for a very weird bug in the UISplitViewController in iOS 13 (FB7293182).
+        // When a UITabViewController contains as its view controllers several UISplitViewControllers (such that
+        // some are not visible in the initial view of the app), if the app is sent the background before the other
+        // tabs are selected, then splitViewController(_:collapseSecondary:onto:) is not called, and thus the default
+        // behaviour of showing the detail view when not split is used. For the Settings tab, this just means the
+        // app opens up on the About menu, which is weird but not broken. For the other tabs, however, the app opens
+        // up on un-initialised views. The BookDetails view controller, for example, will not have had a Book object
+        // set, and so will just show a blank window. The user would have to tap the Back navigation button to get
+        // to the table.
+        // To work around this, we detect the case when this split view controller becoming visible for the first time,
+        // with the detail view controller presented, but not in split mode (in split mode we expect both the master
+        // and the detail view controllers to be visible initially). When this happens, we pop the master navigation
+        // controller to return the master root controller to visibility.
+        if #available(iOS 13.0, *) {
+            if hasAppeared { return }
+            if !isSplit && detailIsPresented {
+                os_log("UISplitViewController becoming visible, but with the detail view controller presented when not in split mode. Attempting to fix the problem by popping the master navigation view controller.", type: .default)
+                self.masterNavigationController.popViewController(animated: false)
+            }
+        }
     }
 
     func splitViewController(_ splitViewController: UISplitViewController, collapseSecondary secondaryViewController: UIViewController, onto primaryViewController: UIViewController) -> Bool {
@@ -243,12 +303,14 @@ class ThemedSplitViewController: UISplitViewController, UISplitViewControllerDel
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         // This is called at app startup
         super.traitCollectionDidChange(previousTraitCollection)
+        if #available(iOS 13.0, *) { return }
         if previousTraitCollection?.horizontalSizeClass != traitCollection.horizontalSizeClass {
             initialise(withTheme: UserDefaults.standard[.theme])
         }
     }
 
     func initialise(withTheme theme: Theme) {
+        if #available(iOS 13.0, *) { return }
         view.backgroundColor = theme.cellSeparatorColor
 
         // This attempts to allieviate this bug: https://stackoverflow.com/q/32507975/5513562
@@ -260,15 +322,21 @@ class ThemedSplitViewController: UISplitViewController, UISplitViewControllerDel
     override var preferredStatusBarStyle: UIStatusBarStyle {
         // This override is placed on the base view controller type - the SplitViewController - so that
         // it only needs to be implemented once.
-        return UserDefaults.standard[.theme].statusBarStyle
+        if #available(iOS 13.0, *) {
+            return super.preferredStatusBarStyle
+        } else {
+            return UserDefaults.standard[.theme].statusBarStyle
+        }
     }
 }
 
+@available(iOS, obsoleted: 13.0)
 class ThemedNavigationController: UINavigationController, ThemeableViewController {
     var hasAppeared = false
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        if #available(iOS 13.0, *) { return }
 
         // Determine whether the nav bar should be transparent or not from the horizontal
         // size class of the parent split view controller. We can't ask *this* view controller,
@@ -281,6 +349,7 @@ class ThemedNavigationController: UINavigationController, ThemeableViewControlle
     }
 
     func initialise(withTheme theme: Theme) {
+        if #available(iOS 13.0, *) { return }
         toolbar?.initialise(withTheme: theme)
         navigationBar.initialise(withTheme: theme)
 
@@ -289,6 +358,7 @@ class ThemedNavigationController: UINavigationController, ThemeableViewControlle
     }
 }
 
+@available(iOS, obsoleted: 13.0)
 class ThemedSelectorViewController<T: Equatable>: SelectorViewController<SelectorRow<PushSelectorCell<T>>> {
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -296,6 +366,7 @@ class ThemedSelectorViewController<T: Equatable>: SelectorViewController<Selecto
     }
 }
 
+@available(iOS, obsoleted: 13.0)
 final class ThemedPushRow<T: Equatable>: _PushRow<PushSelectorCell<T>>, RowType {
     required init(tag: String?) {
         super.init(tag: tag)
@@ -345,19 +416,23 @@ extension UITabBar {
 }
 
 extension StartFinishButton {
+    @available(iOS, obsoleted: 13.0)
     func initialise(withTheme theme: Theme) {
+        if #available(iOS 13.0, *) { return }
         startColor = theme.tint
         finishColor = theme.greenButtonColor
     }
 }
 
 extension Theme {
+    @available(iOS, obsoleted: 13.0)
     func configureForms() {
 
         func initialiseCell(_ cell: UITableViewCell, _: Any? = nil) {
             cell.defaultInitialise(withTheme: self)
         }
 
+        if #available(iOS 13.0, *) { return }
         SwitchRow.defaultCellUpdate = initialiseCell(_:_:)
         DateRow.defaultCellUpdate = initialiseCell(_:_:)
         ThemedPushRow<Theme>.defaultCellUpdate = initialiseCell(_:_:)

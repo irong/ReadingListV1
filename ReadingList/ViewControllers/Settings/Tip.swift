@@ -97,6 +97,7 @@ class Tip: UIViewController, ThemeableViewController {
     }
 
     func initialise(withTheme theme: Theme) {
+        if #available(iOS 13.0, *) { return }
         view.backgroundColor = theme.viewBackgroundColor
         explanationLabel.textColor = theme.titleTextColor
     }

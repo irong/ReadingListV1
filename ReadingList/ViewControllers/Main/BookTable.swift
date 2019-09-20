@@ -145,7 +145,9 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         let cell = tableView.dequeue(BookTableViewCell.self, for: indexPath)
         let book = resultsController.object(at: indexPath)
         cell.configureFrom(book)
-        cell.initialise(withTheme: UserDefaults.standard[.theme])
+        if #available(iOS 13.0, *) { } else {
+            cell.initialise(withTheme: UserDefaults.standard[.theme])
+        }
         return cell
     }
 
@@ -168,6 +170,110 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         } else {
             navigationItem.rightBarButtonItem!.isEnabled = false
             navigationItem.title = readStates.last!.description
+        }
+    }
+
+    @available(iOS 13.0, *)
+    override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        let book = resultsController.object(at: indexPath)
+        return UIContextMenuConfiguration(identifier: book.objectID, previewProvider: {
+            let bookDetails = UIStoryboard.BookDetails.instantiateViewController(withIdentifier: "BookDetails") as! BookDetails
+            bookDetails.book = book
+            return bookDetails
+        }, actionProvider: { _ in
+            var menuItems: [UIMenuElement] = [
+                UIAction(title: "Update Notes", image: UIImage(systemName: "text.bubble")) { _ in
+                    self.present(EditBookNotes(existingBookID: book.objectID).inThemedNavController(), animated: true)
+                },
+                UIAction(title: "Manage Lists", image: UIImage(systemName: "tray.2")) { _ in
+                    self.present(ManageLists.getAppropriateVcForManagingLists([book]), animated: true)
+                },
+                UIAction(title: "Edit Book", image: UIImage(systemName: "square.and.pencil")) { _ in
+                    self.present(EditBookMetadata(bookToEditID: book.objectID).inThemedNavController(), animated: true)
+                },
+                UIAction(title: "Manage Log", image: UIImage(systemName: "calendar")) { _ in
+                    self.present(EditBookReadState(existingBookID: self.resultsController.object(at: indexPath).objectID).inThemedNavController(), animated: true)
+                },
+                UIAction(title: "Delete", image: UIImage(systemName: "trash.fill"), attributes: .destructive) { _ in
+                    let confirm = self.confirmDeleteAlert(indexPaths: [indexPath])
+                    confirm.popoverPresentationController?.setSourceCell(atIndexPath: indexPath, inTable: tableView)
+                    self.present(confirm, animated: true)
+                }
+            ]
+            if UserDefaults.standard[UserSettingsCollection.sortSetting(for: book.readState)] == .custom {
+                let minSort = Book.minSort(with: book.readState, from: PersistentStoreManager.container.viewContext)
+                let maxSort = Book.maxSort(with: book.readState, from: PersistentStoreManager.container.viewContext)
+                var moveUpOrDownActions = [UIMenuElement]()
+                if let minSort = minSort, book.sort != minSort {
+                    moveUpOrDownActions.append(UIAction(title: "Move To Top", image: UIImage(systemName: "arrow.up")) { _ in
+                        print(minSort)
+                        // Make the data change with the delegate off to prevent automatic table updates
+                        self.resultsController.delegate = nil
+                        book.sort = minSort - 1
+                        book.managedObjectContext!.saveAndLogIfErrored()
+
+                        // Move the row to get a nice animation
+                        tableView.moveRow(at: indexPath, to: IndexPath(row: 0, section: indexPath.section))
+                        self.resultsController.delegate = self
+                    })
+                }
+                if let maxSort = maxSort, book.sort != maxSort {
+                    moveUpOrDownActions.append(UIAction(title: "Move To Bottom", image: UIImage(systemName: "arrow.down")) { _ in
+                        // Make the data change with the delegate off to prevent automatic table updates
+                        self.resultsController.delegate = nil
+                        book.sort = maxSort + 1
+                        book.managedObjectContext!.saveAndLogIfErrored()
+
+                        // Move the row to get a nice animation
+                        let rowCount = tableView.numberOfRows(inSection: indexPath.section)
+                        tableView.moveRow(at: indexPath, to: IndexPath(row: rowCount - 1, section: indexPath.section))
+                        self.resultsController.delegate = self
+                    })
+                }
+                if moveUpOrDownActions.count > 1 {
+                    menuItems.insert(UIMenu(title: "Move...", image: UIImage(systemName: "arrow.up.arrow.down"), children: moveUpOrDownActions), at: 0)
+                } else if moveUpOrDownActions.count == 1 {
+                    menuItems.insert(moveUpOrDownActions[0], at: 0)
+                }
+            }
+            if book.readState == .toRead {
+                menuItems.insert(UIAction(title: "Start", image: UIImage(systemName: "play")) { _ in
+                    // Schedule the change after a slight delay so that the animation of the row resuming into place does not
+                    // interfere with the animation of the row being removed from the table section
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                        book.setReading(started: Date())
+                        book.updateSortIndex()
+                        book.managedObjectContext!.saveAndLogIfErrored()
+                    }
+                }, at: 0)
+            } else if book.readState == .reading {
+                menuItems.insert(UIAction(title: "Finish", image: UIImage(systemName: "checkmark")) { _ in
+                    guard let started = book.startedReading else { return }
+                    // Schedule the change after a slight delay so that the animation of the row resuming into place does not
+                    // interfere with the animation of the row being removed from the table section
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                        book.setFinished(started: started, finished: Date())
+                        book.updateSortIndex()
+                        book.managedObjectContext!.saveAndLogIfErrored()
+                    }
+                }, at: 0)
+            }
+            return UIMenu(title: "", children: menuItems)
+        })
+    }
+
+    @available(iOS 13.0, *)
+    override func tableView(_ tableView: UITableView, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {
+        guard let splitViewController = splitViewController else { preconditionFailure("Missing SplitViewController") }
+        guard let previewVC = animator.previewViewController else { return }
+        if splitViewController.detailIsPresented {
+            guard let objectId = configuration.identifier as? NSManagedObjectID else { return }
+            let book = PersistentStoreManager.container.viewContext.object(with: objectId) as! Book
+            (splitViewController.displayedDetailViewController as? BookDetails)?.book = book
+        } else {
+            animator.addAnimations {
+                self.show(previewVC, sender: self)
+            }
         }
     }
 
@@ -312,13 +418,21 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
     }
 
     override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let moreImage, deleteImage: UIImage
+        if #available(iOS 13.0, *) {
+            moreImage = UIImage(systemName: "ellipsis.circle.fill")!
+            deleteImage = UIImage(systemName: "trash.fill")!
+        } else {
+            moreImage = #imageLiteral(resourceName: "More")
+            deleteImage = #imageLiteral(resourceName: "Trash")
+        }
         return UISwipeActionsConfiguration(performFirstActionWithFullSwipe: false, actions: [
-            UIContextualAction(style: .destructive, title: "Delete", image: #imageLiteral(resourceName: "Trash")) { _, view, callback in
+            UIContextualAction(style: .destructive, title: "Delete", image: deleteImage) { _, view, callback in
                 let confirm = self.confirmDeleteAlert(indexPaths: [indexPath], callback: callback)
                 confirm.popoverPresentationController?.sourceView = view
                 self.present(confirm, animated: true, completion: nil)
             },
-            UIContextualAction(style: .normal, title: "More", image: #imageLiteral(resourceName: "More")) { _, view, callback in
+            UIContextualAction(style: .normal, title: "More", image: moreImage) { _, view, callback in
                 let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
                 alert.addAction(UIAlertAction(title: "Manage Lists", style: .default) { _ in
                     let book = self.resultsController.object(at: indexPath)
@@ -346,7 +460,13 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
 
     override func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
 
-        var actions = [UIContextualAction(style: .normal, title: "Log", image: #imageLiteral(resourceName: "Timetable")) { _, _, callback in
+        let logImage: UIImage
+        if #available(iOS 13.0, *) {
+            logImage = UIImage(systemName: "calendar")!
+        } else {
+            logImage = #imageLiteral(resourceName: "Timetable")
+        }
+        var actions = [UIContextualAction(style: .normal, title: "Log", image: logImage) { _, _, callback in
             self.present(EditBookReadState(existingBookID: self.resultsController.object(at: indexPath).objectID).inThemedNavController(), animated: true)
             callback(true)
         }]
@@ -375,7 +495,11 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
             callback(true)
         }
         leadingSwipeAction.backgroundColor = readStateOfSection == .toRead ? UIColor(.buttonBlue) : UIColor(.buttonGreen)
-        leadingSwipeAction.image = readStateOfSection == .toRead ? #imageLiteral(resourceName: "Play") : #imageLiteral(resourceName: "Complete")
+        if #available(iOS 13.0, *) {
+            leadingSwipeAction.image = UIImage(systemName: readStateOfSection == .toRead ? "play.fill" : "checkmark")
+        } else {
+            leadingSwipeAction.image = readStateOfSection == .toRead ? #imageLiteral(resourceName: "Play") : #imageLiteral(resourceName: "Complete")
+        }
         actions.insert(leadingSwipeAction, at: 0)
 
         return UISwipeActionsConfiguration(actions: actions)

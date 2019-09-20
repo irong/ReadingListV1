@@ -11,7 +11,9 @@ class About: UITableViewController {
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
-        cell.defaultInitialise(withTheme: UserDefaults.standard[.theme])
+        if #available(iOS 13.0, *) { } else {
+            cell.defaultInitialise(withTheme: UserDefaults.standard[.theme])
+        }
         return cell
     }
 

@@ -31,7 +31,9 @@ class BookTableHeader: UITableViewHeaderFooterView {
     func configure(labelText: String, enableSort: Bool) {
         label.text = labelText
         sortButton.isEnabled = enableSort
-        initialise(withTheme: UserDefaults.standard[.theme])
+        if #available(iOS 13.0, *) { } else {
+            initialise(withTheme: UserDefaults.standard[.theme])
+        }
     }
 
     func configure(readState: BookReadState, bookCount: Int, enableSort: Bool) {
@@ -45,7 +47,9 @@ class BookTableHeader: UITableViewHeaderFooterView {
     }
 
     private func initialise(withTheme theme: Theme) {
-        label.textColor = theme.subtitleTextColor
-        sortButton.tintColor = theme.subtitleTextColor
+        if #available(iOS 13.0, *) { } else {
+            label.textColor = theme.subtitleTextColor
+            sortButton.tintColor = theme.subtitleTextColor
+        }
     }
 }

@@ -8,7 +8,17 @@ class General: FormViewController {
         super.viewDidLoad()
 
         form +++ Section(header: "Appearance", footer: "Enable Expanded Descriptions to automatically show each book's full description.")
-            <<< ThemedPushRow<Theme> {
+            <<< SwitchRow {
+                $0.title = "Expanded Descriptions"
+                $0.value = UserDefaults.standard[.showExpandedDescription]
+                $0.onChange { row in
+                    guard let newValue = row.value else { return }
+                    UserDefaults.standard[.showExpandedDescription] = newValue
+                }
+            }
+
+        if #available(iOS 13.0, *) {} else {
+            form.allSections[0] <<< ThemedPushRow<Theme> {
                 $0.title = "Theme"
                 $0.options = Theme.allCases
                 $0.value = UserDefaults.standard[.theme]
@@ -24,16 +34,9 @@ class General: FormViewController {
                     }
                 }
             }
-            <<< SwitchRow {
-                $0.title = "Expanded Descriptions"
-                $0.value = UserDefaults.standard[.showExpandedDescription]
-                $0.onChange { row in
-                    guard let newValue = row.value else { return }
-                    UserDefaults.standard[.showExpandedDescription] = newValue
-                }
-            }
+        }
 
-            +++ Section(header: "Progress", footer: "Choose whether to default to Page Number or Percentage when setting progress.")
+        form +++ Section(header: "Progress", footer: "Choose whether to default to Page Number or Percentage when setting progress.")
                 <<< ThemedPushRow<ProgressType> {
                     $0.title = "Default Progress Type"
                     $0.options = [.page, .percentage]

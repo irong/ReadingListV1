@@ -4,7 +4,7 @@ import CoreData
 import Cosmos
 import ReadingList_Foundation
 
-class BookDetails: UIViewController, UIScrollViewDelegate {
+class BookDetails: UIViewController, UIScrollViewDelegate { //swiftlint:disable:this type_body_length
     @IBOutlet private weak var cover: UIImageView!
     @IBOutlet private weak var changeReadStateButton: StartFinishButton!
 
@@ -171,7 +171,7 @@ class BookDetails: UIViewController, UIScrollViewDelegate {
         navigationItem.titleView = titleLabel
 
         // On large devices, scale up the title and author labels
-        if traitCollection.horizontalSizeClass == .regular && traitCollection.verticalSizeClass == .regular {
+        if splitViewController?.isSplit == true && traitCollection.horizontalSizeClass == .regular && traitCollection.verticalSizeClass == .regular {
             titleAuthorHeadings.forEach { $0.scaleFontBy(1.3) }
         }
 
@@ -335,7 +335,9 @@ class BookDetails: UIViewController, UIScrollViewDelegate {
 }
 
 extension BookDetails: ThemeableViewController {
+    @available(iOS, obsoleted: 13.0)
     func initialise(withTheme theme: Theme) {
+        if #available(iOS 13.0, *) { return }
         view.backgroundColor = theme.viewBackgroundColor
         navigationController?.view.backgroundColor = theme.viewBackgroundColor
         navigationController?.navigationBar.initialise(withTheme: theme)

@@ -116,6 +116,7 @@ class ListBookTable: UITableViewController {
     }
 
     override func initialise(withTheme theme: Theme) {
+        if #available(iOS 13.0, *) { return }
         super.initialise(withTheme: theme)
         if let listNameField = listNameField {
             listNameField.textColor = theme.titleTextColor
@@ -124,13 +125,15 @@ class ListBookTable: UITableViewController {
 
     private func listTextField() -> UITextField {
         guard let navigationBar = navigationController?.navigationBar else { preconditionFailure() }
-        let theme = UserDefaults.standard[.theme]
         let textField = UITextField(frame: navigationBar.frame.inset(by: UIEdgeInsets(top: 0, left: 115, bottom: 0, right: 115)))
         textField.text = listNameFieldDefaultText
         textField.textAlignment = .center
         textField.font = UIFont.systemFont(ofSize: 17.0, weight: .semibold)
-        textField.textColor = theme.titleTextColor
-        textField.keyboardAppearance = theme.keyboardAppearance
+        if #available(iOS 13.0, *) { } else {
+            let theme = UserDefaults.standard[.theme]
+            textField.textColor = theme.titleTextColor
+            textField.keyboardAppearance = theme.keyboardAppearance
+        }
         textField.enablesReturnKeyAutomatically = true
         textField.returnKeyType = .done
         textField.delegate = self
@@ -254,7 +257,9 @@ class ListBookTable: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeue(BookTableViewCell.self, for: indexPath)
         let book = listBookSource.book(at: indexPath)
-        cell.initialise(withTheme: UserDefaults.standard[.theme])
+        if #available(iOS 13.0, *) { } else {
+            cell.initialise(withTheme: UserDefaults.standard[.theme])
+        }
         cell.configureFrom(book, includeReadDates: false)
         return cell
     }

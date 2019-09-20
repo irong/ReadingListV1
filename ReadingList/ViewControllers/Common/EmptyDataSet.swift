@@ -8,12 +8,24 @@ extension DZNEmptyDataSetSource {
     var boldDescriptionFont: UIFont { return UIFont.gillSansSemiBold(forTextStyle: .title2) }
 
     func title(_ text: String) -> NSAttributedString {
+        let labelColor: UIColor
+        if #available(iOS 13.0, *) {
+            labelColor = .label
+        } else {
+            labelColor = UserDefaults.standard[.theme].titleTextColor
+        }
         return NSAttributedString(string: text, attributes: [.font: titleFont,
-                                                             .foregroundColor: UserDefaults.standard[.theme].titleTextColor])
+                                                             .foregroundColor: labelColor])
     }
 
     func applyDescriptionAttributes(_ attributedString: NSMutableAttributedString) -> NSMutableAttributedString {
-        attributedString.addAttribute(.foregroundColor, value: UserDefaults.standard[.theme].subtitleTextColor,
+        let labelColor: UIColor
+        if #available(iOS 13.0, *) {
+            labelColor = .secondaryLabel
+        } else {
+            labelColor = UserDefaults.standard[.theme].subtitleTextColor
+        }
+        attributedString.addAttribute(.foregroundColor, value: labelColor,
                                       range: NSRange(location: 0, length: attributedString.string.count))
         return attributedString
     }

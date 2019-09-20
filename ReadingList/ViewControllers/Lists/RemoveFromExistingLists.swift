@@ -34,7 +34,9 @@ class RemoveFromExistingLists: UITableViewController {
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ExistingListCell", for: indexPath)
-        cell.defaultInitialise(withTheme: UserDefaults.standard[.theme])
+        if #available(iOS 13.0, *) { } else {
+            cell.defaultInitialise(withTheme: UserDefaults.standard[.theme])
+        }
 
         let list = resultsController.object(at: indexPath)
         cell.textLabel!.text = list.name
