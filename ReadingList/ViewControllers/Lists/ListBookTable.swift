@@ -44,6 +44,8 @@ class ListBookTable: UITableViewController {
     private var searchController: UISearchController!
     private var listBookSource: ListBooksSource!
 
+    /// Used to work around a animation bug, which is resolved in iOS 13, by forcing the search bar into a visible state.
+    @available(iOS, obsoleted: 13.0)
     var showSearchBarOnAppearance: Bool = false {
         didSet { navigationItem.hidesSearchBarWhenScrolling = !showSearchBarOnAppearance }
     }
@@ -111,8 +113,11 @@ class ListBookTable: UITableViewController {
         super.viewDidAppear(animated)
 
         // Ensure that hidesSearchBarWhenScrolling is always true when the view appears.
-        // Works in conjunction with showSearchBarOnAppearance.
-        navigationItem.hidesSearchBarWhenScrolling = true
+        // Works in conjunction with showSearchBarOnAppearance. That only exists to work around
+        // a bug which is resolved in iOS 13.
+        if #available(iOS 13.0, *) { /* issue is fixed */ } else {
+            navigationItem.hidesSearchBarWhenScrolling = true
+        }
     }
 
     override func initialise(withTheme theme: Theme) {

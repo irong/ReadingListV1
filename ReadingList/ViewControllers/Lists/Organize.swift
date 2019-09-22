@@ -124,6 +124,23 @@ class Organize: UITableViewController {
         }
         return header
     }
+    
+    private func renameList(_ list: List) {
+        let existingListNames = List.names(fromContext: PersistentStoreManager.container.viewContext)
+        let renameListAlert = TextBoxAlert(title: "Rename List", message: "Choose a new name for this list", initialValue: list.name, placeholder: "New list name", keyboardAppearance: UserDefaults.standard[.theme].keyboardAppearance, textValidator: { listName in
+                guard let listName = listName, !listName.isEmptyOrWhitespace else { return false }
+                return listName == list.name || !existingListNames.contains(listName)
+            }, onOK: {
+                guard let listName = $0 else { return }
+                UserEngagement.logEvent(.renameList)
+                list.managedObjectContext!.performAndSave {
+                    list.name = listName
+                }
+            }
+        )
+
+        self.present(renameListAlert, animated: true)
+    }
 
     override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         return UISwipeActionsConfiguration(performFirstActionWithFullSwipe: false, actions: [
@@ -135,21 +152,7 @@ class Organize: UITableViewController {
             UIContextualAction(style: .normal, title: "Rename") { _, _, callback in
                 self.setEditing(false, animated: true)
                 let list = self.resultsController.object(at: indexPath)
-
-                let existingListNames = List.names(fromContext: PersistentStoreManager.container.viewContext)
-                let renameListAlert = TextBoxAlert(title: "Rename List", message: "Choose a new name for this list", initialValue: list.name, placeholder: "New list name", keyboardAppearance: UserDefaults.standard[.theme].keyboardAppearance, textValidator: { listName in
-                        guard let listName = listName, !listName.isEmptyOrWhitespace else { return false }
-                        return listName == list.name || !existingListNames.contains(listName)
-                    }, onOK: {
-                        guard let listName = $0 else { return }
-                        UserEngagement.logEvent(.renameList)
-                        list.managedObjectContext!.performAndSave {
-                            list.name = listName
-                        }
-                    }
-                )
-
-                self.present(renameListAlert, animated: true)
+                self.renameList(list)
                 callback(true)
             }
         ])
@@ -185,13 +188,20 @@ class Organize: UITableViewController {
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if let listBookTable = segue.destination as? ListBookTable {
-            guard let cell = sender as? UITableViewCell, let index = tableView.indexPath(for: cell) else { preconditionFailure() }
-            let list = resultsController.object(at: index)
+            let list: List
+            if let index = sender as? IndexPath {
+                list = resultsController.object(at: index)
+            } else if let cell = sender as? UITableViewCell, let index = tableView.indexPath(for: cell) {
+                list = resultsController.object(at: index)
+            } else { preconditionFailure() }
+
             listBookTable.list = list
 
-            // If the search bar is visible on this view, then it should be visible on the presented view too
-            // to prevent an animation issue from occuring (https://stackoverflow.com/a/55043782/5513562)
-            listBookTable.showSearchBarOnAppearance = !searchController.isActive && searchController.searchBar.frame.height > 0 && !list.books.isEmpty
+            // If the search bar is visible on this view, then it should be visible on the presented view too to
+            // prevent an animation issue from occuring (https://stackoverflow.com/a/55043782/5513562) on iOS <13.
+            if #available(iOS 13.0, *) { /* issue is fixed */ } else {
+                listBookTable.showSearchBarOnAppearance = !searchController.isActive && searchController.searchBar.frame.height > 0 && !list.books.isEmpty
+            }
         }
     }
 
@@ -215,6 +225,31 @@ class Organize: UITableViewController {
         try! resultsController.performFetch()
         PersistentStoreManager.container.viewContext.saveAndLogIfErrored()
         resultsController.delegate = tableView
+    }
+
+    @available(iOS 13.0, *)
+    override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        // the PreviewProvider doesn't seem to work when instantiating the ListBookTable - all the cells become really
+        // big, and that persists when you open from the preview.
+        return UIContextMenuConfiguration(identifier: indexPath as NSIndexPath, previewProvider: nil) { _ in
+            UIMenu(title: "", children: [
+                UIAction(title: "Rename", image: UIImage(systemName: "pencil")) { _ in
+                    let list = self.resultsController.object(at: indexPath)
+                    self.renameList(list)
+                },
+                UIAction(title: "Delete", image: UIImage(systemName: "trash.fill"), attributes: .destructive) { _ in
+                    self.deleteList(forRowAt: indexPath)
+                }
+            ])
+        }
+    }
+
+    @available(iOS 13.0, *)
+    override func tableView(_ tableView: UITableView, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {
+        guard let indexPath = configuration.identifier as? IndexPath else { return }
+        animator.addAnimations {
+            self.performSegue(withIdentifier: "selectList", sender: indexPath)
+        }
     }
 }
 
