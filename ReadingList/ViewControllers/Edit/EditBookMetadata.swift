@@ -213,11 +213,19 @@ class EditBookMetadata: FormViewController {
         validateBook()
 
         monitorThemeSetting()
+
+        // Prevent the default behaviour of allowing a swipe-down to dismiss the modal presentation. This would
+        // not give a confirmation alert before discarding a user's unsaved changes. By handling the dismiss event
+        // ourselves we can present a confirmation dialog.
+        if #available(iOS 13.0, *) {
+            isModalInPresentation = true
+            navigationController?.presentationController?.delegate = self
+        }
     }
 
     func configureNavigationItem() {
         if !isInNavigationFlow {
-            navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(cancelPressed))
+            navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(userDidCancel))
         }
         if isAddingNewBook {
             navigationItem.title = "Add Book"
@@ -279,7 +287,7 @@ class EditBookMetadata: FormViewController {
         navigationItem.rightBarButtonItem!.isEnabled = book.isValidForUpdate()
     }
 
-    @objc func cancelPressed() {
+    @objc func userDidCancel() {
         guard book.changedValues().isEmpty else {
             // Confirm exit dialog
             let confirmExit = UIAlertController(title: "Unsaved changes", message: "Are you sure you want to discard your unsaved changes?", preferredStyle: .actionSheet)
@@ -309,6 +317,13 @@ class EditBookMetadata: FormViewController {
     @objc func presentEditReadingState() {
         guard book.isValidForUpdate() else { return }
         navigationController!.pushViewController(EditBookReadState(newUnsavedBook: book, scratchpadContext: editBookContext), animated: true)
+    }
+}
+
+extension EditBookMetadata: UIAdaptivePresentationControllerDelegate {
+    func presentationControllerDidAttemptToDismiss(_ presentationController: UIPresentationController) {
+        // If the user swipes down, we either dismiss or present a confirmation dialog
+        userDidCancel()
     }
 }
 

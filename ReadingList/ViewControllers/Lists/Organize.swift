@@ -124,7 +124,7 @@ class Organize: UITableViewController {
         }
         return header
     }
-    
+
     private func renameList(_ list: List) {
         let existingListNames = List.names(fromContext: PersistentStoreManager.container.viewContext)
         let renameListAlert = TextBoxAlert(title: "Rename List", message: "Choose a new name for this list", initialValue: list.name, placeholder: "New list name", keyboardAppearance: UserDefaults.standard[.theme].keyboardAppearance, textValidator: { listName in

@@ -107,6 +107,14 @@ class EditBookReadState: FormViewController {
             }
 
         monitorThemeSetting()
+
+        // Prevent the default behaviour of allowing a swipe-down to dismiss the modal presentation. This would
+        // not give a confirmation alert before discarding a user's unsaved changes. By handling the dismiss event
+        // ourselves we can present a confirmation dialog.
+        if #available(iOS 13.0, *) {
+            isModalInPresentation = true
+            navigationController?.presentationController?.delegate = self
+        }
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -154,7 +162,7 @@ class EditBookReadState: FormViewController {
 
     func configureNavigationItem() {
         if navigationItem.leftBarButtonItem == nil && navigationController!.viewControllers.first == self {
-            navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(cancelPressed))
+            navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(userDidCancel))
         }
         navigationItem.title = book.title
         navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(donePressed))
@@ -164,7 +172,7 @@ class EditBookReadState: FormViewController {
         navigationItem.rightBarButtonItem!.isEnabled = book.isValidForUpdate()
     }
 
-    @objc func cancelPressed() {
+    @objc func userDidCancel() {
         // FUTURE: Duplicates code in EditBookMetadata. Consolidate.
         updateBookFromForm()
         guard book.changedValues().isEmpty else {
@@ -215,5 +223,12 @@ class EditBookReadState: FormViewController {
             }
             UserEngagement.onReviewTrigger()
         }
+    }
+}
+
+extension EditBookReadState: UIAdaptivePresentationControllerDelegate {
+    func presentationControllerDidAttemptToDismiss(_ presentationController: UIPresentationController) {
+        // If the user swipes down, we either dismiss or present a confirmation dialog
+        userDidCancel()
     }
 }

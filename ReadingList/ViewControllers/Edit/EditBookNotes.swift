@@ -40,15 +40,23 @@ class EditBookNotes: FormViewController {
             }
 
         monitorThemeSetting()
+
+        // Prevent the default behaviour of allowing a swipe-down to dismiss the modal presentation. This would
+        // not give a confirmation alert before discarding a user's unsaved changes. By handling the dismiss event
+        // ourselves we can present a confirmation dialog.
+        if #available(iOS 13.0, *) {
+            isModalInPresentation = true
+            navigationController?.presentationController?.delegate = self
+        }
     }
 
     func configureNavigationItem() {
         navigationItem.title = "Edit Notes"
-        navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(cancelPressed))
+        navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(userDidCancel))
         navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(donePressed))
     }
 
-    @objc func cancelPressed() {
+    @objc func userDidCancel() {
         // FUTURE: Duplicates code in EditBookMetadata. Consolidate.
         guard book.changedValues().isEmpty else {
             // Confirm exit dialog
@@ -73,5 +81,12 @@ class EditBookNotes: FormViewController {
         presentingViewController?.dismiss(animated: true) {
             UserEngagement.onReviewTrigger()
         }
+    }
+}
+
+extension EditBookNotes: UIAdaptivePresentationControllerDelegate {
+    func presentationControllerDidAttemptToDismiss(_ presentationController: UIPresentationController) {
+        // If the user swipes down, we either dismiss or present a confirmation dialog
+        userDidCancel()
     }
 }
