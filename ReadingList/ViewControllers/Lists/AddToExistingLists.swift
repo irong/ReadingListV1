@@ -17,7 +17,12 @@ class AddToExistingLists: UITableViewController {
         fetchRequest.predicate = NSPredicate.or(books.map {
             NSPredicate(format: "SELF IN %@", $0.lists).not()
         })
-        fetchRequest.sortDescriptors = [NSSortDescriptor(\List.sort), NSSortDescriptor(\List.name)]
+        switch UserDefaults.standard[.listSortOrder] {
+        case .custom:
+            fetchRequest.sortDescriptors = [NSSortDescriptor(\List.sort), NSSortDescriptor(\List.name)]
+        case .alphabetical:
+            fetchRequest.sortDescriptors = [NSSortDescriptor(\List.name)]
+        }
         resultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: PersistentStoreManager.container.viewContext, sectionNameKeyPath: nil, cacheName: nil)
         resultsController.delegate = tableView
         try! resultsController.performFetch()
