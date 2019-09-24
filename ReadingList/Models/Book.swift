@@ -21,7 +21,10 @@ class Book: NSManagedObject {
     @NSManaged var googleBooksId: String?
     @NSManaged var manualBookId: String?
     @NSManaged var title: String
-    @NSManaged var subtitle: String?
+
+    /// Whether the subtitle field has a non-nil value. Used for sorting purposes.
+    @NSManaged private(set) var hasSubtitle: Bool
+
     @NSManaged private(set) var authorSort: String
     @NSManaged var publicationDate: Date?
     @NSManaged var publisher: String?
@@ -131,6 +134,7 @@ class Book: NSManagedObject {
         case currentPercentage = "currentPercentage"
         case rating = "rating"
         case languageCode = "languageCode"
+        case subtitle = "subtitle"
     } //swiftlint:enable redundant_string_enum_value
 
     private func safelyGetPrimitiveValue(_ key: Book.Key) -> Any? {
@@ -149,6 +153,14 @@ class Book: NSManagedObject {
         set {
             safelySetPrimitiveValue(newValue, forKey: #keyPath(Book.authors))
             authorSort = newValue.lastNamesSort
+        }
+    }
+
+    @objc var subtitle: String? {
+        get { return safelyGetPrimitiveValue(.subtitle) as! String? }
+        set {
+            safelySetPrimitiveValue(newValue, .subtitle)
+            hasSubtitle = newValue != nil
         }
     }
 

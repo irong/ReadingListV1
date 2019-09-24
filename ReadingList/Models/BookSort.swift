@@ -8,6 +8,7 @@ import ReadingList_Foundation
     case startDate = 2
     case finishDate = 3
     case title = 4
+    case subtitle = 7
     case author = 5
 
     public var description: String {
@@ -17,12 +18,13 @@ import ReadingList_Foundation
         case .finishDate: return "Finish Date"
         case .title: return "Title"
         case .author: return "Author"
+        case .subtitle: return "Subtitle"
         }
     }
 
     public var supportsListSorting: Bool {
         switch self {
-        case .listCustom, .title, .author, .startDate, .finishDate:
+        case .listCustom, .title, .author, .startDate, .finishDate, .subtitle:
             return true
         case .custom:
             return false
@@ -31,7 +33,7 @@ import ReadingList_Foundation
 
     func supports(_ state: BookReadState) -> Bool {
         switch self {
-        case .custom, .title, .author: return true
+        case .custom, .title, .subtitle, .author: return true
         case .listCustom: return false
         case .startDate: return state == .reading || state == .finished
         case .finishDate: return state == .finished
@@ -40,7 +42,8 @@ import ReadingList_Foundation
 
     var sortDescriptors: [NSSortDescriptor] {
         switch self {
-        case .title: return [NSSortDescriptor(\Book.title)]
+        case .title: return [NSSortDescriptor(\Book.title), NSSortDescriptor(\Book.subtitle)]
+        case .subtitle: return [NSSortDescriptor(\Book.hasSubtitle, ascending: false), NSSortDescriptor(\Book.subtitle), NSSortDescriptor(\Book.title)]
         case .author: return [NSSortDescriptor(\Book.authorSort),
                               NSSortDescriptor(\Book.title)]
         case .startDate: return [NSSortDescriptor(\Book.startedReading, ascending: false),
