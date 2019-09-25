@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="14903" systemVersion="18G95" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="15400" systemVersion="18G95" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="Book" representedClassName="Book" syncable="YES">
         <attribute name="addedWhen" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="authors" attributeType="Transformable" valueTransformerName=""/>
@@ -11,7 +11,7 @@
         <attribute name="currentProgressIsPage" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
         <attribute name="finishedReading" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="googleBooksId" optional="YES" attributeType="String"/>
-        <attribute name="hasSubtitle" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="hasSubtitle" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="isbn13" optional="YES" attributeType="Integer 64" usesScalarValueType="YES"/>
         <attribute name="languageCode" optional="YES" attributeType="String" minValueString="2" maxValueString="2"/>
         <attribute name="manualBookId" optional="YES" attributeType="String"/>
