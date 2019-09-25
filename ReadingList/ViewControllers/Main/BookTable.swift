@@ -25,6 +25,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         }
 
         tableView.keyboardDismissMode = .onDrag
+        tableView.allowsMultipleSelectionDuringEditing = true
         tableView.register(BookTableHeader.self)
         tableView.register(BookTableViewCell.self)
 
@@ -171,6 +172,11 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
             navigationItem.rightBarButtonItem!.isEnabled = false
             navigationItem.title = readStates.last!.description
         }
+    }
+
+    @available(iOS 13.0, *)
+    override func tableView(_ tableView: UITableView, shouldBeginMultipleSelectionInteractionAt indexPath: IndexPath) -> Bool {
+        return true
     }
 
     @available(iOS 13.0, *)
