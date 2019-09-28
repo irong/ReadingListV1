@@ -570,7 +570,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
 extension BookTable: UISearchResultsUpdating {
     func predicate(forSearchText searchText: String?) -> NSPredicate {
         if let searchText = searchText, !searchText.isEmptyOrWhitespace && searchText.trimming().count >= 2 {
-            return NSPredicate.wordsWithinFields(searchText, fieldNames: #keyPath(Book.title), #keyPath(Book.authorSort), "ANY \(#keyPath(Book.subjects)).name")
+            return NSPredicate.wordsWithinFields(searchText, fieldNames: #keyPath(Book.title), #keyPath(Book.subtitle), #keyPath(Book.authorSort), "ANY \(#keyPath(Book.subjects)).name")
         }
         return NSPredicate(boolean: true) // If we cannot filter with the search text, we should return all results
     }
