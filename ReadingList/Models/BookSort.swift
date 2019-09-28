@@ -10,6 +10,8 @@ import ReadingList_Foundation
     case title = 4
     case subtitle = 7
     case author = 5
+    case progress = 8
+    case rating = 9
 
     public var description: String {
         switch self {
@@ -19,14 +21,16 @@ import ReadingList_Foundation
         case .title: return "Title"
         case .author: return "Author"
         case .subtitle: return "Subtitle"
+        case .progress: return "Progress"
+        case .rating: return "Rating"
         }
     }
 
     public var supportsListSorting: Bool {
         switch self {
-        case .listCustom, .title, .author, .startDate, .finishDate, .subtitle:
+        case .listCustom, .title, .author, .startDate, .finishDate, .subtitle, .rating:
             return true
-        case .custom:
+        case .custom, .progress:
             return false
         }
     }
@@ -34,9 +38,10 @@ import ReadingList_Foundation
     func supports(_ state: BookReadState) -> Bool {
         switch self {
         case .custom, .title, .subtitle, .author: return true
-        case .listCustom: return false
+        case .listCustom, .rating: return false
         case .startDate: return state == .reading || state == .finished
         case .finishDate: return state == .finished
+        case .progress: return state == .reading
         }
     }
 
@@ -55,6 +60,8 @@ import ReadingList_Foundation
                               NSSortDescriptor(\Book.googleBooksId),
                               NSSortDescriptor(\Book.manualBookId)]
         case .listCustom: return [NSSortDescriptor(\Book.lists)]
+        case .progress: return [NSSortDescriptor(Book.Key.currentPercentage.rawValue)]
+        case .rating: return [NSSortDescriptor(Book.Key.rating.rawValue, ascending: false)]
         }
     }
 }
