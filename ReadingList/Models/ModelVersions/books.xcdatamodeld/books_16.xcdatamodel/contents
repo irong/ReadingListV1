@@ -60,6 +60,11 @@
             <fetchIndexElement property="readState" type="Binary" order="ascending"/>
             <fetchIndexElement property="finishedReading" type="Binary" order="ascending"/>
         </fetchIndex>
+        <fetchIndex name="sortSubtitle">
+            <fetchIndexElement property="readState" type="Binary" order="ascending"/>
+            <fetchIndexElement property="subtitle" type="Binary" order="ascending"/>
+            <fetchIndexElement property="title" type="Binary" order="ascending"/>
+        </fetchIndex>
         <uniquenessConstraints>
             <uniquenessConstraint>
                 <constraint value="googleBooksId"/>
@@ -78,6 +83,9 @@
             <fetchIndexElement property="sort" type="Binary" order="ascending"/>
             <fetchIndexElement property="name" type="Binary" order="ascending"/>
         </fetchIndex>
+        <fetchIndex name="name">
+            <fetchIndexElement property="name" type="Binary" order="ascending"/>
+        </fetchIndex>
     </entity>
     <entity name="Subject" representedClassName="Subject" syncable="YES">
         <attribute name="name" attributeType="String"/>
@@ -88,7 +96,7 @@
     </entity>
     <elements>
         <element name="Book" positionX="-63" positionY="-18" width="128" height="433"/>
-        <element name="List" positionX="-54" positionY="117" width="128" height="105"/>
+        <element name="List" positionX="-54" positionY="117" width="128" height="103"/>
         <element name="Subject" positionX="-63" positionY="90" width="128" height="75"/>
     </elements>
 </model>
