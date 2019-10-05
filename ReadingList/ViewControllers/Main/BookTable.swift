@@ -180,6 +180,11 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
     }
 
     @available(iOS 13.0, *)
+    override func tableView(_ tableView: UITableView, didBeginMultipleSelectionInteractionAt indexPath: IndexPath) {
+        setEditing(true, animated: true)
+    }
+
+    @available(iOS 13.0, *)
     override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         let book = resultsController.object(at: indexPath)
         return UIContextMenuConfiguration(identifier: book.objectID, previewProvider: {
