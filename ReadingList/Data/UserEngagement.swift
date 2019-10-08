@@ -58,6 +58,8 @@ class UserEngagement {
         case editBook = "Edit_Book"
         case editReadState = "Edit_Read_State"
         case changeSortOrder = "Change_Sort"
+        case moveBookToTop = "Move_Book_To_Top"
+        case moveBookToBottom = "Move_Book_To_Bottom"
 
         // Lists
         case createList = "Create_List"

@@ -217,7 +217,8 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
                 var moveUpOrDownActions = [UIMenuElement]()
                 if let minSort = minSort, book.sort != minSort {
                     moveUpOrDownActions.append(UIAction(title: "Move To Top", image: UIImage(systemName: "arrow.up")) { _ in
-                        print(minSort)
+                        UserEngagement.logEvent(.moveBookToTop)
+
                         // Make the data change with the delegate off to prevent automatic table updates
                         self.resultsController.delegate = nil
                         book.sort = minSort - 1
@@ -230,6 +231,8 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
                 }
                 if let maxSort = maxSort, book.sort != maxSort {
                     moveUpOrDownActions.append(UIAction(title: "Move To Bottom", image: UIImage(systemName: "arrow.down")) { _ in
+                        UserEngagement.logEvent(.moveBookToBottom)
+
                         // Make the data change with the delegate off to prevent automatic table updates
                         self.resultsController.delegate = nil
                         book.sort = maxSort + 1
@@ -252,6 +255,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
                     // Schedule the change after a slight delay so that the animation of the row resuming into place does not
                     // interfere with the animation of the row being removed from the table section
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                        UserEngagement.logEvent(.transitionReadState)
                         book.setReading(started: Date())
                         book.updateSortIndex()
                         book.managedObjectContext!.saveAndLogIfErrored()
@@ -263,6 +267,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
                     // Schedule the change after a slight delay so that the animation of the row resuming into place does not
                     // interfere with the animation of the row being removed from the table section
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                        UserEngagement.logEvent(.transitionReadState)
                         book.setFinished(started: started, finished: Date())
                         book.updateSortIndex()
                         book.managedObjectContext!.saveAndLogIfErrored()
