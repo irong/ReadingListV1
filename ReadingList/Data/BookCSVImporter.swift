@@ -42,6 +42,39 @@ class BookCSVParserDelegate: CSVParserDelegate {
     private var coverDownloadPromises = [Promise<Void>]()
     private var listMappings = [String: [(bookID: NSManagedObjectID, index: Int)]]()
     private var listNames = [String]()
+    private var fieldToColumnNative: [String: String] = [
+        "authors": "Authors",
+        "bookDescription": "Description",
+        "finished": "Finished Reading",
+        "googleBooksId": "Google Books ID",
+        "isbn13": "ISBN-13",
+        "language": "Language Code",
+        "notes": "Notes",
+        "page": "Current Page",
+        "pageCount": "Page Count",
+        "percentage": "Current Percentage",
+        "publicationDate": "Publication Date",
+        "publisher": "Publisher",
+        "rating": "Rating",
+        "started": "Started Reading",
+        "subjects": "Subjects",
+        "title": "Title"
+    ]
+
+    private var fieldToColumnGoodReads: [String: String] = [
+        "authors": "Author l-f",
+        "bookDescription": "Description",
+        "finished": "Date Read",
+        "isbn13": "ISBN13",
+        "notes": "My Review",
+        "pageCount": "Number of Pages",
+        "publicationDate": "Year Published",
+        "publisher": "Publisher",
+        "rating": "My Rating",
+        "started": "Date Added",
+        "title": "Title",
+        "manualId": "Book Id"
+    ]
 
     var onCompletion: ((Result<BookCSVImportResults, CSVImportError>) -> Void)?
 
@@ -56,45 +89,54 @@ class BookCSVParserDelegate: CSVParserDelegate {
     }
 
     func headersRead(_ headers: [String]) -> Bool {
-        if !headers.contains("Title") || !headers.contains("Authors") {
+        if !(headers.contains(fieldToColumnNative.title) || headers.contains(fieldToColumnGoodReads.title)) ||
+            !(headers.contains(fieldToColumnNative.authors) || headers.contains(fieldToColumnGoodReads.authors)
+            ) {
             return false
         }
         listNames = headers.filter { !BookCSVExport.headers.contains($0) }
         return true
     }
 
-    private func createBook(_ values: [String: String]) -> Book? {
-        guard let title = values["Title"] else { return nil }
-        guard let authors = values["Authors"] else { return nil }
+    private func createBook(_ values: [String: String], fieldToColumn: [String: String]) -> Book? {
+        guard let title = values[fieldToColumn.title] else { return nil }
+        guard let authors = values[fieldToColumn.authors] else { return nil }
         let book = Book(context: self.context)
         book.title = title
         book.authors = createAuthors(authors)
-        book.googleBooksId = values["Google Books ID"]
-        book.manualBookId = book.googleBooksId == nil ? UUID().uuidString : nil
-        book.isbn13 = ISBN13(values["ISBN-13"])?.int
-        book.pageCount = Int32(values["Page Count"])
-        if let page = Int32(values["Current Page"]) {
+        book.googleBooksId = values[fieldToColumn.googleBooksId]
+        book.isbn13 = ISBN13(values[fieldToColumn.isbn13])?.int
+        let manualId = values[fieldToColumn.manualId]
+        book.manualBookId = book.googleBooksId == nil ? (manualId == nil ? UUID().uuidString : manualId) : nil
+        book.pageCount = Int32(values[fieldToColumn.pageCount])
+        if let page = Int32(values[fieldToColumn.page]) {
             book.setProgress(.page(page))
-        } else if let percentage = Int32(values["Current Percentage"]) {
+        } else if let percentage = Int32(values[fieldToColumn.percentage]) {
             book.setProgress(.percentage(percentage))
         }
-        book.notes = values["Notes"]?.replacingOccurrences(of: "\r\n", with: "\n")
-        book.publicationDate = Date(iso: values["Publication Date"])
-        book.publisher = values["Publisher"]
-        book.bookDescription = values["Description"]?.replacingOccurrences(of: "\r\n", with: "\n")
-        if let started = Date(iso: values["Started Reading"]) {
-            if let finished = Date(iso: values["Finished Reading"]) {
+        book.notes = values[fieldToColumn.notes]?.replacingOccurrences(of: "\r\n", with: "\n")
+        book.publicationDate = Date(iso: values[fieldToColumn.publicationDate])
+        book.publisher = values[fieldToColumn.publisher]
+        book.bookDescription = values[fieldToColumn.bookDescription]?.replacingOccurrences(of: "\r\n", with: "\n")
+        if let started = Date(iso: values[fieldToColumn.started]) {
+            if let finished = Date(iso: values[fieldToColumn.finished]) {
                 book.setFinished(started: started, finished: finished)
             } else {
-                book.setReading(started: started)
+                let isGoodReads = fieldToColumn == fieldToColumnGoodReads
+                if !isGoodReads || (isGoodReads && values["Bookshelves"].contains("currently-reading")) {
+                    book.setReading(started: started)
+                }
             }
         } else {
             book.setToRead()
         }
 
-        book.subjects = Set(createSubjects(values["Subjects"]))
-        book.rating = Int16(values["Rating"])
-        book.language = LanguageIso639_1(rawValue: values["Language Code"] ?? "")
+        book.subjects = Set(createSubjects(values[fieldToColumn.subjects]))
+        book.rating = Int16(values[fieldToColumn.rating])
+        if ![1, 2, 3, 4, 5].contains(book.rating) {
+            book.rating = ""
+        }
+        book.language = LanguageIso639_1(rawValue: values[fieldToColumn.language] ?? "")
         return book
     }
 
@@ -149,21 +191,23 @@ class BookCSVParserDelegate: CSVParserDelegate {
     }
 
     func lineParseSuccess(_ values: [String: String]) {
+        let fieldToColumn = values[fieldToColumnGoodReads.author] == nil ? fieldToColumnNative : fieldToColumnGoodReads
+
         // FUTURE: Batch save
         context.performAndWait { [unowned self] in
             // Check for duplicates
-            if let googleBooksId = values["Google Books ID"], let existingBookByGoogleId = Book.get(fromContext: self.context, googleBooksId: googleBooksId) {
+            if let googleBooksId = values[fieldToColumn.googleBooksId], let existingBookByGoogleId = Book.get(fromContext: self.context, googleBooksId: googleBooksId) {
                 os_log("Skipping duplicate book: Google Books ID %s already exists in %{public}s", type: .info, googleBooksId, existingBookByGoogleId.objectID.uriRepresentation().absoluteString)
                 duplicateCount += 1
                 return
             }
-            if let isbn = values["ISBN-13"], let existingBookByIsbn = Book.get(fromContext: self.context, isbn: isbn) {
+            if let isbn = values[fieldToColumn.isbn13], let existingBookByIsbn = Book.get(fromContext: self.context, isbn: isbn) {
                 os_log("Skipping duplicate book: ISBN %s already exists in %{public}s", type: .info, isbn, existingBookByIsbn.objectID.uriRepresentation().absoluteString)
                 duplicateCount += 1
                 return
             }
 
-            guard let newBook = createBook(values) else {
+            guard let newBook = createBook(values, fieldToColumn) else {
                 invalidCount += 1
                 os_log("Invalid data: no book created")
                 return
@@ -189,11 +233,11 @@ class BookCSVParserDelegate: CSVParserDelegate {
                     listMappings[listName]!.append((newBook.objectID, listPosition))
                 }
             }
-
+            // FUTURE: Lookup googleBooksId from isbn13 when nil
             // Supplement the book with the cover image
-            if self.includeImages, let googleBookdID = newBook.googleBooksId {
-                os_log("Supplementing book %{public}s with cover image from google ID %s", type: .info, objectIdForLogging, googleBookdID)
-                populateCover(forBook: newBook, withGoogleID: googleBookdID)
+            if self.includeImages, let googleBooksId = newBook.googleBooksId {
+                os_log("Supplementing book %{public}s with cover image from google ID %s", type: .info, objectIdForLogging, googleBooksId)
+                populateCover(forBook: newBook, withGoogleID: googleBooksId)
             }
         }
     }
