@@ -68,6 +68,7 @@ class BookCSVParserDelegate: CSVParserDelegate {
         guard let authors = values["Authors"] else { return nil }
         let book = Book(context: self.context)
         book.title = title
+        book.subtitle = values["Subtitle"]
         book.authors = createAuthors(authors)
         book.googleBooksId = values["Google Books ID"]
         book.manualBookId = book.googleBooksId == nil ? UUID().uuidString : nil
