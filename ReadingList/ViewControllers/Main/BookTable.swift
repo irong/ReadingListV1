@@ -11,13 +11,32 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
     private var resultsController: CompoundFetchedResultsController<Book>!
     private var searchController: UISearchController!
     private var sortManager: SortManager<Book>!
-    private lazy var orderedDefaultPredicates = readStates.map {
-        (readState: $0, predicate: NSPredicate(format: "%K == %ld", #keyPath(Book.readState), $0.rawValue))
+    
+    /// An array of tuples of a BookReadState and its associated NSPredicate, in the order the read states should be shown in the table
+    private lazy var defaultPredicates = readStates.map {
+        (readState: $0, predicate: predicate(for: $0))
     }
+    
+    /**
+     An array of tuples of a BookReadState and its associated NSPredicate, for all BookReadStates. The order is such that the array starts with
+     the BookReadStates that are shown in the table, in that order, followed by any other BookReadStates.
+    */
+    private lazy var allReadStatePredicates: [(readState: BookReadState, predicate: NSPredicate)] = {
+        var allReadStates = Array(readStates)
+        allReadStates.append(contentsOf: BookReadState.allCases.filter { !readStates.contains($0) })
+        return allReadStates.map { ($0, predicate(for: $0)) }
+    }()
+
+    private let allReadStatesSearchBarScopeIndex = 1
 
     override func viewDidLoad() {
         searchController = UISearchController(filterPlaceholderText: "Your Library")
         searchController.searchResultsUpdater = self
+        searchController.delegate = self
+        // The search bar should have two scope buttons: one which represents the read states shown normally in this VC,
+        // the other for "all books".
+        searchController.searchBar.scopeButtonTitles = [readStates.map { $0.description }.joined(separator: " & "), "All"]
+        searchController.searchBar.delegate = self
         navigationItem.searchController = searchController
 
         sortManager = SortManager<Book>(tableView) {
@@ -33,7 +52,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         navigationItem.title = readStates.last!.description
 
         // Handle the data fetch, sort and filtering
-        buildResultsController()
+        buildResultsController(forAllReadStates: false)
 
         configureNavBarButtons()
 
@@ -69,7 +88,8 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         let header = tableView.dequeue(BookTableHeader.self)
         header.presenter = self
         header.onSortChanged = { [unowned self] in
-            self.buildResultsController()
+            // All read states are only visible when searching, and when searching, changing of sorts is disabled
+            self.buildResultsController(forAllReadStates: false)
             self.tableView.reloadData()
             UserEngagement.logEvent(.changeSortOrder)
         }
@@ -77,8 +97,20 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         return header
     }
 
-    private func buildResultsController() {
-        let controllers = orderedDefaultPredicates.map { readState, predicate -> NSFetchedResultsController<Book> in
+    private func predicate(for readState: BookReadState) -> NSPredicate {
+        return NSPredicate(format: "%K == %ld", #keyPath(Book.readState), readState.rawValue)
+    }
+
+    private func buildResultsController(forAllReadStates: Bool) {
+        // The predicates we use as a basis for the fetch requests depends on whether we are displaying all read states or not
+        let orderedPredicates: [(readState: BookReadState, predicate: NSPredicate)]
+        if forAllReadStates {
+            orderedPredicates = allReadStatePredicates
+        } else {
+            orderedPredicates = defaultPredicates
+        }
+        
+        let controllers = orderedPredicates.map { readState, predicate -> NSFetchedResultsController<Book> in
             let fetchRequest = NSManagedObject.fetchRequest(Book.self, batch: 25)
             fetchRequest.predicate = predicate
             fetchRequest.sortDescriptors = UserDefaults.standard[UserSettingsCollection.sortSetting(for: readState)].sortDescriptors
@@ -586,11 +618,13 @@ extension BookTable: UISearchResultsUpdating {
     }
 
     func updateSearchResults(for searchController: UISearchController) {
-        let searchTextPredicate = self.predicate(forSearchText: searchController.searchBar.text)
+        let searchTextPredicate = predicate(forSearchText: searchController.searchBar.text)
 
         var anyChangedPredicates = false
         for (index, controller) in resultsController.controllers.enumerated() {
-            let thisSectionPredicate = NSPredicate.and([orderedDefaultPredicates[index].predicate, searchTextPredicate])
+            // The sequence, in allReadStatePredicates, of read states will match the sequence of the read states
+            // each controller is for. There may be less controllers than the size of allReadStatePredicates, though.
+            let thisSectionPredicate = NSPredicate.and([allReadStatePredicates[index].predicate, searchTextPredicate])
             if controller.fetchRequest.predicate != thisSectionPredicate {
                 controller.fetchRequest.predicate = thisSectionPredicate
                 anyChangedPredicates = true
@@ -601,6 +635,28 @@ extension BookTable: UISearchResultsUpdating {
             tableView.reloadData()
         } else {
             reloadHeaders()
+        }
+    }
+}
+
+extension BookTable: UISearchControllerDelegate {
+    func didPresentSearchController(_ searchController: UISearchController) {
+        if searchController.searchBar.selectedScopeButtonIndex == allReadStatesSearchBarScopeIndex {
+            buildResultsController(forAllReadStates: true)
+            updateSearchResults(for: searchController)
+        }
+    }
+}
+
+extension BookTable: UISearchBarDelegate {
+    func searchBar(_ searchBar: UISearchBar, selectedScopeButtonIndexDidChange selectedScope: Int) {
+        buildResultsController(forAllReadStates: selectedScope == allReadStatesSearchBarScopeIndex)
+        updateSearchResults(for: searchController)
+    }
+
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        if searchBar.selectedScopeButtonIndex == allReadStatesSearchBarScopeIndex {
+            buildResultsController(forAllReadStates: false)
         }
     }
 }
