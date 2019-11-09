@@ -109,7 +109,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         } else {
             orderedPredicates = defaultPredicates
         }
-        
+
         let controllers = orderedPredicates.map { readState, predicate -> NSFetchedResultsController<Book> in
             let fetchRequest = NSManagedObject.fetchRequest(Book.self, batch: 25)
             fetchRequest.predicate = predicate
@@ -541,6 +541,13 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
             book.managedObjectContext!.saveAndLogIfErrored()
             UserEngagement.logEvent(.transitionReadState)
             callback(true)
+
+            // Workaround a strange iOS 13 quirk, where if a swipe leads to a new section appearing while the search controller is active,
+            // setEditing(false) is not called. This results in the table being stuck in edit mode, unable to leave, and unable to select
+            // any table cells.
+            if #available(iOS 13.0, *), self.searchController.isActive {
+                self.setEditing(false, animated: false)
+            }
         }
         leadingSwipeAction.backgroundColor = readStateOfSection == .toRead ? UIColor(.buttonBlue) : UIColor(.buttonGreen)
         if #available(iOS 13.0, *) {
