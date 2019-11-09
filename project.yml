@@ -83,7 +83,41 @@ targets:
         - ReadingList_UITests
       preActions:
         - name: Set simulator status bar overrides
-          script: xcrun simctl status_bar booted override --time "9:42 AM" --dataNetwork wifi --wifiMode active --wifiBars 3 --cellularMode notSupported --batteryState discharging --batteryLevel 100
+          settingsTarget: ReadingList_UITests
+          script: |
+                  function version {
+                      echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }';
+                  }
+
+                  if [[ "${SDKROOT}" != *"simulator"* ]]; then
+                      exit 0
+                  fi
+
+                  if [ $(version "${TARGET_DEVICE_OS_VERSION}") -ge $(version "13") ]; then
+                      xcrun simctl boot "${TARGET_DEVICE_IDENTIFIER}"
+
+                      xcrun simctl status_bar "${TARGET_DEVICE_IDENTIFIER}" override \
+                          --time "9:41 AM" \
+                          --dataNetwork wifi \
+                          --wifiMode active \
+                          --wifiBars 3 \
+                          --cellularMode notSupported \
+                          --batteryState discharging \
+                          --batteryLevel 100
+                  fi
       postActions:
         - name: Reset simulator status bar
-          script: xcrun simctl status_bar booted clear
+          settingsTarget: ReadingList_UITests
+          script: |
+                  function version {
+                      echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }';
+                  }
+
+                  if [[ "${SDKROOT}" != *"simulator"* ]]; then
+                      exit 0
+                  fi
+
+                  if [ $(version "${TARGET_DEVICE_OS_VERSION}") -ge $(version "13") ]; then
+                      xcrun simctl boot "${TARGET_DEVICE_IDENTIFIER}"
+                      xcrun simctl status_bar "${TARGET_DEVICE_IDENTIFIER}" clear
+                  fi
