@@ -11,7 +11,6 @@ target 'ReadingList' do
   pod 'CHCSVParser', :git => 'https://github.com/davedelong/CHCSVParser.git'
   pod 'PromisesSwift', '~> 1.2'
   pod 'Cosmos', '~> 20.0'
-  pod 'SimulatorStatusMagic', :configurations => ['Debug']
   pod 'Fabric'
   pod 'Crashlytics'
   pod 'Firebase/Core'
@@ -22,10 +21,6 @@ target 'ReadingList' do
     pod 'Swifter', :git => 'https://github.com/httpswift/swifter.git', :branch => 'stable'
   end
   target 'ReadingList_UITests' do
-    inherit! :complete
-    pod 'Swifter', :git => 'https://github.com/httpswift/swifter.git', :branch => 'stable'
-  end
-  target 'ReadingList_Screenshots' do
     inherit! :complete
     pod 'Swifter', :git => 'https://github.com/httpswift/swifter.git', :branch => 'stable'
   end

@@ -1,6 +1,6 @@
 excluded:
   - Pods
-  - ReadingList_Screenshots/SnapshotHelper.swift
+  - ReadingList_UITests/SnapshotHelper.swift
 identifier_name:
   excluded:
     - id

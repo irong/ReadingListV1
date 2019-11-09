@@ -21,10 +21,11 @@ class Screenshots: XCTestCase {
         super.tearDown()
         mockServer.server.stop()
     }
-
+    
     func testSnapshot() {
-        // Screenshot is designed for iOS 12 only
-        guard #available(iOS 12.0, *) else { return }
+        
+        // Screenshot is designed for iOS 13 only
+        guard #available(iOS 13.0, *) else { return }
 
         let app = ReadingListApp()
         app.clickTab(.toRead)
@@ -61,6 +62,10 @@ class Screenshots: XCTestCase {
         let yourLibrarySearchField = app.searchFields["Your Library"]
         yourLibrarySearchField.tap()
         yourLibrarySearchField.typeText("Orwell")
+        let swipeExplanationContinueButton = app.buttons["Continue"]
+        if swipeExplanationContinueButton.exists {
+            swipeExplanationContinueButton.tap()
+        }
         app.buttons["Done"].tap()
 
         if isIpad {
@@ -74,7 +79,8 @@ class Screenshots: XCTestCase {
             app.tables.cells.element(boundBy: 3).tap()
         }
         app.navigationBars["Finished"].buttons["Edit"].tap()
-        app.tables.cells.element(boundBy: 3).tap()
+        app.tables.cells.element(boundBy: 5).tap()
+        app.tables.cells.element(boundBy: 8).tap()
         app.tables.cells.element(boundBy: 6).tap()
         app.tables.cells.element(boundBy: 7).tap()
         snapshot("4_BulkEdit")
@@ -88,10 +94,10 @@ class Screenshots: XCTestCase {
         }
         snapshot("5_Organise")
 
-        app.tabBars.buttons["Settings"].tap()
-        app.tables.staticTexts["General"].tap()
-        app.tables.staticTexts["Black"].tap()
-        app.tabBars.buttons["To Read"].tap()
-        snapshot("6_DarkMode")
+        //app.tabBars.buttons["Settings"].tap()
+        //app.tables.staticTexts["General"].tap()
+        //app.tables.staticTexts["Black"].tap()
+        //app.tabBars.buttons["To Read"].tap()
+        //snapshot("6_DarkMode")
     }
 }

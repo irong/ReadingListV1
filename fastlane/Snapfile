@@ -2,8 +2,8 @@ devices([
 	"iPhone SE",
 	"iPhone 8",
 	"iPhone 8 Plus",
-        "iPhone Xs",
-	"iPhone Xs Max",
+        "iPhone 11 Pro",
+	"iPhone 11 Pro Max",
 	"iPad Pro (9.7-inch)",
 	"iPad Pro (12.9-inch)"
 ])
@@ -11,7 +11,7 @@ languages([
   "en-GB",
   "en-US"
 ])
-scheme("ReadingList_Screenshots")
+scheme("ReadingList_UITests")
 workspace("ReadingList.xcworkspace")
 clear_previous_screenshots(true)
 reinstall_app(true)

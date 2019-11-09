@@ -74,7 +74,6 @@ PODS:
   - PromisesObjC (1.2.8)
   - PromisesSwift (1.2.8):
     - PromisesObjC (= 1.2.8)
-  - SimulatorStatusMagic (2.4.1)
   - SVProgressHUD (2.2.5)
   - Swifter (1.4.7)
   - SwiftyJSON (5.0.0)
@@ -90,7 +89,6 @@ DEPENDENCIES:
   - Firebase/Core
   - ImageRow (~> 4.0)
   - PromisesSwift (~> 1.2)
-  - SimulatorStatusMagic
   - SVProgressHUD (~> 2.2)
   - Swifter (from `https://github.com/httpswift/swifter.git`, branch `stable`)
   - SwiftyJSON (~> 5.0)
@@ -117,7 +115,6 @@ SPEC REPOS:
     - nanopb
     - PromisesObjC
     - PromisesSwift
-    - SimulatorStatusMagic
     - SVProgressHUD
     - SwiftyJSON
     - SwiftyStoreKit
@@ -158,12 +155,11 @@ SPEC CHECKSUMS:
   nanopb: 18003b5e52dab79db540fe93fe9579f399bd1ccd
   PromisesObjC: c119f3cd559f50b7ae681fa59dc1acd19173b7e6
   PromisesSwift: 37bad6f4daddb02f7c9c531efe91e8b21c13ee2f
-  SimulatorStatusMagic: 28d4a9d1a500ac7cea0b2b5a43c1c6ddb40ba56c
   SVProgressHUD: 1428aafac632c1f86f62aa4243ec12008d7a51d6
   Swifter: 1c6973f7cef90e92f305db5caca72ab414d7948e
   SwiftyJSON: 36413e04c44ee145039d332b4f4e2d3e8d6c4db7
   SwiftyStoreKit: 033d06b6f87955405d3f844a18a7687c2438592a
 
-PODFILE CHECKSUM: e3bbca4c427b142b544f0e817722784fb4163f25
+PODFILE CHECKSUM: d074ce502c054ca745fbbbb335b40ca3e061ce01
 
 COCOAPODS: 1.8.4

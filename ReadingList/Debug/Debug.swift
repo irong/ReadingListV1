@@ -2,7 +2,6 @@
 
 import Foundation
 import CoreData
-import SimulatorStatusMagic
 import ReadingList_Foundation
 
 extension QuickAction: UserSettingType {}
@@ -19,9 +18,6 @@ class Debug {
         if CommandLine.arguments.contains("--reset") {
             UserDefaults.standard.removePersistentDomain(forName: Bundle.main.bundleIdentifier!)
             NSPersistentStoreCoordinator().destroyAndDeleteStore(at: URL.applicationSupport.appendingPathComponent(PersistentStoreManager.storeFileName))
-        }
-        if CommandLine.arguments.contains(screenshotsCommand) {
-            SDStatusBarManager.sharedInstance().enableOverrides()
         }
     }
 

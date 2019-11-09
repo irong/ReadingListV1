@@ -78,17 +78,12 @@ targets:
       - path: ReadingList/Api/GoogleBooksRequest.swift
     dependencies:
       - target: ReadingList
-
-  ReadingList_Screenshots:
-    type: bundle.ui-testing
-    platform: iOS
-    deploymentTarget: 11.0
-    sources:
-      - path: ReadingList_Screenshots
-      - path: ReadingList_UITests
-      - path: ReadingList/Api/GoogleBooksRequest.swift
-    dependencies:
-      - target: ReadingList
     scheme:
       testTargets:
-        - ReadingList_Screenshots
+        - ReadingList_UITests
+      preActions:
+        - name: Set simulator status bar overrides
+          script: xcrun simctl status_bar booted override --time "9:42 AM" --dataNetwork wifi --wifiMode active --wifiBars 3 --cellularMode notSupported --batteryState discharging --batteryLevel 100
+      postActions:
+        - name: Reset simulator status bar
+          script: xcrun simctl status_bar booted clear
