@@ -102,7 +102,7 @@ class Book: NSManagedObject {
 
     private func updateComputedProgressData() {
         if currentProgressIsPage {
-            if let pageCount = pageCount, let currentPage = currentPage {
+            if let pageCount = pageCount, let currentPage = currentPage, pageCount != 0 {
                 currentPercentage = min(100, Int32(round((Float(currentPage) / Float(pageCount)) * 100)))
             } else {
                 currentPercentage = nil
