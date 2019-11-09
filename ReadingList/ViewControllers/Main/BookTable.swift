@@ -542,10 +542,10 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
             UserEngagement.logEvent(.transitionReadState)
             callback(true)
 
-            // Workaround a strange iOS 13 quirk, where if a swipe leads to a new section appearing while the search controller is active,
-            // setEditing(false) is not called. This results in the table being stuck in edit mode, unable to leave, and unable to select
-            // any table cells.
-            if #available(iOS 13.0, *), self.searchController.isActive {
+            // Workaround a strange iOS 13 quirk, where if a swipe leads to a new section appearing, setEditing(false) is not called.
+            // This results in the table being unexpectedly in edit mode, and if the search conrtoller is active, it will be stuck:
+            // unable to leave edit mode, and unable to select any table cells!
+            if #available(iOS 13.0, *) {
                 self.setEditing(false, animated: false)
             }
         }
