@@ -241,6 +241,8 @@ class BookDetails: UIViewController, UIScrollViewDelegate { //swiftlint:disable:
     }
 
     @IBAction private func changeReadStateButtonWasPressed(_ sender: BorderedButton) {
+        let feedbackGenerator = UINotificationFeedbackGenerator()
+        feedbackGenerator.prepare()
         guard let book = book, book.readState == .toRead || book.readState == .reading else {
             assertionFailure("Change read state button pressed when not valid"); return
         }
@@ -252,6 +254,7 @@ class BookDetails: UIViewController, UIScrollViewDelegate { //swiftlint:disable:
         }
         book.updateSortIndex()
         book.managedObjectContext!.saveAndLogIfErrored()
+        feedbackGenerator.notificationOccurred(.success)
 
         UserEngagement.logEvent(.transitionReadState)
 
