@@ -648,6 +648,7 @@ extension BookTable: UISearchResultsUpdating {
 
 extension BookTable: UISearchControllerDelegate {
     func didPresentSearchController(_ searchController: UISearchController) {
+        UserEngagement.logEvent(.searchLibrary)
         if searchController.searchBar.selectedScopeButtonIndex == allReadStatesSearchBarScopeIndex {
             buildResultsController(forAllReadStates: true)
             updateSearchResults(for: searchController)
@@ -657,6 +658,7 @@ extension BookTable: UISearchControllerDelegate {
 
 extension BookTable: UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, selectedScopeButtonIndexDidChange selectedScope: Int) {
+        UserEngagement.logEvent(.searchLibrarySwitchScope)
         buildResultsController(forAllReadStates: selectedScope == allReadStatesSearchBarScopeIndex)
         updateSearchResults(for: searchController)
     }
