@@ -49,7 +49,7 @@ class UserEngagement {
         case csvImport = "CSV_Import"
         case csvExport = "CSV_Export"
         case deleteAllData = "Delete_All_Data"
-        
+
         // Navigation
         case searchLibrary = "Search_Library"
         case searchLibrarySwitchScope = "Search_Library_Switch_Scope"

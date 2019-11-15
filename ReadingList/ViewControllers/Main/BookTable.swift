@@ -11,12 +11,12 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
     private var resultsController: CompoundFetchedResultsController<Book>!
     private var searchController: UISearchController!
     private var sortManager: SortManager<Book>!
-    
+
     /// An array of tuples of a BookReadState and its associated NSPredicate, in the order the read states should be shown in the table
     private lazy var defaultPredicates = readStates.map {
         (readState: $0, predicate: predicate(for: $0))
     }
-    
+
     /**
      An array of tuples of a BookReadState and its associated NSPredicate, for all BookReadStates. The order is such that the array starts with
      the BookReadStates that are shown in the table, in that order, followed by any other BookReadStates.

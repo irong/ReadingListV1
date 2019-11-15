@@ -273,7 +273,8 @@ class BookDetails: UIViewController, UIScrollViewDelegate { //swiftlint:disable:
 
     @objc func googleBooksButtonPressed() {
         guard let googleBooksId = book?.googleBooksId else { return }
-        presentThemedSafariViewController(GoogleBooksRequest.webpage(googleBooksId).url)
+        guard let url = GoogleBooksRequest.webpage(googleBooksId).url else { return }
+        presentThemedSafariViewController(url)
     }
 
     @IBAction private func addToList(_ sender: Any) {

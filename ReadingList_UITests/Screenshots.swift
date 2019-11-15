@@ -21,9 +21,9 @@ class Screenshots: XCTestCase {
         super.tearDown()
         mockServer.server.stop()
     }
-    
+
     func testSnapshot() {
-        
+
         // Screenshot is designed for iOS 13 only
         guard #available(iOS 13.0, *) else { return }
 

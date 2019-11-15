@@ -12,7 +12,10 @@ class GoogleBooks {
     static func search(_ text: String) -> Promise<[SearchResult]> {
         os_log("Searching for Google Books with query", type: .debug)
         let languageRestriction = UserDefaults.standard[.searchLanguageRestriction]
-        return URLSession.shared.json(url: GoogleBooksRequest.searchText(text, languageRestriction).url)
+        guard let url = GoogleBooksRequest.searchText(text, languageRestriction).url else {
+            return Promise<[SearchResult]>(GoogleError.invalidUrl)
+        }
+        return URLSession.shared.json(url: url)
             .then(GoogleBooksParser.assertNoError)
             .then(GoogleBooksParser.parseSearchResults)
     }
@@ -22,7 +25,10 @@ class GoogleBooks {
      */
     static func fetch(isbn: String) -> Promise<FetchResult> {
         os_log("Searching for Google Book with ISBN %{public}s", type: .debug, isbn)
-        return URLSession.shared.json(url: GoogleBooksRequest.searchIsbn(isbn).url)
+        guard let url = GoogleBooksRequest.searchIsbn(isbn).url else {
+            return Promise<FetchResult>(GoogleError.invalidUrl)
+        }
+        return URLSession.shared.json(url: url)
             .then(GoogleBooksParser.parseSearchResults)
             .then {
                 guard let id = $0.first?.id else { throw GoogleError.noResult }
@@ -55,7 +61,10 @@ class GoogleBooks {
      */
     private static func fetch(googleBooksId: String, existingSearchResult: SearchResult?) -> Promise<FetchResult> {
         os_log("Fetching Google Book with ID %{public}s", type: .debug, googleBooksId)
-        let fetchPromise = URLSession.shared.json(url: GoogleBooksRequest.fetch(googleBooksId).url)
+        guard let url = GoogleBooksRequest.fetch(googleBooksId).url else {
+            return Promise<FetchResult>(GoogleError.invalidUrl)
+        }
+        let fetchPromise = URLSession.shared.json(url: url)
             .then { json -> FetchResult in
                 if let fetchResult = GoogleBooksParser.parseFetchResults(json) {
                     return fetchResult
@@ -86,7 +95,10 @@ class GoogleBooks {
      Gets the cover image data for the book corresponding to the Google Books ID (if exists).
      */
     static func getCover(googleBooksId: String) -> Promise<Data> {
-        return URLSession.shared.data(url: GoogleBooksRequest.coverImage(googleBooksId, .thumbnail).url)
+        guard let url = GoogleBooksRequest.coverImage(googleBooksId, .thumbnail).url else {
+            return Promise<Data>(GoogleError.invalidUrl)
+        }
+        return URLSession.shared.data(url: url)
     }
 }
 
@@ -239,5 +251,6 @@ class FetchResult {
 enum GoogleError: Error {
     case noResult
     case missingEssentialData
+    case invalidUrl
     case specifiedError(code: Int, message: String)
 }
