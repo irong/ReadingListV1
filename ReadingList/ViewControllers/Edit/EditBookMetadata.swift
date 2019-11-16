@@ -203,9 +203,12 @@ class EditBookMetadata: FormViewController {
                 $0.title = "Manual Book ID"
                 $0.value = book.manualBookId
             }
-            <<< LabelRow {
+            <<< TextRow {
                 $0.title = "Google Books ID"
                 $0.value = book.googleBooksId
+                $0.onChange {
+                    book.googleBooksId = $0.value
+                }
             }
         #endif
 
