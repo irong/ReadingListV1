@@ -2,6 +2,7 @@ import UIKit
 import AVFoundation
 import SVProgressHUD
 import ReadingList_Foundation
+import CoreData
 import os.log
 
 class NonRotatingNavigationController: ThemedNavigationController {
@@ -11,13 +12,26 @@ class NonRotatingNavigationController: ThemedNavigationController {
     }
 }
 
-class ScanBarcode: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
+class ScanBarcode: UIViewController {
 
     var session: AVCaptureSession?
+    var metadataOutput: AVCaptureMetadataOutput?
     var previewLayer: AVCaptureVideoPreviewLayer?
+
+    var bulkAddedBooks = [Book]()
+    var bulkAddLastScannedIsbn: String?
+
+    /**
+        Nil when not bulk adding, non-nil otherwise.
+     */
+    var bulkAddContext: NSManagedObjectContext?
+
     let feedbackGenerator = UINotificationFeedbackGenerator()
+    let metadataObjectsDelegateQos = DispatchQueue.global(qos: .userInteractive)
 
     @IBOutlet private weak var torchButton: UIBarButtonItem!
+    @IBOutlet private weak var scanManyButton: UIBarButtonItem!
+    @IBOutlet private weak var reviewBooksButton: UIBarButtonItem!
     @IBOutlet private weak var cameraPreviewView: UIView!
     @IBOutlet private weak var previewOverlay: UIView!
 
@@ -54,27 +68,75 @@ class ScanBarcode: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
 
     @IBAction private func cancelWasPressed(_ sender: AnyObject) {
         SVProgressHUD.dismiss()
-        dismiss(animated: true, completion: nil)
+        if !bulkAddedBooks.isEmpty {
+            let alert = UIAlertController(title: "Unsaved books", message: "You have \(bulkAddedBooks.count) unsaved \("book".pluralising(bulkAddedBooks.count)) which will be discarded if you cancel now. Are you sure?", preferredStyle: .actionSheet)
+            alert.addAction(UIAlertAction(title: "Discard", style: .destructive) { _ in
+                self.dismiss(animated: true)
+            })
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+            present(alert, animated: true)
+        } else {
+            dismiss(animated: true)
+        }
+    }
+
+    @IBAction private func scanManyPressed(_ sender: UIBarButtonItem) {
+        if bulkAddContext == nil {
+            switchScanMode(toBulk: true)
+        } else if bulkAddedBooks.isEmpty {
+            switchScanMode(toBulk: false)
+        } else {
+            let alert = UIAlertController(
+                title: "Discard \(bulkAddedBooks.count) \("book".pluralising(bulkAddedBooks.count))?",
+                message: "You have already scanned \(bulkAddedBooks.count) \("book".pluralising(bulkAddedBooks.count)) which will be discarded if you switch to scanning a single book.",
+                preferredStyle: .actionSheet
+            )
+            alert.addAction(UIAlertAction(title: "Discard", style: .destructive) { _ in
+                self.switchScanMode(toBulk: false)
+            })
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+            present(alert, animated: true)
+        }
+    }
+
+    private func switchScanMode(toBulk bulk: Bool) {
+        if bulk {
+            bulkAddContext = PersistentStoreManager.container.viewContext.childContext()
+            scanManyButton.title = "Scan Single"
+            updateReviewBooksButton()
+        } else {
+            bulkAddContext = nil
+            bulkAddedBooks.removeAll()
+            bulkAddLastScannedIsbn = nil
+            scanManyButton.title = "Scan Many"
+            updateReviewBooksButton()
+        }
+    }
+
+    @IBAction private func reviewBooksPressed(_ sender: UIBarButtonItem) {
+        guard let bulkAddContext = bulkAddContext else { return }
+        let reviewBooks = ReviewBulkBooks()
+        reviewBooks.books = bulkAddedBooks
+        reviewBooks.context = bulkAddContext
+        present(reviewBooks, animated: true)
+    }
+
+    func updateReviewBooksButton() {
+        if bulkAddContext == nil || bulkAddedBooks.isEmpty {
+            reviewBooksButton.title = "Review Books"
+            reviewBooksButton.isEnabled = false
+        } else {
+            reviewBooksButton.title = "Review \(bulkAddedBooks.count) \("Book".pluralising(bulkAddedBooks.count))"
+            reviewBooksButton.isEnabled = true
+        }
     }
 
     @IBAction private func torchPressed(_ sender: UIBarButtonItem) {
-        guard let device = AVCaptureDevice.default(for: .video) else { return }
-        guard device.hasTorch else { return }
-
-        do {
-            try device.lockForConfiguration()
-            defer {
-                device.unlockForConfiguration()
-            }
-            if device.torchMode == .on {
-                device.torchMode = .off
-                sender.image = #imageLiteral(resourceName: "Torch")
-            } else {
-                try device.setTorchModeOn(level: 1.0)
-                sender.image = #imageLiteral(resourceName: "TorchFilled")
-            }
-        } catch {
-            os_log("Error toggling torch state", type: .error)
+        switch AVCaptureDevice.toggleTorch() {
+        case true:
+            sender.image = #imageLiteral(resourceName: "TorchFilled")
+        case false:
+            sender.image = #imageLiteral(resourceName: "Torch")
         }
     }
 
@@ -84,7 +146,10 @@ class ScanBarcode: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
 
         if let session = session, !session.isRunning {
             session.startRunning()
+            metadataOutput?.setMetadataObjectsDelegate(self, queue: metadataObjectsDelegateQos)
         }
+
+        navigationController?.setToolbarHidden(false, animated: true)
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -93,6 +158,8 @@ class ScanBarcode: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
         if let session = session, session.isRunning {
             session.stopRunning()
         }
+
+        navigationController?.setToolbarHidden(true, animated: true)
     }
 
     private func setupAvSession() {
@@ -126,22 +193,22 @@ class ScanBarcode: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
             camera.focusPointOfInterest = cameraPreviewView.center
         }
 
-        let output = AVCaptureMetadataOutput()
+        metadataOutput = AVCaptureMetadataOutput()
         session = AVCaptureSession()
 
         // Check that we can add the input and output to the session
-        guard let session = session, session.canAddInput(input) && session.canAddOutput(output) else {
+        guard let session = session, let metadataOutput = metadataOutput, session.canAddInput(input) && session.canAddOutput(metadataOutput) else {
             presentInfoAlert(title: "Error ⚠️", message: "The camera could not be used. Sorry about that.")
             feedbackGenerator.notificationOccurred(.error); return
         }
 
         // Prepare the metadata output and add to the session
         session.addInput(input)
-        output.setMetadataObjectsDelegate(self, queue: DispatchQueue.global(qos: .userInteractive))
-        session.addOutput(output)
+        metadataOutput.setMetadataObjectsDelegate(self, queue: metadataObjectsDelegateQos)
+        session.addOutput(metadataOutput)
 
         // This line must be after session outputs are added
-        output.metadataObjectTypes = [.ean13]
+        metadataOutput.metadataObjectTypes = [.ean13]
 
         // Begin the capture session.
         session.startRunning()
@@ -166,31 +233,42 @@ class ScanBarcode: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
         }
     }
 
-    func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
-        guard let avMetadata = metadataObjects.first as? AVMetadataMachineReadableCodeObject,
-            let isbn = ISBN13(avMetadata.stringValue) else { return }
-        DispatchQueue.main.sync {
-            respondToCapturedIsbn(isbn.string)
-        }
-    }
-
     func respondToCapturedIsbn(_ isbn: String) {
         feedbackGenerator.prepare()
 
-        // Since we have a result, stop the session and hide the preview
-        session?.stopRunning()
+        // If we are bulk adding books, ensure that this isn't the most recently scanned book
+        if bulkAddContext != nil {
+            if isbn == bulkAddLastScannedIsbn {
+                // Don't even give a warning: re-scanning the last ISBN can be done very easily
+                return
+            } else {
+                // Remember that we have seen this ISBN
+                bulkAddLastScannedIsbn = isbn
+            }
+        }
+
+        // Since we have a result, stop the metadata capture
+        metadataOutput?.setMetadataObjectsDelegate(nil, queue: nil)
 
         // Check that the book hasn't already been added
         if let existingBook = Book.get(fromContext: PersistentStoreManager.container.viewContext, isbn: isbn) {
             feedbackGenerator.notificationOccurred(.warning)
-            presentDuplicateAlert(existingBook)
+            handleDuplicateBook(existingBook)
+        } else if let existingBulkBook = bulkAddedBooks.first(where: { $0.isbn13?.string == isbn }) {
+            feedbackGenerator.notificationOccurred(.warning)
+            handleDuplicateBook(existingBulkBook)
         } else {
             feedbackGenerator.notificationOccurred(.success)
             searchForFoundIsbn(isbn: isbn)
         }
     }
 
-    func presentDuplicateAlert(_ book: Book) {
+    func handleDuplicateBook(_ book: Book) {
+        if bulkAddContext != nil {
+            SVProgressHUD.showError(withStatus: "Already Added")
+            metadataOutput?.setMetadataObjectsDelegate(self, queue: self.metadataObjectsDelegateQos)
+            return
+        }
         let alert = UIAlertController.duplicateBook(goToExistingBook: {
             self.dismiss(animated: true) {
                 guard let tabBarController = AppDelegate.shared.tabBarController else {
@@ -200,7 +278,7 @@ class ScanBarcode: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
                 tabBarController.simulateBookSelection(book, allowTableObscuring: true)
             }
         }, cancel: {
-            self.session?.startRunning()
+            self.metadataOutput?.setMetadataObjectsDelegate(self, queue: self.metadataObjectsDelegateQos)
         })
 
         present(alert, animated: true)
@@ -215,39 +293,62 @@ class ScanBarcode: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
             .catch(on: .main) { error in
                 self.feedbackGenerator.notificationOccurred(.error)
                 switch error {
-                case GoogleError.noResult: self.presentNoExactMatchAlert(forIsbn: isbn)
+                case GoogleError.noResult: self.handleNoExactMatch(forIsbn: isbn)
                 default: self.onSearchError(error)
                 }
             }
-            .then(on: .main) { fetchResult in
-                guard let navigationController = self.navigationController else { return }
-
-                if let existingBook = Book.get(fromContext: PersistentStoreManager.container.viewContext, googleBooksId: fetchResult.id) {
-                    self.feedbackGenerator.notificationOccurred(.warning)
-                    self.presentDuplicateAlert(existingBook)
-                } else {
-                    self.feedbackGenerator.notificationOccurred(.success)
-
-                    // Event logging
-                    UserEngagement.logEvent(.scanBarcode)
-
-                    // If there is no duplicate, we can safely go to the next page
-                    let context = PersistentStoreManager.container.viewContext.childContext()
-                    let book = Book(context: context)
-                    book.populate(fromFetchResult: fetchResult)
-                    navigationController.pushViewController(
-                        EditBookReadState(newUnsavedBook: book, scratchpadContext: context),
-                        animated: true)
-                }
-            }
+            .then(on: .main, handleFetchSuccess(_:))
     }
 
-    func presentNoExactMatchAlert(forIsbn isbn: String) {
+    func handleFetchSuccess(_ fetchResult: FetchResult) {
+        if let existingBook = Book.get(fromContext: bulkAddContext ?? PersistentStoreManager.container.viewContext, googleBooksId: fetchResult.id) {
+            self.feedbackGenerator.notificationOccurred(.warning)
+            self.handleDuplicateBook(existingBook)
+            return
+        }
+
+        self.feedbackGenerator.notificationOccurred(.success)
+
+        // If there is no duplicate, we can safely proceed. The context we add the book to depends on the
+        // mode we are operating in.
+        let context = self.bulkAddContext ?? PersistentStoreManager.container.viewContext.childContext()
+        let book = Book(context: context)
+        book.populate(fromFetchResult: fetchResult)
+
+        if self.bulkAddContext == nil {
+            UserEngagement.logEvent(.scanBarcode)
+
+            // If we are just adding one book, we push to the screen to edit the read state of this book
+            self.navigationController?.pushViewController(
+                EditBookReadState(newUnsavedBook: book, scratchpadContext: context),
+                animated: true)
+        } else {
+            UserEngagement.logEvent(.scanBarcodeBulk)
+
+            // If we are in Bulk Add mode, set the book to To Read for now then add the book to our array
+            book.setToRead()
+            book.updateSortIndex()
+            self.bulkAddedBooks.append(book)
+
+            // Update the toolbar button and restart the metadata capture
+            self.updateReviewBooksButton()
+            self.metadataOutput?.setMetadataObjectsDelegate(self, queue: self.metadataObjectsDelegateQos)
+        }
+    }
+
+    func handleNoExactMatch(forIsbn isbn: String) {
+        // We don't want to give the user the option of leaving this screen and entering a new workflow if they
+        // are in the middle of a bulk barcode scan operation.
+        if bulkAddContext != nil {
+            SVProgressHUD.showError(withStatus: "No Match Found")
+            self.metadataOutput?.setMetadataObjectsDelegate(self, queue: self.metadataObjectsDelegateQos)
+            return
+        }
         let alert = UIAlertController(title: "No Exact Match",
                                       message: "We couldn't find an exact match. Would you like to do a more general search instead?",
                                       preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "No", style: .cancel) { _ in
-            self.session?.startRunning()
+            self.metadataOutput?.setMetadataObjectsDelegate(self, queue: self.metadataObjectsDelegateQos)
         })
         alert.addAction(UIAlertAction(title: "Yes", style: .default) { _ in
             let presentingViewController = self.presentingViewController
@@ -261,7 +362,7 @@ class ScanBarcode: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
     }
 
     func onSearchError(_ error: Error) {
-        var message: String!
+        let message: String
         switch (error as NSError).code {
         case NSURLErrorNotConnectedToInternet, NSURLErrorNetworkConnectionLost:
             message = "There seems to be no internet connection."
@@ -292,5 +393,16 @@ class ScanBarcode: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
         })
         feedbackGenerator.notificationOccurred(.error)
         present(alert, animated: true, completion: nil)
+    }
+}
+
+extension ScanBarcode: AVCaptureMetadataOutputObjectsDelegate {
+    func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
+        guard let avMetadata = metadataObjects.first as? AVMetadataMachineReadableCodeObject,
+            let isbn = ISBN13(avMetadata.stringValue) else { return }
+
+        DispatchQueue.main.async {
+            self.respondToCapturedIsbn(isbn.string)
+        }
     }
 }

@@ -42,6 +42,7 @@ class UserEngagement {
         // Add books
         case searchOnline = "Search_Online"
         case scanBarcode = "Scan_Barcode"
+        case scanBarcodeBulk = "Scan_Barcode_Bulk"
         case searchOnlineMultiple = "Search_Online_Multiple"
         case addManualBook = "Add_Manual_Book"
 
