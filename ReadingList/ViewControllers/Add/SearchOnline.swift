@@ -11,7 +11,7 @@ class SearchOnline: UITableViewController {
     var tableItems = [SearchResult]()
 
     @IBOutlet private weak var addAllButton: UIBarButtonItem!
-    @IBOutlet private weak var selectModeButton: UIBarButtonItem!
+    @IBOutlet private weak var selectModeButton: TogglableUIBarButtonItem!
 
     var searchController: UISearchController!
     private let feedbackGenerator = UINotificationFeedbackGenerator()
@@ -37,6 +37,10 @@ class SearchOnline: UITableViewController {
         // If we have an entry-point search, fire it off now
         if let initialSearchString = initialSearchString {
             performSearch(searchText: initialSearchString)
+        }
+        
+        selectModeButton.onToggle = { _ in
+            self.changeSelectMode()
         }
 
         monitorThemeSetting()
@@ -241,9 +245,9 @@ class SearchOnline: UITableViewController {
         navigationController?.setToolbarHidden(true, animated: true)
     }
 
-    @IBAction private func changeSelectMode(_ sender: UIBarButtonItem) {
+    private func changeSelectMode() {
         tableView.setEditing(!tableView.isEditing, animated: true)
-        selectModeButton.title = tableView.isEditing ? "Select Single" : "Select Many"
+        selectModeButton.isToggled.toggle()
         if !tableView.isEditing {
             addAllButton.title = "Add Books"
             addAllButton.isEnabled = false

@@ -107,6 +107,10 @@ class EditBookReadState: FormViewController {
             }
 
         monitorThemeSetting()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
 
         // Prevent the default behaviour of allowing a swipe-down to dismiss the modal presentation. This would
         // not give a confirmation alert before discarding a user's unsaved changes. By handling the dismiss event
@@ -115,10 +119,7 @@ class EditBookReadState: FormViewController {
             isModalInPresentation = true
             navigationController?.presentationController?.delegate = self
         }
-    }
 
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
         // If we are editing a book (not adding one), pre-select the current page field
         if self.book.readState == .reading && self.book.changedValues().isEmpty {
             guard let progressRow = [progressPageKey, progressPercentageKey].map({
