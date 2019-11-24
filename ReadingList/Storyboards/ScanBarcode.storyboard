@@ -41,10 +41,8 @@
                     </view>
                     <tabBarItem key="tabBarItem" title="Item" id="C92-un-dfo"/>
                     <toolbarItems>
-                        <barButtonItem title="Scan Many" id="pS1-WQ-qdU">
-                            <connections>
-                                <action selector="scanManyPressed:" destination="MGK-ee-YjP" id="hEH-xq-7YS"/>
-                            </connections>
+                        <barButtonItem title=" Scan Multiple " id="qo7-cK-IeZ" customClass="TogglableUIBarButtonItem" customModule="ReadingList_Foundation">
+                            <color key="tintColor" systemColor="systemBlueColor" red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         </barButtonItem>
                         <barButtonItem style="plain" systemItem="flexibleSpace" id="7wO-mK-uZ1"/>
                         <barButtonItem enabled="NO" title="Review Books" style="done" id="8Pl-ki-4Te">
@@ -71,7 +69,7 @@
                         <outlet property="cameraPreviewView" destination="VIt-na-l7a" id="62h-so-ss3"/>
                         <outlet property="previewOverlay" destination="710-zJ-iLP" id="qCX-qv-uzC"/>
                         <outlet property="reviewBooksButton" destination="8Pl-ki-4Te" id="olo-87-UlW"/>
-                        <outlet property="scanManyButton" destination="pS1-WQ-qdU" id="QLP-j5-d3T"/>
+                        <outlet property="scanMultipleToggle" destination="qo7-cK-IeZ" id="bTt-ga-12E"/>
                         <outlet property="torchButton" destination="6vR-mA-5SB" id="rM5-Va-fPp"/>
                     </connections>
                 </viewController>

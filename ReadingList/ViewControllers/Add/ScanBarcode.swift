@@ -30,10 +30,10 @@ class ScanBarcode: UIViewController {
     let metadataObjectsDelegateQos = DispatchQueue.global(qos: .userInteractive)
 
     @IBOutlet private weak var torchButton: UIBarButtonItem!
-    @IBOutlet private weak var scanManyButton: UIBarButtonItem!
     @IBOutlet private weak var reviewBooksButton: UIBarButtonItem!
     @IBOutlet private weak var cameraPreviewView: UIView!
     @IBOutlet private weak var previewOverlay: UIView!
+    @IBOutlet private weak var scanMultipleToggle: TogglableUIBarButtonItem!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -41,6 +41,9 @@ class ScanBarcode: UIViewController {
             torchButton.setHidden(true)
         }
 
+        scanMultipleToggle.onToggle = {
+            self.scanManyPressed($0)
+        }
         feedbackGenerator.prepare()
 
         // To help with development, debug simulator builds detect taps on the screen and in response bring
@@ -66,51 +69,49 @@ class ScanBarcode: UIViewController {
     }
     #endif
 
+    private func mayDiscardUnsavedChanges(_ reason: String, discardAction: @escaping () -> Void) {
+        if bulkAddContext == nil || bulkAddedBooks.isEmpty {
+            // If not in bulk scan mode, there is no unsaved work
+            discardAction()
+            return
+        }
+
+        let alert = UIAlertController(title: "Unsaved books", message: "You have \(bulkAddedBooks.count) unsaved \("book".pluralising(bulkAddedBooks.count)) which will be discarded if you \(reason). Are you sure?", preferredStyle: .actionSheet)
+        alert.addAction(UIAlertAction(title: "Discard", style: .destructive) { _ in
+            discardAction()
+        })
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        present(alert, animated: true)
+    }
+
     @IBAction private func cancelWasPressed(_ sender: AnyObject) {
         SVProgressHUD.dismiss()
-        if !bulkAddedBooks.isEmpty {
-            let alert = UIAlertController(title: "Unsaved books", message: "You have \(bulkAddedBooks.count) unsaved \("book".pluralising(bulkAddedBooks.count)) which will be discarded if you cancel now. Are you sure?", preferredStyle: .actionSheet)
-            alert.addAction(UIAlertAction(title: "Discard", style: .destructive) { _ in
-                self.dismiss(animated: true)
-            })
-            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-            present(alert, animated: true)
-        } else {
-            dismiss(animated: true)
+        mayDiscardUnsavedChanges("cancel now") {
+            self.dismiss(animated: true)
         }
     }
 
-    @IBAction private func scanManyPressed(_ sender: UIBarButtonItem) {
-        if bulkAddContext == nil {
+    @IBAction private func scanManyPressed(_ enabled: Bool) {
+        if enabled {
             switchScanMode(toBulk: true)
-        } else if bulkAddedBooks.isEmpty {
-            switchScanMode(toBulk: false)
         } else {
-            let alert = UIAlertController(
-                title: "Discard \(bulkAddedBooks.count) \("book".pluralising(bulkAddedBooks.count))?",
-                message: "You have already scanned \(bulkAddedBooks.count) \("book".pluralising(bulkAddedBooks.count)) which will be discarded if you switch to scanning a single book.",
-                preferredStyle: .actionSheet
-            )
-            alert.addAction(UIAlertAction(title: "Discard", style: .destructive) { _ in
+            mayDiscardUnsavedChanges("switch to scanning a single book") {
                 self.switchScanMode(toBulk: false)
-            })
-            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-            present(alert, animated: true)
+            }
         }
     }
 
     private func switchScanMode(toBulk bulk: Bool) {
         if bulk {
             bulkAddContext = PersistentStoreManager.container.viewContext.childContext()
-            scanManyButton.title = "Scan Single"
             updateReviewBooksButton()
         } else {
             bulkAddContext = nil
             bulkAddedBooks.removeAll()
             bulkAddLastScannedIsbn = nil
-            scanManyButton.title = "Scan Many"
             updateReviewBooksButton()
         }
+        scanMultipleToggle.isToggled.toggle()
     }
 
     @IBAction private func reviewBooksPressed(_ sender: UIBarButtonItem) {
@@ -118,7 +119,7 @@ class ScanBarcode: UIViewController {
         let reviewBooks = ReviewBulkBooks()
         reviewBooks.books = bulkAddedBooks
         reviewBooks.context = bulkAddContext
-        present(reviewBooks, animated: true)
+        navigationController?.pushViewController(reviewBooks, animated: true)
     }
 
     func updateReviewBooksButton() {
@@ -137,6 +138,7 @@ class ScanBarcode: UIViewController {
             sender.image = #imageLiteral(resourceName: "TorchFilled")
         case false:
             sender.image = #imageLiteral(resourceName: "Torch")
+        default: break
         }
     }
 
@@ -150,6 +152,23 @@ class ScanBarcode: UIViewController {
         }
 
         navigationController?.setToolbarHidden(false, animated: true)
+
+        // If we are re-visiting this page, we may have deleted some of the objects from the review page;
+        // for some reason, isDeleted doesn't return true! But the context becomes nil. Remove those objects.
+        bulkAddedBooks.removeAll { $0.managedObjectContext == nil }
+        updateReviewBooksButton()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+
+        // Prevent the default behaviour of allowing a swipe-down to dismiss the modal presentation. This would
+        // not give a confirmation alert before discarding a user's unsaved changes. By handling the dismiss event
+        // ourselves we can present a confirmation dialog.
+        if #available(iOS 13.0, *) {
+            isModalInPresentation = true
+            navigationController?.presentationController?.delegate = self
+        }
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -324,6 +343,7 @@ class ScanBarcode: UIViewController {
                 animated: true)
         } else {
             UserEngagement.logEvent(.scanBarcodeBulk)
+            SVProgressHUD.showSuccess(withStatus: "Book Added")
 
             // If we are in Bulk Add mode, set the book to To Read for now then add the book to our array
             book.setToRead()
@@ -403,6 +423,15 @@ extension ScanBarcode: AVCaptureMetadataOutputObjectsDelegate {
 
         DispatchQueue.main.async {
             self.respondToCapturedIsbn(isbn.string)
+        }
+    }
+}
+
+extension ScanBarcode: UIAdaptivePresentationControllerDelegate {
+    func presentationControllerDidAttemptToDismiss(_ presentationController: UIPresentationController) {
+        // If the user swipes down, we either dismiss or present a confirmation dialog
+        mayDiscardUnsavedChanges("cancel now") {
+            self.dismiss(animated: true)
         }
     }
 }

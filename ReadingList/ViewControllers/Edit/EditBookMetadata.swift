@@ -216,6 +216,10 @@ class EditBookMetadata: FormViewController {
         validateBook()
 
         monitorThemeSetting()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
 
         // Prevent the default behaviour of allowing a swipe-down to dismiss the modal presentation. This would
         // not give a confirmation alert before discarding a user's unsaved changes. By handling the dismiss event
