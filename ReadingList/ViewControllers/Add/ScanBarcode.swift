@@ -5,18 +5,13 @@ import ReadingList_Foundation
 import CoreData
 import os.log
 
-class NonRotatingNavigationController: ThemedNavigationController {
-    override var shouldAutorotate: Bool {
-        // Correctly laying out the preview layer during interface rotation is tricky. Just disable it.
-        return false
-    }
-}
-
 class ScanBarcode: UIViewController {
 
-    var session: AVCaptureSession?
+    // Communicate with the session and other session objects on this queue.
+    private let sessionQueue = DispatchQueue(label: "session queue")
+    let session = AVCaptureSession()
+
     var metadataOutput: AVCaptureMetadataOutput?
-    var previewLayer: AVCaptureVideoPreviewLayer?
 
     var bulkAddedBooks = [Book]()
     var bulkAddLastScannedIsbn: String?
@@ -27,12 +22,10 @@ class ScanBarcode: UIViewController {
     var bulkAddContext: NSManagedObjectContext?
 
     let feedbackGenerator = UINotificationFeedbackGenerator()
-    let metadataObjectsDelegateQos = DispatchQueue.global(qos: .userInteractive)
 
     @IBOutlet private weak var torchButton: UIBarButtonItem!
     @IBOutlet private weak var reviewBooksButton: UIBarButtonItem!
-    @IBOutlet private weak var cameraPreviewView: UIView!
-    @IBOutlet private weak var previewOverlay: UIView!
+    @IBOutlet private weak var cameraPreviewView: PreviewView!
     @IBOutlet private weak var scanMultipleToggle: TogglableUIBarButtonItem!
 
     override func viewDidLoad() {
@@ -41,9 +34,8 @@ class ScanBarcode: UIViewController {
             torchButton.setHidden(true)
         }
 
-        scanMultipleToggle.onToggle = {
-            self.scanManyPressed($0)
-        }
+        scanMultipleToggle.onToggle = { self.scanManyPressed($0) }
+
         feedbackGenerator.prepare()
 
         // To help with development, debug simulator builds detect taps on the screen and in response bring
@@ -52,12 +44,7 @@ class ScanBarcode: UIViewController {
         view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onViewTap(_:))))
         #endif
 
-        // Setup the camera preview asynchronously
-        DispatchQueue.main.async {
-            self.setupAvSession()
-            self.previewOverlay.layer.borderColor = UIColor.red.cgColor
-            self.previewOverlay.layer.borderWidth = 1.0
-        }
+        setupAvSession()
     }
 
     #if DEBUG && targetEnvironment(simulator)
@@ -69,14 +56,14 @@ class ScanBarcode: UIViewController {
     }
     #endif
 
-    private func mayDiscardUnsavedChanges(_ reason: String, discardAction: @escaping () -> Void) {
+    private func mayDiscardUnsavedChanges(actionDescription: String, discardAction: @escaping () -> Void) {
         if bulkAddContext == nil || bulkAddedBooks.isEmpty {
             // If not in bulk scan mode, there is no unsaved work
             discardAction()
             return
         }
 
-        let alert = UIAlertController(title: "Unsaved books", message: "You have \(bulkAddedBooks.count) unsaved \("book".pluralising(bulkAddedBooks.count)) which will be discarded if you \(reason). Are you sure?", preferredStyle: .actionSheet)
+        let alert = UIAlertController(title: "Unsaved books", message: "You have \(bulkAddedBooks.count) unsaved \("book".pluralising(bulkAddedBooks.count)) which will be discarded if you \(actionDescription). Are you sure?", preferredStyle: .actionSheet)
         alert.addAction(UIAlertAction(title: "Discard", style: .destructive) { _ in
             discardAction()
         })
@@ -86,7 +73,7 @@ class ScanBarcode: UIViewController {
 
     @IBAction private func cancelWasPressed(_ sender: AnyObject) {
         SVProgressHUD.dismiss()
-        mayDiscardUnsavedChanges("cancel now") {
+        mayDiscardUnsavedChanges(actionDescription: "cancel now") {
             self.dismiss(animated: true)
         }
     }
@@ -95,7 +82,7 @@ class ScanBarcode: UIViewController {
         if enabled {
             switchScanMode(toBulk: true)
         } else {
-            mayDiscardUnsavedChanges("switch to scanning a single book") {
+            mayDiscardUnsavedChanges(actionDescription: "switch to scanning a single book") {
                 self.switchScanMode(toBulk: false)
             }
         }
@@ -146,9 +133,14 @@ class ScanBarcode: UIViewController {
         super.viewWillAppear(animated)
         cameraPreviewView.layoutIfNeeded()
 
-        if let session = session, !session.isRunning {
-            session.startRunning()
-            metadataOutput?.setMetadataObjectsDelegate(self, queue: metadataObjectsDelegateQos)
+        // The torch deactivates itself when the view disappears, so ensure that the button reflects the state as it is when this view appears
+        torchButton.image = #imageLiteral(resourceName: "Torch")
+
+        sessionQueue.async {
+            if !self.session.isRunning {
+                self.session.startRunning()
+                self.metadataOutput?.setMetadataObjectsDelegate(self, queue: self.sessionQueue)
+            }
         }
 
         navigationController?.setToolbarHidden(false, animated: true)
@@ -174,8 +166,10 @@ class ScanBarcode: UIViewController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
 
-        if let session = session, session.isRunning {
-            session.stopRunning()
+        sessionQueue.async {
+            if self.session.isRunning {
+                self.session.stopRunning()
+            }
         }
 
         navigationController?.setToolbarHidden(true, animated: true)
@@ -188,11 +182,12 @@ class ScanBarcode: UIViewController {
             imageView.contentMode = .scaleAspectFill
             imageView.image = #imageLiteral(resourceName: "example_barcode.jpg")
             view.addSubview(imageView)
-            imageView.addSubview(previewOverlay)
             return
         }
         if let isbnToSimulate = UserDefaults.standard.string(forKey: "barcode-isbn-simulation") {
-            respondToCapturedIsbn(isbnToSimulate)
+            DispatchQueue.main.async {
+                self.respondToCapturedIsbn(isbnToSimulate)
+            }
             return
         }
         // We want to ignore any actual errors, like not having a camera, so return if UITesting
@@ -206,37 +201,40 @@ class ScanBarcode: UIViewController {
             return
         }
 
+        cameraPreviewView.session = session
+        cameraPreviewView.videoPreviewLayer.videoGravity = .resizeAspectFill
+
         // Try to focus the camera if possible
         if camera.isFocusPointOfInterestSupported == true {
             try? camera.lockForConfiguration()
             camera.focusPointOfInterest = cameraPreviewView.center
         }
 
-        metadataOutput = AVCaptureMetadataOutput()
-        session = AVCaptureSession()
-
-        // Check that we can add the input and output to the session
-        guard let session = session, let metadataOutput = metadataOutput, session.canAddInput(input) && session.canAddOutput(metadataOutput) else {
-            presentInfoAlert(title: "Error ⚠️", message: "The camera could not be used. Sorry about that.")
-            feedbackGenerator.notificationOccurred(.error); return
-        }
-
-        // Prepare the metadata output and add to the session
-        session.addInput(input)
-        metadataOutput.setMetadataObjectsDelegate(self, queue: metadataObjectsDelegateQos)
-        session.addOutput(metadataOutput)
-
-        // This line must be after session outputs are added
-        metadataOutput.metadataObjectTypes = [.ean13]
-
-        // Begin the capture session.
-        session.startRunning()
-
-        // We want to view what the camera is seeing
-        previewLayer = AVCaptureVideoPreviewLayer(session, gravity: .resizeAspectFill, frame: view.bounds)
         setVideoOrientation()
 
-        cameraPreviewView.layer.addSublayer(previewLayer!)
+        sessionQueue.async {
+            self.metadataOutput = AVCaptureMetadataOutput()
+
+            // Check that we can add the input and output to the session
+            guard let metadataOutput = self.metadataOutput, self.session.canAddInput(input) && self.session.canAddOutput(metadataOutput) else {
+                DispatchQueue.main.async {
+                    self.presentInfoAlert(title: "Error ⚠️", message: "The camera could not be used. Sorry about that.")
+                    self.feedbackGenerator.notificationOccurred(.error)
+                }
+                return
+            }
+
+            // Prepare the metadata output and add to the session
+            self.session.addInput(input)
+            metadataOutput.setMetadataObjectsDelegate(self, queue: self.sessionQueue)
+            self.session.addOutput(metadataOutput)
+
+            // This line must be after session outputs are added
+            metadataOutput.metadataObjectTypes = [.ean13]
+
+            // Begin the capture session.
+            self.session.startRunning()
+        }
     }
 
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -245,11 +243,8 @@ class ScanBarcode: UIViewController {
     }
 
     private func setVideoOrientation() {
-        guard let connection = previewLayer?.connection, connection.isVideoOrientationSupported else { return }
-
-        if let videoOrientation = UIDevice.current.orientation.videoOrientation {
-            connection.videoOrientation = videoOrientation
-        }
+        guard cameraPreviewView.videoPreviewLayer.connection?.isVideoOrientationSupported == true else { return }
+        cameraPreviewView.videoPreviewLayer.connection?.videoOrientation = UIDevice.current.orientation.videoOrientation ?? .portrait
     }
 
     func respondToCapturedIsbn(_ isbn: String) {
@@ -285,7 +280,7 @@ class ScanBarcode: UIViewController {
     func handleDuplicateBook(_ book: Book) {
         if bulkAddContext != nil {
             SVProgressHUD.showError(withStatus: "Already Added")
-            metadataOutput?.setMetadataObjectsDelegate(self, queue: self.metadataObjectsDelegateQos)
+            metadataOutput?.setMetadataObjectsDelegate(self, queue: sessionQueue)
             return
         }
         let alert = UIAlertController.duplicateBook(goToExistingBook: {
@@ -297,7 +292,7 @@ class ScanBarcode: UIViewController {
                 tabBarController.simulateBookSelection(book, allowTableObscuring: true)
             }
         }, cancel: {
-            self.metadataOutput?.setMetadataObjectsDelegate(self, queue: self.metadataObjectsDelegateQos)
+            self.metadataOutput?.setMetadataObjectsDelegate(self, queue: self.sessionQueue)
         })
 
         present(alert, animated: true)
@@ -352,7 +347,7 @@ class ScanBarcode: UIViewController {
 
             // Update the toolbar button and restart the metadata capture
             self.updateReviewBooksButton()
-            self.metadataOutput?.setMetadataObjectsDelegate(self, queue: self.metadataObjectsDelegateQos)
+            self.metadataOutput?.setMetadataObjectsDelegate(self, queue: sessionQueue)
         }
     }
 
@@ -361,14 +356,14 @@ class ScanBarcode: UIViewController {
         // are in the middle of a bulk barcode scan operation.
         if bulkAddContext != nil {
             SVProgressHUD.showError(withStatus: "No Match Found")
-            self.metadataOutput?.setMetadataObjectsDelegate(self, queue: self.metadataObjectsDelegateQos)
+            self.metadataOutput?.setMetadataObjectsDelegate(self, queue: sessionQueue)
             return
         }
         let alert = UIAlertController(title: "No Exact Match",
                                       message: "We couldn't find an exact match. Would you like to do a more general search instead?",
                                       preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "No", style: .cancel) { _ in
-            self.metadataOutput?.setMetadataObjectsDelegate(self, queue: self.metadataObjectsDelegateQos)
+            self.metadataOutput?.setMetadataObjectsDelegate(self, queue: self.sessionQueue)
         })
         alert.addAction(UIAlertAction(title: "Yes", style: .default) { _ in
             let presentingViewController = self.presentingViewController
@@ -430,8 +425,17 @@ extension ScanBarcode: AVCaptureMetadataOutputObjectsDelegate {
 extension ScanBarcode: UIAdaptivePresentationControllerDelegate {
     func presentationControllerDidAttemptToDismiss(_ presentationController: UIPresentationController) {
         // If the user swipes down, we either dismiss or present a confirmation dialog
-        mayDiscardUnsavedChanges("cancel now") {
+        mayDiscardUnsavedChanges(actionDescription: "cancel now") {
             self.dismiss(animated: true)
         }
+    }
+}
+
+class BarcodeScanPreviewOverlay: UIView {
+    override func awakeFromNib() {
+        super.awakeFromNib()
+
+        layer.borderColor = UIColor.red.cgColor
+        layer.borderWidth = 1.0
     }
 }

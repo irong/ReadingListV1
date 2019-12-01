@@ -16,11 +16,11 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <view clipsSubviews="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="VIt-na-l7a">
+                            <view clipsSubviews="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="VIt-na-l7a" customClass="PreviewView" customModule="ReadingList" customModuleProvider="target">
                                 <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                                 <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
                             </view>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="710-zJ-iLP">
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="710-zJ-iLP" customClass="BarcodeScanPreviewOverlay" customModule="ReadingList" customModuleProvider="target">
                                 <rect key="frame" x="47" y="263" width="281" height="141"/>
                                 <constraints>
                                     <constraint firstAttribute="width" secondItem="710-zJ-iLP" secondAttribute="height" multiplier="2:1" id="bw1-bF-OIn"/>
@@ -67,7 +67,6 @@
                     <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
                     <connections>
                         <outlet property="cameraPreviewView" destination="VIt-na-l7a" id="62h-so-ss3"/>
-                        <outlet property="previewOverlay" destination="710-zJ-iLP" id="qCX-qv-uzC"/>
                         <outlet property="reviewBooksButton" destination="8Pl-ki-4Te" id="olo-87-UlW"/>
                         <outlet property="scanMultipleToggle" destination="qo7-cK-IeZ" id="bTt-ga-12E"/>
                         <outlet property="torchButton" destination="6vR-mA-5SB" id="rM5-Va-fPp"/>
@@ -77,10 +76,10 @@
             </objects>
             <point key="canvasLocation" x="-1471.2" y="-393.55322338830587"/>
         </scene>
-        <!--Non Rotating Navigation Controller-->
+        <!--Themed Navigation Controller-->
         <scene sceneID="YJu-cP-9jM">
             <objects>
-                <navigationController id="rYQ-41-cfc" customClass="NonRotatingNavigationController" customModule="ReadingList" customModuleProvider="target" sceneMemberID="viewController">
+                <navigationController id="rYQ-41-cfc" customClass="ThemedNavigationController" customModule="ReadingList" customModuleProvider="target" sceneMemberID="viewController">
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="rHe-eY-Zk8">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>

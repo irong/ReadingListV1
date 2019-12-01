@@ -38,7 +38,7 @@ class SearchOnline: UITableViewController {
         if let initialSearchString = initialSearchString {
             performSearch(searchText: initialSearchString)
         }
-        
+
         selectModeButton.onToggle = { _ in
             self.changeSelectMode()
         }
