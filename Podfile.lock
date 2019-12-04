@@ -1,6 +1,5 @@
 PODS:
   - CHCSVParser (2.1.0)
-  - Cosmos (20.0.1)
   - Crashlytics (3.14.0):
     - Fabric (~> 1.10.2)
   - DZNEmptyDataSet (1.8.1)
@@ -71,32 +70,24 @@ PODS:
     - nanopb/encode (= 0.3.9011)
   - nanopb/decode (0.3.9011)
   - nanopb/encode (0.3.9011)
-  - PromisesObjC (1.2.8)
-  - PromisesSwift (1.2.8):
-    - PromisesObjC (= 1.2.8)
   - SVProgressHUD (2.2.5)
   - Swifter (1.4.7)
   - SwiftyJSON (5.0.0)
-  - SwiftyStoreKit (0.15.0)
 
 DEPENDENCIES:
   - CHCSVParser (from `https://github.com/davedelong/CHCSVParser.git`)
-  - Cosmos (~> 20.0)
   - Crashlytics
   - DZNEmptyDataSet (~> 1.8)
   - Eureka (~> 5.1)
   - Fabric
   - Firebase/Core
   - ImageRow (~> 4.0)
-  - PromisesSwift (~> 1.2)
   - SVProgressHUD (~> 2.2)
   - Swifter (from `https://github.com/httpswift/swifter.git`, branch `stable`)
   - SwiftyJSON (~> 5.0)
-  - SwiftyStoreKit (~> 0.15)
 
 SPEC REPOS:
   trunk:
-    - Cosmos
     - Crashlytics
     - DZNEmptyDataSet
     - Eureka
@@ -113,11 +104,8 @@ SPEC REPOS:
     - GoogleUtilities
     - ImageRow
     - nanopb
-    - PromisesObjC
-    - PromisesSwift
     - SVProgressHUD
     - SwiftyJSON
-    - SwiftyStoreKit
 
 EXTERNAL SOURCES:
   CHCSVParser:
@@ -136,7 +124,6 @@ CHECKOUT OPTIONS:
 
 SPEC CHECKSUMS:
   CHCSVParser: 64da26e2b4ddbf7527f7f03120bf91d83d28f354
-  Cosmos: b47fddf2102bb48580cd3025d9ce0a5c658a65da
   Crashlytics: 540b7e5f5da5a042647227a5e3ac51d85eed06df
   DZNEmptyDataSet: 9525833b9e68ac21c30253e1d3d7076cc828eaa7
   Eureka: 18a5076dcf0c41f9cd9748aa1c42f4d11434bdae
@@ -153,13 +140,10 @@ SPEC CHECKSUMS:
   GoogleUtilities: f895fde57977df4e0233edda0dbeac490e3703b6
   ImageRow: e65b2e1a33f89062bf2a553a2aad61d975eb7428
   nanopb: 18003b5e52dab79db540fe93fe9579f399bd1ccd
-  PromisesObjC: c119f3cd559f50b7ae681fa59dc1acd19173b7e6
-  PromisesSwift: 37bad6f4daddb02f7c9c531efe91e8b21c13ee2f
   SVProgressHUD: 1428aafac632c1f86f62aa4243ec12008d7a51d6
   Swifter: 1c6973f7cef90e92f305db5caca72ab414d7948e
   SwiftyJSON: 36413e04c44ee145039d332b4f4e2d3e8d6c4db7
-  SwiftyStoreKit: 033d06b6f87955405d3f844a18a7687c2438592a
 
-PODFILE CHECKSUM: d074ce502c054ca745fbbbb335b40ca3e061ce01
+PODFILE CHECKSUM: 2a32c7744f8f4850ee3917a6d954998d63c74e4a
 
 COCOAPODS: 1.8.4

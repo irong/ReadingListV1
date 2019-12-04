@@ -6,6 +6,20 @@ options:
   indentWith: 4
   bundleIdPrefix: com.andrewbennet
 
+packages:
+  SwiftyJSON:
+    url: https://github.com/SwiftyJSON/SwiftyJSON
+    minorVersion: 5.0.0
+  Promises:
+    url: https://github.com/google/promises
+    minorVersion: 1.2.0
+  Cosmos:
+    url: https://github.com/evgenyneu/Cosmos
+    minorVersion: 20.0.0
+  SwiftyStoreKit:
+    url: https://github.com/bizz84/SwiftyStoreKit
+    minorVersion: 0.15.0
+
 targets:
   ReadingList:
     type: application
@@ -19,6 +33,10 @@ targets:
     dependencies:
       - sdk: StoreKit.framework
       - target: ReadingList_Foundation
+      - package: SwiftyJSON
+      - package: Promises
+      - package: Cosmos
+      - package: SwiftyStoreKit
     preBuildScripts:
       - name: SwiftLint
         script: |
