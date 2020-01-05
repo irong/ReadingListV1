@@ -380,8 +380,7 @@ public extension UIDevice {
         let identifier = modelIdentifier
         switch identifier {
         case "iPod7,1":                                 return "iPod Touch 6"
-        case "iPhone5,1", "iPhone5,2":                  return "iPhone 5"
-        case "iPhone5,3", "iPhone5,4":                  return "iPhone 5c"
+        case "iPod9,1":                                 return "iPod Touch 7"
         case "iPhone6,1", "iPhone6,2":                  return "iPhone 5s"
         case "iPhone7,2":                               return "iPhone 6"
         case "iPhone7,1":                               return "iPhone 6 Plus"
@@ -396,7 +395,9 @@ public extension UIDevice {
         case "iPhone11,2":                              return "iPhone XS"
         case "iPhone11,4", "iPhone11,6":                return "iPhone XS Max"
         case "iPhone11,8":                              return "iPhone XR"
-        case "iPad3,4", "iPad3,5", "iPad3,6":           return "iPad 4"
+        case "iPhone12,1":                              return "iPhone 11"
+        case "iPhone12,3":                              return "iPhone 11 Pro"
+        case "iPhone12,5":                              return "iPhone 11 Pro Max"
         case "iPad4,1", "iPad4,2", "iPad4,3":           return "iPad Air"
         case "iPad5,3", "iPad5,4":                      return "iPad Air 2"
         case "iPad11,3", "iPad11,4":                    return "iPad Air 3"
