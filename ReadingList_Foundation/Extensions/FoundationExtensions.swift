@@ -42,6 +42,10 @@ public extension String {
             try self.write(to: file, atomically: false, encoding: encoding)
         }
     }
+
+    func attributedWithFont(_ font: UIFont) -> NSAttributedString {
+        return NSAttributedString(self, font: font)
+    }
 }
 
 public extension Int16 {

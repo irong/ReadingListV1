@@ -2,7 +2,6 @@ platform :ios, '11.0'
 use_frameworks!
 
 target 'ReadingList' do
-  pod 'DZNEmptyDataSet', '~> 1.8'
   pod 'SwiftyJSON', '~> 5.0'
   pod 'Eureka', '~> 5.1'
   pod 'ImageRow', '~> 4.0'
