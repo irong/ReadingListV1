@@ -50,7 +50,7 @@ class SearchableEmptyStateTableViewController: EmptyStateTableViewController {
         if searchController.hasActiveSearchTerms {
             text = textForSearchEmptyState()
         } else {
-            text = textForSearchEmptyState()
+            text = textForNonSearchEmptyState()
         }
 
         return attributeWithThemeColor(text)
@@ -103,7 +103,7 @@ class SearchableEmptyStateTableViewController: EmptyStateTableViewController {
     func searchWillBeDismissed() {
         // Schedule a call to update the other bits of UI when the search controller is being dismissed. We do this so
         // that we can properly reflect the inactive state of the search controller (it will only be inactive at the end
-        // of this loop). Some UI depends on whether the search controller is active; hence the need to rerun the update,
+        // of this main run-loop). Some UI depends on whether the search controller is active; hence the need to rerun the update,
         // even if we are going from empty --> empty.
         DispatchQueue.main.async {
             self.updateEmptyStateRelatedItems()

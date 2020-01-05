@@ -270,6 +270,7 @@ class SearchOnline: UITableViewController {
             self.addMultiple(selectedRows: selectedRows)
         })
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        alert.popoverPresentationController?.barButtonItem = sender
         present(alert, animated: true, completion: nil)
     }
 
