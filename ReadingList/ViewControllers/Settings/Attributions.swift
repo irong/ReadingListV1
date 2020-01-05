@@ -12,7 +12,6 @@ class Attributions: UITableViewController {
     private let attributions = [
         Attribution("CHCSVParser", url: "https://github.com/davedelong/CHCSVParser", copyright: "2014 Dave DeLong", license: .mit),
         Attribution("Cosmos", url: "https://github.com/evgenyneu/Cosmos", copyright: "2015 Evgenii Neumerzhitckii", license: .mit),
-        Attribution("DZNEmptyDataSet", url: "https://github.com/dzenbot/DZNEmptyDataSet", copyright: "2016 Ignacio Romero Zurbuchen", license: .mit),
         Attribution("Eureka", url: "https://github.com/xmartlabs/Eureka", copyright: "2015 XMARTLABS", license: .mit),
         Attribution("Icons8", url: "https://icons8.com", copyright: "Icons8", license: .ccByNd3),
         Attribution("Promises", url: "https://github.com/google/promises", copyright: "2018 Google Inc", license: .apache2),

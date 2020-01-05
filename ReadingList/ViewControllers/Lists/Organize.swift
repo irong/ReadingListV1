@@ -1,7 +1,6 @@
 import Foundation
 import UIKit
 import CoreData
-import DZNEmptyDataSet
 import ReadingList_Foundation
 
 extension List: Sortable {
@@ -23,20 +22,18 @@ enum ListSortOrder: Int, CustomStringConvertible, CaseIterable, UserSettingType 
     }
 }
 
-class Organize: UITableViewController {
+class Organize: SearchableEmptyStateTableViewController {
 
     var resultsController: NSFetchedResultsController<List>!
-    var searchController: UISearchController!
     var sortManager: SortManager<List>!
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
         clearsSelectionOnViewWillAppear = true
+        configureNavigationBarButtons()
 
         tableView.register(BookTableHeader.self)
-        tableView.emptyDataSetSource = self
-        tableView.emptyDataSetDelegate = self
 
         sortManager = SortManager(tableView) {
             self.resultsController.object(at: $0)
@@ -44,16 +41,21 @@ class Organize: UITableViewController {
 
         searchController = UISearchController(filterPlaceholderText: "Your Lists")
         searchController.searchResultsUpdater = self
-        navigationItem.searchController = searchController
 
         resultsController = buildResultsController()
         try! resultsController.performFetch()
 
-        navigationItem.leftBarButtonItem = editButtonItem
-
         NotificationCenter.default.addObserver(self, selector: #selector(refetch), name: NSNotification.Name.PersistentStoreBatchOperationOccurred, object: nil)
 
         monitorThemeSetting()
+    }
+
+    override func configureNavigationBarButtons() {
+        if !isShowingEmptyState {
+            navigationItem.leftBarButtonItem = editButtonItem
+        } else {
+            navigationItem.leftBarButtonItem = nil
+        }
     }
 
     private func buildResultsController() -> NSFetchedResultsController<List> {
@@ -86,11 +88,11 @@ class Organize: UITableViewController {
         tableView.reloadData()
     }
 
-    override func numberOfSections(in tableView: UITableView) -> Int {
+    override func sectionCount(in tableView: UITableView) -> Int {
         return resultsController.sections!.count
     }
 
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    override func rowCount(in tableView: UITableView, forSection section: Int) -> Int {
         return resultsController.sections![section].numberOfObjects
     }
 
@@ -174,6 +176,7 @@ class Organize: UITableViewController {
         confirmDelete.addAction(UIAlertAction(title: "Delete", style: .destructive) { _ in
             self.resultsController.object(at: indexPath).deleteAndSave()
             UserEngagement.logEvent(.deleteList)
+            self.setEditing(false, animated: true)
 
             // When the table goes from 1 row to 0 rows in the single section, the section header remains unless the table is reloaded
             if self.tableView.numberOfRows(inSection: 0) == 0 {
@@ -251,6 +254,26 @@ class Organize: UITableViewController {
             self.performSegue(withIdentifier: "selectList", sender: indexPath)
         }
     }
+
+    override func titleForNonSearchEmptyState() -> String {
+         return NSLocalizedString("OrganizeEmptyHeader", comment: "")
+    }
+
+    override func textForSearchEmptyState() -> NSAttributedString {
+        return NSMutableAttributedString("Try changing your search, or add a new list by tapping the ", font: emptyStateDescriptionFont)
+                .appending("+", font: emptyStateDescriptionBoldFont)
+                .appending(" button.", font: emptyStateDescriptionFont)
+
+    }
+
+    override func textForNonSearchEmptyState() -> NSAttributedString {
+        return NSMutableAttributedString(NSLocalizedString("OrganizeInstruction", comment: ""), font: emptyStateDescriptionFont)
+            .appending("\n\nTo create a new list, tap the ", font: emptyStateDescriptionFont)
+            .appending("+", font: emptyStateDescriptionBoldFont)
+            .appending(" button above, or tap ", font: emptyStateDescriptionFont)
+            .appending("Manage Lists", font: emptyStateDescriptionBoldFont)
+            .appending(" when viewing a book.", font: emptyStateDescriptionFont)
+    }
 }
 
 extension Organize: NSFetchedResultsControllerDelegate {
@@ -303,42 +326,8 @@ extension Organize: UISearchResultsUpdating {
     }
 }
 
-extension Organize: DZNEmptyDataSetSource {
-
-    func title(forEmptyDataSet scrollView: UIScrollView!) -> NSAttributedString! {
-        if searchController.hasActiveSearchTerms {
-            return title("🔍 No Results")
-        }
-        return title(NSLocalizedString("OrganizeEmptyHeader", comment: ""))
-    }
-
-    func verticalOffset(forEmptyDataSet scrollView: UIScrollView!) -> CGFloat {
-        return -30
-    }
-
-    func description(forEmptyDataSet scrollView: UIScrollView!) -> NSAttributedString! {
-        if searchController.hasActiveSearchTerms {
-            return noResultsDescription(for: "list")
-        }
-        return applyDescriptionAttributes(
-            NSMutableAttributedString(NSLocalizedString("OrganizeInstruction", comment: ""), font: descriptionFont)
-            .appending("\n\nTo create a new list, tap the ", font: descriptionFont)
-            .appending("+", font: boldDescriptionFont)
-            .appending(" button above, or tap ", font: descriptionFont)
-            .appending("Manage Lists", font: boldDescriptionFont)
-            .appending(" when viewing a book.", font: descriptionFont)
-        )
-    }
-}
-
-extension Organize: DZNEmptyDataSetDelegate {
-    func emptyDataSetWillAppear(_ scrollView: UIScrollView!) {
-        navigationItem.leftBarButtonItem = nil
-        navigationItem.largeTitleDisplayMode = .never
-    }
-
-    func emptyDataSetWillDisappear(_ scrollView: UIScrollView!) {
-        navigationItem.leftBarButtonItem = editButtonItem
-        navigationItem.largeTitleDisplayMode = .automatic
+extension Organize: UISearchBarDelegate {
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        searchWillBeDismissed()
     }
 }

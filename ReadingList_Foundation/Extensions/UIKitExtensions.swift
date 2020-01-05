@@ -283,6 +283,10 @@ public extension NSAttributedString {
     @objc convenience init(_ string: String, font: UIFont) {
         self.init(string: string, attributes: [.font: font])
     }
+
+    func mutable() -> NSMutableAttributedString {
+        return NSMutableAttributedString(attributedString: self)
+    }
 }
 
 public extension NSMutableAttributedString {
@@ -292,6 +296,11 @@ public extension NSMutableAttributedString {
 
     @discardableResult func appending(_ text: String, font: UIFont) -> NSMutableAttributedString {
         self.append(NSAttributedString(text, font: font))
+        return self
+    }
+
+    @discardableResult func attributedWithColor(_ color: UIColor) -> NSMutableAttributedString {
+        self.addAttribute(.foregroundColor, value: color, range: NSRange(location: 0, length: self.length))
         return self
     }
 }

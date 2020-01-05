@@ -1,7 +1,6 @@
 import Foundation
 import UIKit
 import CoreData
-import DZNEmptyDataSet
 import ReadingList_Foundation
 
 enum ListBooksSource {
@@ -36,12 +35,11 @@ enum ListBooksSource {
     }
 }
 
-class ListBookTable: UITableViewController {
+class ListBookTable: SearchableEmptyStateTableViewController {
 
     var list: List!
     private var cachedListNames: [String]!
     private var ignoreNotifications = false
-    private var searchController: UISearchController!
     private var listBookSource: ListBooksSource!
 
     /// Used to work around a animation bug, which is resolved in iOS 13, by forcing the search bar into a visible state.
@@ -65,6 +63,8 @@ class ListBookTable: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        normalLargeTitleDisplayMode = .never
+
         tableView.register(BookTableViewCell.self)
         tableView.register(BookTableHeader.self)
 
@@ -72,14 +72,10 @@ class ListBookTable: UITableViewController {
         navigationItem.title = list.name
         navigationItem.rightBarButtonItem = editButtonItem
 
-        tableView.emptyDataSetSource = self
-        tableView.emptyDataSetDelegate = self
-
         buildBookSource()
 
         searchController = UISearchController(filterPlaceholderText: "Filter List")
         searchController.searchResultsUpdater = self
-        navigationItem.searchController = searchController
 
         NotificationCenter.default.addObserver(self, selector: #selector(objectContextChanged(_:)),
                                                name: .NSManagedObjectContextObjectsDidChange,
@@ -250,11 +246,11 @@ class ListBookTable: UITableViewController {
         ignoreNotifications = false
     }
 
-    override func numberOfSections(in tableView: UITableView) -> Int {
+    override func sectionCount(in tableView: UITableView) -> Int {
         return listBookSource.numberOfSections()
     }
 
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    override func rowCount(in tableView: UITableView, forSection section: Int) -> Int {
         guard section == 0 else { assertionFailure(); return 0 }
         return listBookSource.numberOfBooks()
     }
@@ -292,7 +288,7 @@ class ListBookTable: UITableViewController {
 
                 if mutableSet.isEmpty {
                     tableView.deleteSections(IndexSet(arrayLiteral: 0), with: .automatic)
-                    tableView.reloadEmptyDataSet()
+                    self.reloadEmptyStateView()
                 } else {
                     tableView.deleteRows(at: [indexPath], with: .automatic)
                 }
@@ -329,6 +325,24 @@ class ListBookTable: UITableViewController {
             let book = listBookSource.book(at: senderIndex)
             detailsViewController.book = book
         }
+    }
+
+    override func titleForNonSearchEmptyState() -> String {
+        return "✨ Empty List"
+    }
+
+    override func textForSearchEmptyState() -> NSAttributedString {
+        return NSAttributedString(
+            "Try changing your search, or add another book to this list.",
+            font: emptyStateDescriptionFont)
+    }
+
+    override func textForNonSearchEmptyState() -> NSAttributedString {
+        return NSMutableAttributedString(
+            "The list \"\(list.name)\" is currently empty.  To add a book to it, find a book and tap ",
+            font: emptyStateDescriptionFont)
+            .appending("Manage Lists", font: emptyStateDescriptionBoldFont)
+            .appending(".", font: emptyStateDescriptionFont)
     }
 }
 
@@ -380,44 +394,6 @@ extension ListBookTable: UISearchResultsUpdating {
             }
         }
         tableView.reloadData()
-    }
-}
-
-extension ListBookTable: DZNEmptyDataSetSource {
-    func title(forEmptyDataSet scrollView: UIScrollView!) -> NSAttributedString! {
-        if searchController.hasActiveSearchTerms {
-            return title("🔍 No Results")
-        }
-        return title("✨ Empty List")
-    }
-
-    func verticalOffset(forEmptyDataSet scrollView: UIScrollView!) -> CGFloat {
-        return -30
-    }
-
-    func description(forEmptyDataSet scrollView: UIScrollView!) -> NSAttributedString! {
-        if searchController.hasActiveSearchTerms {
-            return applyDescriptionAttributes(
-                NSMutableAttributedString("Try changing your search, or add another book to this list", font: descriptionFont)
-            )
-        }
-        return applyDescriptionAttributes(
-            NSMutableAttributedString("The list \"\(list.name)\" is currently empty.  To add a book to it, find a book and tap ", font: descriptionFont)
-                .appending("Manage Lists", font: boldDescriptionFont)
-        )
-    }
-}
-
-extension ListBookTable: DZNEmptyDataSetDelegate {
-    func emptyDataSetWillAppear(_ scrollView: UIScrollView!) {
-        configureNavigationItem()
-
-        // Prevents section headers lingering around for a bit after books are removed
-        reloadHeaders()
-    }
-
-    func emptyDataSetDidDisappear(_ scrollView: UIScrollView!) {
-        configureNavigationItem()
     }
 }
 

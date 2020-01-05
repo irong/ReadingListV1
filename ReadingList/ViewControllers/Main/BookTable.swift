@@ -1,15 +1,13 @@
 import UIKit
-import DZNEmptyDataSet
 import CoreData
 import ReadingList_Foundation
 import os.log
 
-class BookTable: UITableViewController { //swiftlint:disable:this type_body_length
+class BookTable: SearchableEmptyStateTableViewController { //swiftlint:disable:this type_body_length
 
     var readStates: [BookReadState]!
 
     private var resultsController: CompoundFetchedResultsController<Book>!
-    private var searchController: UISearchController!
     private var sortManager: SortManager<Book>!
 
     /// An array of tuples of a BookReadState and its associated NSPredicate, in the order the read states should be shown in the table
@@ -37,7 +35,6 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         // the other for "all books".
         searchController.searchBar.scopeButtonTitles = [readStates.map { $0.description }.joined(separator: " & "), "All"]
         searchController.searchBar.delegate = self
-        navigationItem.searchController = searchController
 
         sortManager = SortManager<Book>(tableView) {
             self.resultsController.object(at: $0)
@@ -54,11 +51,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         // Handle the data fetch, sort and filtering
         buildResultsController(forAllReadStates: false)
 
-        configureNavBarButtons()
-
-        // Set the DZN data set source
-        tableView.emptyDataSetSource = self
-        tableView.emptyDataSetDelegate = self
+        configureNavigationBarButtons()
 
         // Watch for changes
         NotificationCenter.default.addObserver(self, selector: #selector(refetch), name: .PersistentStoreBatchOperationOccurred, object: nil)
@@ -136,12 +129,13 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
             navigationItem.title = readStates.last!.description
         }
 
-        configureNavBarButtons()
+        configureNavigationBarButtons()
         reloadHeaders()
     }
 
-    private func configureNavBarButtons() {
-        let leftButton, rightButton: UIBarButtonItem
+    override func configureNavigationBarButtons() {
+        let leftButton: UIBarButtonItem?
+        let rightButton: UIBarButtonItem
         if isEditing {
             // If we're editing, the right button should become an "edit action" button, but be disabled until any books are selected
             leftButton = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(toggleEditingAnimated))
@@ -149,12 +143,9 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
             rightButton.isEnabled = false
         } else {
             // If we're not editing, the right button should revert back to being an Add button
-            leftButton = UIBarButtonItem(title: "Edit", style: .plain, target: self, action: #selector(toggleEditingAnimated))
+            leftButton = isShowingEmptyState ? nil : UIBarButtonItem(title: "Edit", style: .plain, target: self, action: #selector(toggleEditingAnimated))
             rightButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addWasPressed(_:)))
         }
-
-        // The edit state may be updated after the emptydataset is shown; the left button should be hidden when empty
-        leftButton.setHidden(tableView.isEmptyDataSetVisible)
 
         navigationItem.leftBarButtonItem = leftButton
         navigationItem.rightBarButtonItem = rightButton
@@ -166,11 +157,11 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         self.tableView.reloadData()
     }
 
-    override func numberOfSections(in tableView: UITableView) -> Int {
+    override func sectionCount(in tableView: UITableView) -> Int {
         return resultsController.sections!.count
     }
 
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    override func rowCount(in tableView: UITableView, forSection section: Int) -> Int {
         return resultsController.sections![section].numberOfObjects
     }
 
@@ -448,6 +439,42 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         }
     }
 
+    override func titleForNonSearchEmptyState() -> String {
+        if readStates.contains(.reading) {
+            return "📚 To Read"
+        } else {
+            return "🎉 Finished"
+        }
+    }
+
+    override func textForNonSearchEmptyState() -> NSAttributedString {
+        let mutableString: NSMutableAttributedString
+        if readStates.contains(.reading) {
+            mutableString = NSMutableAttributedString("Books you add to your ", font: emptyStateDescriptionFont)
+                .appending("To Read", font: emptyStateDescriptionBoldFont)
+                .appending(" list, or mark as currently ", font: emptyStateDescriptionFont)
+                .appending("Reading", font: emptyStateDescriptionBoldFont)
+                .appending(" will show up here.", font: emptyStateDescriptionFont)
+        } else {
+            mutableString = NSMutableAttributedString("Books you mark as ", font: emptyStateDescriptionFont)
+                .appending("Finished", font: emptyStateDescriptionBoldFont)
+                .appending(" will show up here.", font: emptyStateDescriptionFont)
+        }
+
+        mutableString.appending("\n\nAdd a book by tapping the ", font: emptyStateDescriptionFont)
+            .appending("+", font: emptyStateDescriptionBoldFont)
+            .appending(" button above.", font: emptyStateDescriptionFont)
+
+        return mutableString
+    }
+
+    override func textForSearchEmptyState() -> NSAttributedString {
+        return NSMutableAttributedString(
+            "Try changing your search, or add a new book by tapping the ", font: emptyStateDescriptionFont)
+        .appending("+", font: emptyStateDescriptionBoldFont)
+        .appending(" button.", font: emptyStateDescriptionFont)
+    }
+
     @IBAction private func addWasPressed(_ sender: UIBarButtonItem) {
         let optionsAlert = UIAlertController(title: "Add New Book", message: nil, preferredStyle: .actionSheet)
         optionsAlert.addAction(UIAlertAction(title: "Scan Barcode", style: .default) { _ in
@@ -568,8 +595,8 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         confirmDeleteAlert.addAction(UIAlertAction(title: "Delete", style: .destructive) { _ in
             indexPaths.map(self.resultsController.object).forEach { $0.delete() }
             PersistentStoreManager.container.viewContext.saveAndLogIfErrored()
-            self.setEditing(false, animated: true)
             UserEngagement.logEvent(indexPaths.count > 1 ? .bulkDeleteBook : .deleteBook)
+            self.setEditing(false, animated: true)
             callback?(true)
         })
         return confirmDeleteAlert
@@ -667,6 +694,7 @@ extension BookTable: UISearchBarDelegate {
         if searchBar.selectedScopeButtonIndex == allReadStatesSearchBarScopeIndex {
             buildResultsController(forAllReadStates: false)
         }
+        searchWillBeDismissed()
     }
 }
 
@@ -712,58 +740,6 @@ extension BookTable: UIViewControllerPreviewingDelegate {
 
     func previewingContext(_ previewingContext: UIViewControllerPreviewing, commit viewControllerToCommit: UIViewController) {
         show(viewControllerToCommit, sender: self)
-    }
-}
-
-extension BookTable: DZNEmptyDataSetSource {
-    func title(forEmptyDataSet scrollView: UIScrollView!) -> NSAttributedString! {
-        if searchController.hasActiveSearchTerms {
-            return title("🔍 No Results")
-        } else if readStates.contains(.reading) {
-            return title("📚 To Read")
-        } else {
-            return title("🎉 Finished")
-        }
-    }
-
-    func verticalOffset(forEmptyDataSet scrollView: UIScrollView!) -> CGFloat {
-        return -30
-    }
-
-    func description(forEmptyDataSet scrollView: UIScrollView!) -> NSAttributedString! {
-        if searchController.hasActiveSearchTerms {
-            return noResultsDescription(for: "book")
-        }
-
-        let attributedDescription: NSMutableAttributedString
-        if readStates.contains(.reading) {
-            attributedDescription = NSMutableAttributedString("Books you add to your ", font: descriptionFont)
-                .appending("To Read", font: boldDescriptionFont)
-                .appending(" list, or mark as currently ", font: descriptionFont)
-                .appending("Reading", font: boldDescriptionFont)
-                .appending(" will show up here.", font: descriptionFont)
-        } else {
-            attributedDescription = NSMutableAttributedString("Books you mark as ", font: descriptionFont)
-                .appending("Finished", font: boldDescriptionFont)
-                .appending(" will show up here.", font: descriptionFont)
-        }
-        return applyDescriptionAttributes(
-            attributedDescription.appending("\n\nAdd a book by tapping the ", font: descriptionFont)
-                .appending("+", font: boldDescriptionFont)
-                .appending(" button above.", font: descriptionFont)
-        )
-    }
-}
-
-extension BookTable: DZNEmptyDataSetDelegate {
-    func emptyDataSetWillAppear(_ scrollView: UIScrollView!) {
-        navigationItem.leftBarButtonItem!.setHidden(true)
-        navigationItem.largeTitleDisplayMode = .never
-    }
-
-    func emptyDataSetWillDisappear(_ scrollView: UIScrollView!) {
-        navigationItem.leftBarButtonItem!.setHidden(false)
-        navigationItem.largeTitleDisplayMode = .automatic
     }
 }
 
