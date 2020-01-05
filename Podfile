@@ -12,12 +12,9 @@ target 'ReadingList' do
 
   target 'ReadingList_UnitTests' do
     inherit! :complete
-    pod 'SwiftyJSON', '~> 5.0'
-    pod 'Swifter', :git => 'https://github.com/httpswift/swifter.git', :branch => 'stable'
   end
   target 'ReadingList_UITests' do
     inherit! :complete
-    pod 'Swifter', :git => 'https://github.com/httpswift/swifter.git', :branch => 'stable'
   end
 
 end

@@ -19,6 +19,9 @@ packages:
   SwiftyStoreKit:
     url: https://github.com/bizz84/SwiftyStoreKit
     minorVersion: 0.15.0
+  Swifter:
+    url: https://github.com/httpswift/swifter
+    branch: stable 
 
 targets:
   ReadingList:
@@ -78,6 +81,8 @@ targets:
     platform: iOS
     deploymentTarget: 11.0
     sources: [ReadingList_Foundation]
+    dependencies:
+     - package: SwiftyJSON
 
   ReadingList_UnitTests:
     type: bundle.unit-test
@@ -96,6 +101,7 @@ targets:
       - path: ReadingList/Api/GoogleBooksRequest.swift
     dependencies:
       - target: ReadingList
+      - package: Swifter
     scheme:
       testTargets:
         - ReadingList_UITests
