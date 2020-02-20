@@ -371,7 +371,7 @@ class AuthorSection: MultivaluedSection {
         super.init(multivaluedOptions: [], header: "", footer: "") { _ in }
     }
 
-    required init(multivaluedOptions: MultivaluedOptions, header: String, footer: String, _ initializer: (MultivaluedSection) -> Void) {
+    required init(multivaluedOptions: MultivaluedOptions, header: String?, footer: String?, _ initializer: (GenericMultivaluedSection<ButtonRow>) -> Void) {
         super.init(multivaluedOptions: multivaluedOptions, header: header, footer: footer, initializer)
     }
 

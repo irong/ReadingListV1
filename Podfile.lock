@@ -2,7 +2,6 @@ PODS:
   - CHCSVParser (2.1.0)
   - Crashlytics (3.14.0):
     - Fabric (~> 1.10.2)
-  - Eureka (5.1.0)
   - Fabric (1.10.2)
   - Firebase/Core (6.14.0):
     - Firebase/CoreOnly
@@ -62,8 +61,6 @@ PODS:
     - GoogleUtilities/Logger
   - GoogleUtilities/UserDefaults (6.4.0):
     - GoogleUtilities/Logger
-  - ImageRow (4.0.0):
-    - Eureka (~> 5.0)
   - nanopb (0.3.9011):
     - nanopb/decode (= 0.3.9011)
     - nanopb/encode (= 0.3.9011)
@@ -74,16 +71,13 @@ PODS:
 DEPENDENCIES:
   - CHCSVParser (from `https://github.com/davedelong/CHCSVParser.git`)
   - Crashlytics
-  - Eureka (~> 5.1)
   - Fabric
   - Firebase/Core
-  - ImageRow (~> 4.0)
   - SVProgressHUD (~> 2.2)
 
 SPEC REPOS:
   trunk:
     - Crashlytics
-    - Eureka
     - Fabric
     - Firebase
     - FirebaseAnalytics
@@ -95,7 +89,6 @@ SPEC REPOS:
     - GoogleDataTransport
     - GoogleDataTransportCCTSupport
     - GoogleUtilities
-    - ImageRow
     - nanopb
     - SVProgressHUD
 
@@ -111,7 +104,6 @@ CHECKOUT OPTIONS:
 SPEC CHECKSUMS:
   CHCSVParser: 64da26e2b4ddbf7527f7f03120bf91d83d28f354
   Crashlytics: 540b7e5f5da5a042647227a5e3ac51d85eed06df
-  Eureka: 18a5076dcf0c41f9cd9748aa1c42f4d11434bdae
   Fabric: 706c8b8098fff96c33c0db69cbf81f9c551d0d74
   Firebase: 0219bb4782eb1406f1b9b0628a2e625484ce910d
   FirebaseAnalytics: f68b9f3f1241385129ae0a83b63627fc420c05e5
@@ -123,10 +115,9 @@ SPEC CHECKSUMS:
   GoogleDataTransport: 8e9b210c97d55fbff306cc5468ff91b9cb32dcf5
   GoogleDataTransportCCTSupport: 202d7cdf9c4a7d81a2bb7f7e7e1ba6faa421b1f2
   GoogleUtilities: 29bd0d8f850efbd28cff6d99e8b7da1f8d236bcf
-  ImageRow: e65b2e1a33f89062bf2a553a2aad61d975eb7428
   nanopb: 18003b5e52dab79db540fe93fe9579f399bd1ccd
   SVProgressHUD: 1428aafac632c1f86f62aa4243ec12008d7a51d6
 
-PODFILE CHECKSUM: acc149ac1c8d8858a91ce012d8c91fbffad3a738
+PODFILE CHECKSUM: 95ca627f86b2cb50c31f7c3e14c569d66a550f5c
 
 COCOAPODS: 1.8.4

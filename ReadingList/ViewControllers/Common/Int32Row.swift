@@ -1,5 +1,6 @@
 import Foundation
 import Eureka
+import UIKit
 
 extension Int32: InputTypeInitiable {
     public init?(string stringValue: String) {

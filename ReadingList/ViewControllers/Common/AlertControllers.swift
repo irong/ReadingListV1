@@ -1,7 +1,6 @@
 import Foundation
 import UIKit
 import Eureka
-import ImageRow
 
 extension UIAlertController {
     static func duplicateBook(goToExistingBook: @escaping () -> Void, cancel: @escaping () -> Void) -> UIAlertController {
