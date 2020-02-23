@@ -118,10 +118,7 @@ class Organize: SearchableEmptyStateTableViewController {
                 try! self.resultsController.performFetch()
                 tableView.reloadData()
             }
-            if let popover = alert.popoverPresentationController {
-                popover.sourceView = button
-                popover.sourceRect = button.bounds
-            }
+            alert.popoverPresentationController?.setButton(button)
             self.present(alert, animated: true)
         }
         return header

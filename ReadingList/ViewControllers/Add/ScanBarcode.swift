@@ -63,7 +63,7 @@ class ScanBarcode: UIViewController {
             return
         }
 
-        let alert = UIAlertController(title: "Unsaved books", message: "You have \(bulkAddedBooks.count) unsaved \("book".pluralising(bulkAddedBooks.count)) which will be discarded if you \(actionDescription). Are you sure?", preferredStyle: .actionSheet)
+        let alert = UIAlertController(title: "Unsaved books", message: "You have \(bulkAddedBooks.count) unsaved \("book".pluralising(bulkAddedBooks.count)) which will be discarded if you \(actionDescription). Are you sure?", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Discard", style: .destructive) { _ in
             discardAction()
         })

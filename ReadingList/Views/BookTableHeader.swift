@@ -18,10 +18,7 @@ class BookTableHeader: UITableViewHeaderFooterView {
             let alert = UIAlertController.selectOrder(orderable) { [unowned self] in
                 self.onSortChanged?()
             }
-            if let popover = alert.popoverPresentationController {
-                popover.sourceView = sortButton
-                popover.sourceRect = sortButton.bounds
-            }
+            alert.popoverPresentationController?.setButton(sortButton)
             presenter.present(alert, animated: true, completion: nil)
         } else {
             assertionFailure()

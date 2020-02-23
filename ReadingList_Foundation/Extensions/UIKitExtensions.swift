@@ -173,6 +173,11 @@ public extension UIPopoverPresentationController {
         let cell = tableView.cellForRow(at: indexPath)!
         setSourceCell(cell, inTableView: tableView, arrowDirections: arrowDirections)
     }
+    
+    func setButton(_ button: UIButton) {
+        sourceView = button
+        sourceRect = button.bounds
+    }
 }
 
 public extension UITabBarItem {
