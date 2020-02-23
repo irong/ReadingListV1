@@ -35,12 +35,63 @@ enum ListBooksSource {
     }
 }
 
-class ListBookTable: SearchableEmptyStateTableViewController {
+class ListBookTableDataSource: SearchableEmptyStateTableViewDataSource {
+    
+    var listBookSource: ListBooksSource
+    let list: List
+    
+    init(_ tableView: UITableView, searchController: UISearchController, navigationItem: UINavigationItem, list: List, listBookSource: ListBooksSource) {
+        self.listBookSource = listBookSource
+        self.list = list
+        super.init(tableView, searchController: searchController, navigationItem: navigationItem) { indexPath in
+            let cell = tableView.dequeue(BookTableViewCell.self, for: indexPath)
+            let book = listBookSource.book(at: indexPath)
+            if #available(iOS 13.0, *) { } else {
+                cell.initialise(withTheme: UserDefaults.standard[.theme])
+            }
+            cell.configureFrom(book, includeReadDates: false)
+            return cell
+            
+        }
+    }
+    
+    override func sectionCount(in tableView: UITableView) -> Int {
+        return listBookSource.numberOfSections()
+    }
+
+    override func rowCount(in tableView: UITableView, forSection section: Int) -> Int {
+        guard section == 0 else { assertionFailure(); return 0 }
+        return listBookSource.numberOfBooks()
+    }
+
+    override func titleForNonSearchEmptyState() -> String {
+        return "✨ Empty List"
+    }
+
+    override func textForSearchEmptyState() -> NSAttributedString {
+        return NSAttributedString(
+            "Try changing your search, or add another book to this list.",
+            font: emptyStateDescriptionFont)
+    }
+
+    override func textForNonSearchEmptyState() -> NSAttributedString {
+        return NSMutableAttributedString(
+            "The list \"\(list.name)\" is currently empty.  To add a book to it, find a book and tap ",
+            font: emptyStateDescriptionFont)
+            .appending("Manage Lists", font: emptyStateDescriptionBoldFont)
+            .appending(".", font: emptyStateDescriptionFont)
+    }
+}
+
+class ListBookTable: UITableViewController {
 
     var list: List!
     private var cachedListNames: [String]!
     private var ignoreNotifications = false
     private var listBookSource: ListBooksSource!
+    
+    private var searchController: UISearchController!
+    private var dataSource: ListBookTableDataSource!
 
     /// Used to work around a animation bug, which is resolved in iOS 13, by forcing the search bar into a visible state.
     @available(iOS, obsoleted: 13.0)
@@ -63,7 +114,7 @@ class ListBookTable: SearchableEmptyStateTableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        normalLargeTitleDisplayMode = .never
+        //normalLargeTitleDisplayMode = .never
 
         tableView.register(BookTableViewCell.self)
         tableView.register(BookTableHeader.self)
@@ -76,6 +127,7 @@ class ListBookTable: SearchableEmptyStateTableViewController {
 
         searchController = UISearchController(filterPlaceholderText: "Filter List")
         searchController.searchResultsUpdater = self
+        dataSource = ListBookTableDataSource(tableView, searchController: searchController, navigationItem: navigationItem, list: list, listBookSource: listBookSource)
 
         NotificationCenter.default.addObserver(self, selector: #selector(objectContextChanged(_:)),
                                                name: .NSManagedObjectContextObjectsDidChange,
@@ -246,25 +298,6 @@ class ListBookTable: SearchableEmptyStateTableViewController {
         ignoreNotifications = false
     }
 
-    override func sectionCount(in tableView: UITableView) -> Int {
-        return listBookSource.numberOfSections()
-    }
-
-    override func rowCount(in tableView: UITableView, forSection section: Int) -> Int {
-        guard section == 0 else { assertionFailure(); return 0 }
-        return listBookSource.numberOfBooks()
-    }
-
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeue(BookTableViewCell.self, for: indexPath)
-        let book = listBookSource.book(at: indexPath)
-        if #available(iOS 13.0, *) { } else {
-            cell.initialise(withTheme: UserDefaults.standard[.theme])
-        }
-        cell.configureFrom(book, includeReadDates: false)
-        return cell
-    }
-
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         performSegue(withIdentifier: "showDetail", sender: indexPath)
     }
@@ -288,7 +321,7 @@ class ListBookTable: SearchableEmptyStateTableViewController {
 
                 if mutableSet.isEmpty {
                     tableView.deleteSections(IndexSet(arrayLiteral: 0), with: .automatic)
-                    self.reloadEmptyStateView()
+                    self.dataSource.reloadEmptyStateView()
                 } else {
                     tableView.deleteRows(at: [indexPath], with: .automatic)
                 }
@@ -325,24 +358,6 @@ class ListBookTable: SearchableEmptyStateTableViewController {
             let book = listBookSource.book(at: senderIndex)
             detailsViewController.book = book
         }
-    }
-
-    override func titleForNonSearchEmptyState() -> String {
-        return "✨ Empty List"
-    }
-
-    override func textForSearchEmptyState() -> NSAttributedString {
-        return NSAttributedString(
-            "Try changing your search, or add another book to this list.",
-            font: emptyStateDescriptionFont)
-    }
-
-    override func textForNonSearchEmptyState() -> NSAttributedString {
-        return NSMutableAttributedString(
-            "The list \"\(list.name)\" is currently empty.  To add a book to it, find a book and tap ",
-            font: emptyStateDescriptionFont)
-            .appending("Manage Lists", font: emptyStateDescriptionBoldFont)
-            .appending(".", font: emptyStateDescriptionFont)
     }
 }
 

@@ -38,3 +38,15 @@ public class List: NSManagedObject {
         }
     }
 }
+
+enum ListSortOrder: Int, CustomStringConvertible, CaseIterable, UserSettingType {
+    case custom = 0
+    case alphabetical = 1
+
+    var description: String {
+        switch self {
+        case .custom: return "Custom"
+        case .alphabetical: return "Alphabetical"
+        }
+    }
+}

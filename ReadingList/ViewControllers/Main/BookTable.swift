@@ -3,12 +3,80 @@ import CoreData
 import ReadingList_Foundation
 import os.log
 
-class BookTable: SearchableEmptyStateTableViewController { //swiftlint:disable:this type_body_length
+class BookTableDataSource: SearchableEmptyStateTableViewDataSource {
+
+    var resultsController: CompoundFetchedResultsController<Book>
+    let readStates: [BookReadState]
+
+    init(_ tableView: UITableView, searchController: UISearchController, resultsController: CompoundFetchedResultsController<Book>, navigationItem: UINavigationItem, readStates: [BookReadState]) {
+        self.resultsController = resultsController
+        self.readStates = readStates
+
+        super.init(tableView, searchController: searchController, navigationItem: navigationItem) { indexPath in
+            let cell = tableView.dequeue(BookTableViewCell.self, for: indexPath)
+            let book = resultsController.object(at: indexPath)
+            cell.configureFrom(book)
+            if #available(iOS 13.0, *) { } else {
+                cell.initialise(withTheme: UserDefaults.standard[.theme])
+            }
+            return cell
+        }
+    }
+    
+    override func sectionCount(in tableView: UITableView) -> Int {
+        return resultsController.sections!.count
+    }
+
+    override func rowCount(in tableView: UITableView, forSection section: Int) -> Int {
+        return resultsController.sections![section].numberOfObjects
+    }
+
+    override func titleForNonSearchEmptyState() -> String {
+        if readStates.contains(.reading) {
+            return "📚 To Read"
+        } else {
+            return "🎉 Finished"
+        }
+    }
+
+    override func textForNonSearchEmptyState() -> NSAttributedString {
+        let mutableString: NSMutableAttributedString
+        if readStates.contains(.reading) {
+            mutableString = NSMutableAttributedString("Books you add to your ", font: emptyStateDescriptionFont)
+                .appending("To Read", font: emptyStateDescriptionBoldFont)
+                .appending(" list, or mark as currently ", font: emptyStateDescriptionFont)
+                .appending("Reading", font: emptyStateDescriptionBoldFont)
+                .appending(" will show up here.", font: emptyStateDescriptionFont)
+        } else {
+            mutableString = NSMutableAttributedString("Books you mark as ", font: emptyStateDescriptionFont)
+                .appending("Finished", font: emptyStateDescriptionBoldFont)
+                .appending(" will show up here.", font: emptyStateDescriptionFont)
+        }
+
+        mutableString.appending("\n\nAdd a book by tapping the ", font: emptyStateDescriptionFont)
+            .appending("+", font: emptyStateDescriptionBoldFont)
+            .appending(" button above.", font: emptyStateDescriptionFont)
+
+        return mutableString
+    }
+
+    override func textForSearchEmptyState() -> NSAttributedString {
+        return NSMutableAttributedString(
+            "Try changing your search, or add a new book by tapping the ", font: emptyStateDescriptionFont)
+        .appending("+", font: emptyStateDescriptionBoldFont)
+        .appending(" button.", font: emptyStateDescriptionFont)
+    }
+
+}
+
+class BookTable: UITableViewController { //swiftlint:disable:this type_body_length
 
     var readStates: [BookReadState]!
 
     private var resultsController: CompoundFetchedResultsController<Book>!
     private var sortManager: SortManager<Book>!
+    var dataSource: BookTableDataSource!
+    var searchController: UISearchController!
 
     /// An array of tuples of a BookReadState and its associated NSPredicate, in the order the read states should be shown in the table
     private lazy var defaultPredicates = readStates.map {
@@ -50,7 +118,9 @@ class BookTable: SearchableEmptyStateTableViewController { //swiftlint:disable:t
 
         // Handle the data fetch, sort and filtering
         buildResultsController(forAllReadStates: false)
-
+        dataSource = BookTableDataSource(tableView, searchController: searchController, resultsController: resultsController, navigationItem: navigationItem, readStates: readStates)
+        tableView.dataSource = dataSource
+        
         configureNavigationBarButtons()
 
         // Watch for changes
@@ -76,6 +146,21 @@ class BookTable: SearchableEmptyStateTableViewController { //swiftlint:disable:t
             registerForPreviewing(with: self, sourceView: tableView)
         }
     }
+    
+    /*@available(iOS 13.0, *)
+    var diffableDataSource: UITableViewDiffableDataSource<BookReadState, Book>!
+    
+    @available(iOS 13.0, *)
+    func test() {
+        diffableDataSource = UITableViewDiffableDataSource<BookReadState, Book>(tableView: tableView) { (_, index, identifier) -> UITableViewCell? in
+            return nil
+        }
+
+        var diffableDataSourceSnapshot = NSDiffableDataSourceSnapshot<BookReadState, Book>()
+        diffableDataSourceSnapshot.appendSections([.toRead])
+        diffableDataSourceSnapshot.appendItems(resultsController.controllers[0].fetchedObjects ?? [])
+        diffableDataSource.apply(diffableDataSourceSnapshot)
+    }*/
 
     override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         let header = tableView.dequeue(BookTableHeader.self)
@@ -133,7 +218,7 @@ class BookTable: SearchableEmptyStateTableViewController { //swiftlint:disable:t
         reloadHeaders()
     }
 
-    override func configureNavigationBarButtons() {
+    func configureNavigationBarButtons() {
         let leftButton: UIBarButtonItem?
         let rightButton: UIBarButtonItem
         if isEditing {
@@ -143,7 +228,7 @@ class BookTable: SearchableEmptyStateTableViewController { //swiftlint:disable:t
             rightButton.isEnabled = false
         } else {
             // If we're not editing, the right button should revert back to being an Add button
-            leftButton = isShowingEmptyState ? nil : UIBarButtonItem(title: "Edit", style: .plain, target: self, action: #selector(toggleEditingAnimated))
+            leftButton = dataSource.isShowingEmptyState ? nil : UIBarButtonItem(title: "Edit", style: .plain, target: self, action: #selector(toggleEditingAnimated))
             rightButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addWasPressed(_:)))
         }
 
@@ -155,24 +240,6 @@ class BookTable: SearchableEmptyStateTableViewController { //swiftlint:disable:t
         // FUTURE: This can leave the EmptyDataSet off-screen if a bulk delete has occurred. Can't find a way to prevent this.
         try! self.resultsController.performFetch()
         self.tableView.reloadData()
-    }
-
-    override func sectionCount(in tableView: UITableView) -> Int {
-        return resultsController.sections!.count
-    }
-
-    override func rowCount(in tableView: UITableView, forSection section: Int) -> Int {
-        return resultsController.sections![section].numberOfObjects
-    }
-
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeue(BookTableViewCell.self, for: indexPath)
-        let book = resultsController.object(at: indexPath)
-        cell.configureFrom(book)
-        if #available(iOS 13.0, *) { } else {
-            cell.initialise(withTheme: UserDefaults.standard[.theme])
-        }
-        return cell
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -439,42 +506,6 @@ class BookTable: SearchableEmptyStateTableViewController { //swiftlint:disable:t
         }
     }
 
-    override func titleForNonSearchEmptyState() -> String {
-        if readStates.contains(.reading) {
-            return "📚 To Read"
-        } else {
-            return "🎉 Finished"
-        }
-    }
-
-    override func textForNonSearchEmptyState() -> NSAttributedString {
-        let mutableString: NSMutableAttributedString
-        if readStates.contains(.reading) {
-            mutableString = NSMutableAttributedString("Books you add to your ", font: emptyStateDescriptionFont)
-                .appending("To Read", font: emptyStateDescriptionBoldFont)
-                .appending(" list, or mark as currently ", font: emptyStateDescriptionFont)
-                .appending("Reading", font: emptyStateDescriptionBoldFont)
-                .appending(" will show up here.", font: emptyStateDescriptionFont)
-        } else {
-            mutableString = NSMutableAttributedString("Books you mark as ", font: emptyStateDescriptionFont)
-                .appending("Finished", font: emptyStateDescriptionBoldFont)
-                .appending(" will show up here.", font: emptyStateDescriptionFont)
-        }
-
-        mutableString.appending("\n\nAdd a book by tapping the ", font: emptyStateDescriptionFont)
-            .appending("+", font: emptyStateDescriptionBoldFont)
-            .appending(" button above.", font: emptyStateDescriptionFont)
-
-        return mutableString
-    }
-
-    override func textForSearchEmptyState() -> NSAttributedString {
-        return NSMutableAttributedString(
-            "Try changing your search, or add a new book by tapping the ", font: emptyStateDescriptionFont)
-        .appending("+", font: emptyStateDescriptionBoldFont)
-        .appending(" button.", font: emptyStateDescriptionFont)
-    }
-
     @IBAction private func addWasPressed(_ sender: UIBarButtonItem) {
         let optionsAlert = UIAlertController(title: "Add New Book", message: nil, preferredStyle: .actionSheet)
         optionsAlert.addAction(UIAlertAction(title: "Scan Barcode", style: .default) { _ in
@@ -694,7 +725,7 @@ extension BookTable: UISearchBarDelegate {
         if searchBar.selectedScopeButtonIndex == allReadStatesSearchBarScopeIndex {
             buildResultsController(forAllReadStates: false)
         }
-        searchWillBeDismissed()
+        dataSource.searchWillBeDismissed()
     }
 }
 
@@ -707,6 +738,18 @@ extension BookTable: HeaderConfigurable {
 }
 
 extension BookTable: NSFetchedResultsControllerDelegate {
+    @available(iOS 13.0, *)
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChangeContentWith snapshot: NSDiffableDataSourceSnapshotReference) {
+        let readState = BookReadState.toRead
+        
+        /*let test = snapshot as NSDiffableDataSourceSnapshot<Int, Book>
+        var existingSnapshot = diffableDataSource.snapshot()
+        existingSnapshot.deleteItems(existingSnapshot.itemIdentifiers(inSection: readState))
+        existingSnapshot.appendItems(s.itemIdentifiers, toSection: readState)
+
+        diffableDataSource.apply(existingSnapshot, animatingDifferences: true)*/
+    }
+    
     func controllerWillChangeContent(_: NSFetchedResultsController<NSFetchRequestResult>) {
         tableView.beginUpdates()
     }

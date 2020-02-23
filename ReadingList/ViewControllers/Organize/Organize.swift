@@ -10,22 +10,22 @@ extension List: Sortable {
     }
 }
 
-enum ListSortOrder: Int, CustomStringConvertible, CaseIterable, UserSettingType {
-    case custom = 0
-    case alphabetical = 1
-
-    var description: String {
-        switch self {
-        case .custom: return "Custom"
-        case .alphabetical: return "Alphabetical"
+extension UITableViewCell {
+    func configure(from list: List) {
+        textLabel!.text = list.name
+        detailTextLabel!.text = "\(list.books.count) book\(list.books.count == 1 ? "" : "s")"
+        if #available(iOS 13.0, *) { } else {
+            defaultInitialise(withTheme: UserDefaults.standard[.theme])
         }
     }
 }
 
-class Organize: SearchableEmptyStateTableViewController {
+class Organize: UITableViewController {
 
     var resultsController: NSFetchedResultsController<List>!
-    var sortManager: SortManager<List>!
+    var searchController: UISearchController!
+    var dataSource: OrganizeTableViewDataSourceCommon!
+    var emptyDataSetManager: OrganizeEmptyDataSetManager!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -35,37 +35,43 @@ class Organize: SearchableEmptyStateTableViewController {
 
         tableView.register(BookTableHeader.self)
 
-        sortManager = SortManager(tableView) {
-            self.resultsController.object(at: $0)
-        }
-
         searchController = UISearchController(filterPlaceholderText: "Your Lists")
         searchController.searchResultsUpdater = self
+        navigationItem.searchController = searchController
 
-        resultsController = buildResultsController()
+        let fetchRequest = NSManagedObject.fetchRequest(List.self, batch: 25)
+        fetchRequest.sortDescriptors = sortDescriptors()
+        resultsController = NSFetchedResultsController<List>(fetchRequest: fetchRequest, managedObjectContext: PersistentStoreManager.container.viewContext, sectionNameKeyPath: nil, cacheName: nil)
+
+        if #available(iOS 13.0, *) {
+            dataSource = OrganizeTableViewDataSource(tableView: tableView, resultsController: resultsController)
+        } else {
+            dataSource = OrganizeTableViewDataSourceLegacy(tableView, resultsController: resultsController)
+        }
+        resultsController.delegate = dataSource
+        
+        emptyDataSetManager = OrganizeEmptyDataSetManager(tableView, searchController: searchController)
+        dataSource.emptyDetectionDelegate = emptyDataSetManager
+
+        tableView.dataSource = dataSource
+
         try! resultsController.performFetch()
+        dataSource.updateData(animate: false)
 
         NotificationCenter.default.addObserver(self, selector: #selector(refetch), name: NSNotification.Name.PersistentStoreBatchOperationOccurred, object: nil)
 
         monitorThemeSetting()
     }
 
-    override func configureNavigationBarButtons() {
-        if !isShowingEmptyState {
+    func configureNavigationBarButtons() {
+        if true{//} !dataSource.isShowingEmptyState {
             navigationItem.leftBarButtonItem = editButtonItem
         } else {
             navigationItem.leftBarButtonItem = nil
         }
     }
 
-    private func buildResultsController() -> NSFetchedResultsController<List> {
-        let controller = NSFetchedResultsController<List>(fetchRequest: fetchRequest(), managedObjectContext: PersistentStoreManager.container.viewContext, sectionNameKeyPath: nil, cacheName: nil)
-        controller.delegate = self
-        return controller
-    }
-
-    private func fetchRequest() -> NSFetchRequest<List> {
-        let fetchRequest = NSManagedObject.fetchRequest(List.self, batch: 25)
+    private func sortDescriptors() -> [NSSortDescriptor] {
         var sortDescriptors = [NSSortDescriptor(\List.name)]
         switch UserDefaults.standard[.listSortOrder] {
         case .custom:
@@ -73,8 +79,7 @@ class Organize: SearchableEmptyStateTableViewController {
         case .alphabetical:
             break
         }
-        fetchRequest.sortDescriptors = sortDescriptors
-        return fetchRequest
+        return sortDescriptors
     }
 
     override func setEditing(_ editing: Bool, animated: Bool) {
@@ -88,42 +93,25 @@ class Organize: SearchableEmptyStateTableViewController {
         tableView.reloadData()
     }
 
-    override func sectionCount(in tableView: UITableView) -> Int {
-        return resultsController.sections!.count
-    }
-
-    override func rowCount(in tableView: UITableView, forSection section: Int) -> Int {
-        return resultsController.sections![section].numberOfObjects
-    }
-
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ListCell", for: indexPath)
-        let list = resultsController.object(at: indexPath)
-        cell.textLabel!.text = list.name
-        cell.detailTextLabel!.text = "\(list.books.count) book\(list.books.count == 1 ? "" : "s")"
-        if #available(iOS 13.0, *) { } else {
-            cell.defaultInitialise(withTheme: UserDefaults.standard[.theme])
+    func onSortButtonTap(_ button: UIButton) {
+        let alert = UIAlertController.selectOption(ListSortOrder.allCases, title: "Choose Order", selected: UserDefaults.standard[.listSortOrder]) { [unowned self] sortOrder in
+            UserDefaults.standard[.listSortOrder] = sortOrder
+            self.resultsController.fetchRequest.sortDescriptors = self.sortDescriptors()
+            try! self.resultsController.performFetch()
+            self.dataSource.updateData(animate: true)
         }
-        return cell
+        if let popover = alert.popoverPresentationController {
+            popover.sourceView = button
+            popover.sourceRect = button.bounds
+        }
+        self.present(alert, animated: true)
     }
-
+    
     override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         guard section == 0 && tableView.numberOfRows(inSection: 0) > 0 else { return nil }
         let header = tableView.dequeue(BookTableHeader.self)
         configureHeader(header, at: section)
-        header.onSortButtonTap = { [unowned self] button in
-            let alert = UIAlertController.selectOption(ListSortOrder.allCases, title: "Choose Order", selected: UserDefaults.standard[.listSortOrder]) { [unowned self] sortOrder in
-                UserDefaults.standard[.listSortOrder] = sortOrder
-                self.resultsController = self.buildResultsController()
-                try! self.resultsController.performFetch()
-                tableView.reloadData()
-            }
-            if let popover = alert.popoverPresentationController {
-                popover.sourceView = button
-                popover.sourceRect = button.bounds
-            }
-            self.present(alert, animated: true)
-        }
+        header.onSortButtonTap = self.onSortButtonTap
         return header
     }
 
@@ -213,23 +201,6 @@ class Organize: SearchableEmptyStateTableViewController {
         return !tableView.isEditing
     }
 
-    override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
-        guard UserDefaults.standard[.listSortOrder] == .custom else { return false }
-        return resultsController.sections![0].numberOfObjects > 1
-    }
-
-    override func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
-        guard UserDefaults.standard[.listSortOrder] == .custom else {
-            assertionFailure()
-            return
-        }
-        resultsController.delegate = nil
-        sortManager.move(objectAt: sourceIndexPath, to: destinationIndexPath)
-        try! resultsController.performFetch()
-        PersistentStoreManager.container.viewContext.saveAndLogIfErrored()
-        resultsController.delegate = tableView
-    }
-
     @available(iOS 13.0, *)
     override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         // the PreviewProvider doesn't seem to work when instantiating the ListBookTable - all the cells become really
@@ -246,52 +217,13 @@ class Organize: SearchableEmptyStateTableViewController {
             ])
         }
     }
-
+    
     @available(iOS 13.0, *)
     override func tableView(_ tableView: UITableView, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {
         guard let indexPath = configuration.identifier as? IndexPath else { return }
         animator.addAnimations {
             self.performSegue(withIdentifier: "selectList", sender: indexPath)
         }
-    }
-
-    override func titleForNonSearchEmptyState() -> String {
-         return NSLocalizedString("OrganizeEmptyHeader", comment: "")
-    }
-
-    override func textForSearchEmptyState() -> NSAttributedString {
-        return NSMutableAttributedString("Try changing your search, or add a new list by tapping the ", font: emptyStateDescriptionFont)
-                .appending("+", font: emptyStateDescriptionBoldFont)
-                .appending(" button.", font: emptyStateDescriptionFont)
-
-    }
-
-    override func textForNonSearchEmptyState() -> NSAttributedString {
-        return NSMutableAttributedString(NSLocalizedString("OrganizeInstruction", comment: ""), font: emptyStateDescriptionFont)
-            .appending("\n\nTo create a new list, tap the ", font: emptyStateDescriptionFont)
-            .appending("+", font: emptyStateDescriptionBoldFont)
-            .appending(" button above, or tap ", font: emptyStateDescriptionFont)
-            .appending("Manage Lists", font: emptyStateDescriptionBoldFont)
-            .appending(" when viewing a book.", font: emptyStateDescriptionFont)
-    }
-}
-
-extension Organize: NSFetchedResultsControllerDelegate {
-    func controllerWillChangeContent(_: NSFetchedResultsController<NSFetchRequestResult>) {
-        tableView.beginUpdates()
-    }
-
-    func controllerDidChangeContent(_: NSFetchedResultsController<NSFetchRequestResult>) {
-        tableView.endUpdates()
-        reloadHeaders()
-    }
-
-    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
-        tableView.controller(controller, didChange: anObject, at: indexPath, for: type, newIndexPath: newIndexPath)
-    }
-
-    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange sectionInfo: NSFetchedResultsSectionInfo, atSectionIndex sectionIndex: Int, for type: NSFetchedResultsChangeType) {
-        tableView.controller(controller, didChange: sectionInfo, atSectionIndex: sectionIndex, for: type)
     }
 }
 
@@ -322,12 +254,12 @@ extension Organize: UISearchResultsUpdating {
             resultsController.fetchRequest.predicate = searchTextPredicate
             try! resultsController.performFetch()
         }
-        tableView.reloadData()
+        dataSource.updateData(animate: true)
     }
 }
 
 extension Organize: UISearchBarDelegate {
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
-        searchWillBeDismissed()
+        //dataSource.searchWillBeDismissed()
     }
 }
