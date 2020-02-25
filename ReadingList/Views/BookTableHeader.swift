@@ -8,6 +8,7 @@ class BookTableHeader: UITableViewHeaderFooterView {
     var onSortButtonTap: ((_ sender: UIButton) -> Void)?
     var onSortChanged: (() -> Void)?
 
+    public static let height: CGFloat = 50
     @IBOutlet private weak var label: UILabel!
     @IBOutlet private weak var sortButton: UIButton!
 

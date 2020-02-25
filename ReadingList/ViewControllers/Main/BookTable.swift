@@ -22,7 +22,7 @@ class BookTableDataSource: SearchableEmptyStateTableViewDataSource {
             return cell
         }
     }
-    
+
     override func sectionCount(in tableView: UITableView) -> Int {
         return resultsController.sections!.count
     }
@@ -120,7 +120,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         buildResultsController(forAllReadStates: false)
         dataSource = BookTableDataSource(tableView, searchController: searchController, resultsController: resultsController, navigationItem: navigationItem, readStates: readStates)
         tableView.dataSource = dataSource
-        
+
         configureNavigationBarButtons()
 
         // Watch for changes
@@ -146,7 +146,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
             registerForPreviewing(with: self, sourceView: tableView)
         }
     }
-    
+
     /*@available(iOS 13.0, *)
     var diffableDataSource: UITableViewDiffableDataSource<BookReadState, Book>!
     
@@ -228,7 +228,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
             rightButton.isEnabled = false
         } else {
             // If we're not editing, the right button should revert back to being an Add button
-            leftButton = dataSource.isShowingEmptyState ? nil : UIBarButtonItem(title: "Edit", style: .plain, target: self, action: #selector(toggleEditingAnimated))
+            leftButton = dataSource.isEmpty ? nil : UIBarButtonItem(title: "Edit", style: .plain, target: self, action: #selector(toggleEditingAnimated))
             rightButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addWasPressed(_:)))
         }
 
@@ -741,7 +741,7 @@ extension BookTable: NSFetchedResultsControllerDelegate {
     @available(iOS 13.0, *)
     func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChangeContentWith snapshot: NSDiffableDataSourceSnapshotReference) {
         let readState = BookReadState.toRead
-        
+
         /*let test = snapshot as NSDiffableDataSourceSnapshot<Int, Book>
         var existingSnapshot = diffableDataSource.snapshot()
         existingSnapshot.deleteItems(existingSnapshot.itemIdentifiers(inSection: readState))
@@ -749,7 +749,7 @@ extension BookTable: NSFetchedResultsControllerDelegate {
 
         diffableDataSource.apply(existingSnapshot, animatingDifferences: true)*/
     }
-    
+
     func controllerWillChangeContent(_: NSFetchedResultsController<NSFetchRequestResult>) {
         tableView.beginUpdates()
     }

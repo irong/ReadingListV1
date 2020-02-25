@@ -4,36 +4,40 @@ import CoreData
 import os.log
 import ReadingList_Foundation
 
-class SearchableEmptyStateFetchedResultsTableViewDataSource<ResultType: NSFetchRequestResult>: SearchableEmptyStateTableViewDataSource {
-    let resultsController: NSFetchedResultsController<ResultType>
-    
-    init(_ tableView: UITableView, searchController: UISearchController, resultsController: NSFetchedResultsController<ResultType>, navigationItem: UINavigationItem, cellProvider: @escaping (ResultType) -> UITableViewCell) {
-        self.resultsController = resultsController
-        super.init(tableView, searchController: searchController, navigationItem: navigationItem) { indexPath in
-            return cellProvider(resultsController.object(at: indexPath))
-        }
-    }
-    
-    override func sectionCount(in tableView: UITableView) -> Int {
-        return resultsController.sections?.count ?? 0
-    }
-    
-    override func rowCount(in tableView: UITableView, forSection section: Int) -> Int {
-        return resultsController.sections![section].numberOfObjects
-    }
-}
-
 class UITableViewSearchableEmptyStateManager: UITableViewEmptyStateManager {
-    
+
     let searchController: UISearchController
+    let navigationBar: UINavigationBar?
+    let navigationItem: UINavigationItem
+    let initialLargeTitleDisplayMode: UINavigationItem.LargeTitleDisplayMode
+    let initialPrefersLargeTitles: Bool
 
     let emptyStateTitleFont = UIFont.gillSans(forTextStyle: .title1)
     let emptyStateDescriptionFont = UIFont.gillSans(forTextStyle: .title2)
     let emptyStateDescriptionBoldFont = UIFont.gillSansSemiBold(forTextStyle: .title2)
-    
-    init(_ tableView: UITableView, searchController: UISearchController) {
+
+    init(_ tableView: UITableView, navigationBar: UINavigationBar?, navigationItem: UINavigationItem, searchController: UISearchController) {
         self.searchController = searchController
+        self.navigationBar = navigationBar
+        self.navigationItem = navigationItem
+        self.initialLargeTitleDisplayMode = navigationItem.largeTitleDisplayMode
+        self.initialPrefersLargeTitles = navigationBar?.prefersLargeTitles ?? false
         super.init(tableView)
+    }
+
+    override func emptyStateDidChange() {
+        super.emptyStateDidChange()
+        if isShowingEmptyState {
+            if !searchController.isActive {
+                navigationItem.searchController?.searchBar.isHidden = true
+                navigationItem.largeTitleDisplayMode = .never
+                navigationBar?.prefersLargeTitles = false
+            }
+        } else {
+            navigationItem.searchController?.searchBar.isHidden = false
+            navigationItem.largeTitleDisplayMode = initialLargeTitleDisplayMode
+            navigationBar?.prefersLargeTitles = initialPrefersLargeTitles
+        }
     }
 
     private func attributeWithThemeColor(_ attributedString: NSAttributedString) -> NSAttributedString {
@@ -43,7 +47,7 @@ class UITableViewSearchableEmptyStateManager: UITableViewEmptyStateManager {
             return attributedString.mutable().attributedWithColor(UserDefaults.standard[.theme].titleTextColor)
         }
     }
-    
+
     final override func titleForEmptyState() -> NSAttributedString {
         let title: NSAttributedString
         if searchController.hasActiveSearchTerms {
@@ -74,19 +78,20 @@ class UITableViewSearchableEmptyStateManager: UITableViewEmptyStateManager {
         }
     }
 
-    func titleForNonSearchEmptyState() -> String {
+    open func titleForNonSearchEmptyState() -> String {
         fatalError("titleForNonSearchEmptyState() not implemented")
     }
 
-    func textForNonSearchEmptyState() -> NSAttributedString {
+    open func textForNonSearchEmptyState() -> NSAttributedString {
         fatalError("textForNonSearchEmptyState() not implemented")
     }
 
-    func textForSearchEmptyState() -> NSAttributedString {
+    open func textForSearchEmptyState() -> NSAttributedString {
         fatalError("textForNonSearchEmptyState() not implemented")
     }
 }
 
+// TODO: Delete
 class SearchableEmptyStateTableViewDataSource: UITableViewEmptyDetectingLegacyDataSource {
 
     /// Must be assigned as soon as possible - e.g. during `viewDidLoad()`
@@ -96,13 +101,13 @@ class SearchableEmptyStateTableViewDataSource: UITableViewEmptyDetectingLegacyDa
     let emptyStateDescriptionFont = UIFont.gillSans(forTextStyle: .title2)
     let emptyStateDescriptionBoldFont = UIFont.gillSansSemiBold(forTextStyle: .title2)
     let navigationItem: UINavigationItem
-    
+
     init(_ tableView: UITableView, searchController: UISearchController, navigationItem: UINavigationItem, cellProvider: @escaping (IndexPath) -> UITableViewCell) {
         self.navigationItem = navigationItem
         self.searchController = searchController
         super.init(tableView, cellProvider: cellProvider)
     }
-    
+
 //    override func viewDidLoad() {
 //        super.viewDidLoad()
 //
@@ -125,35 +130,35 @@ class SearchableEmptyStateTableViewDataSource: UITableViewEmptyDetectingLegacyDa
         }
     }
 
-    final override func titleForEmptyState() -> NSAttributedString {
-        let title: NSAttributedString
-        if searchController.hasActiveSearchTerms {
-            title = "🔍 No Results".attributedWithFont(emptyStateTitleFont)
-        } else {
-            title = titleForNonSearchEmptyState().attributedWithFont(emptyStateTitleFont)
-        }
-
-        return attributeWithThemeColor(title)
-    }
-
-    final override func textForEmptyState() -> NSAttributedString {
-        let text: NSAttributedString
-        if searchController.hasActiveSearchTerms {
-            text = textForSearchEmptyState()
-        } else {
-            text = textForNonSearchEmptyState()
-        }
-
-        return attributeWithThemeColor(text)
-    }
-
-    final override func positionForEmptyState() -> EmptyStatePosition {
-        if searchController.isActive {
-            return .top
-        } else {
-            return .center
-        }
-    }
+    //final override func titleForEmptyState() -> NSAttributedString {
+    //    let title: NSAttributedString
+    //    if searchController.hasActiveSearchTerms {
+    //        title = "🔍 No Results".attributedWithFont(emptyStateTitleFont)
+    //    } else {
+    //        title = titleForNonSearchEmptyState().attributedWithFont(emptyStateTitleFont)
+    //    }
+//
+    //    return attributeWithThemeColor(title)
+    //}
+//
+    //final override func textForEmptyState() -> NSAttributedString {
+    //    let text: NSAttributedString
+    //    if searchController.hasActiveSearchTerms {
+    //        text = textForSearchEmptyState()
+    //    } else {
+    //        text = textForNonSearchEmptyState()
+    //    }
+//
+    //    return attributeWithThemeColor(text)
+    //}
+//
+    //final override func positionForEmptyState() -> EmptyStatePosition {
+    //    if searchController.isActive {
+    //        return .top
+    //    } else {
+    //        return .center
+    //    }
+    //}
 
     func titleForNonSearchEmptyState() -> String {
         fatalError("titleForNonSearchEmptyState() not implemented")
@@ -167,18 +172,10 @@ class SearchableEmptyStateTableViewDataSource: UITableViewEmptyDetectingLegacyDa
         fatalError("textForNonSearchEmptyState() not implemented")
     }
 
-    override func tableDidBecomeNonEmpty() {
-        updateEmptyStateRelatedItems()
-    }
-
-    override func tableDidBecomeEmpty() {
-        updateEmptyStateRelatedItems()
-    }
-
     func configureNavigationBarButtons() { }
 
     func updateEmptyStateRelatedItems() {
-        if isShowingEmptyState {
+        if isEmpty {
             if !searchController.isActive {
                 navigationItem.searchController = nil
                 navigationItem.largeTitleDisplayMode = .never
@@ -198,8 +195,8 @@ class SearchableEmptyStateTableViewDataSource: UITableViewEmptyDetectingLegacyDa
         // even if we are going from empty --> empty.
         DispatchQueue.main.async {
             self.updateEmptyStateRelatedItems()
-            if self.isShowingEmptyState {
-                self.reloadEmptyStateView()
+            if self.isEmpty {
+                //TODO//self.reloadEmptyStateView()
             }
         }
     }

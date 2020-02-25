@@ -36,10 +36,10 @@ enum ListBooksSource {
 }
 
 class ListBookTableDataSource: SearchableEmptyStateTableViewDataSource {
-    
+
     var listBookSource: ListBooksSource
     let list: List
-    
+
     init(_ tableView: UITableView, searchController: UISearchController, navigationItem: UINavigationItem, list: List, listBookSource: ListBooksSource) {
         self.listBookSource = listBookSource
         self.list = list
@@ -51,10 +51,10 @@ class ListBookTableDataSource: SearchableEmptyStateTableViewDataSource {
             }
             cell.configureFrom(book, includeReadDates: false)
             return cell
-            
+
         }
     }
-    
+
     override func sectionCount(in tableView: UITableView) -> Int {
         return listBookSource.numberOfSections()
     }
@@ -89,7 +89,7 @@ class ListBookTable: UITableViewController {
     private var cachedListNames: [String]!
     private var ignoreNotifications = false
     private var listBookSource: ListBooksSource!
-    
+
     private var searchController: UISearchController!
     private var dataSource: ListBookTableDataSource!
 
@@ -321,7 +321,7 @@ class ListBookTable: UITableViewController {
 
                 if mutableSet.isEmpty {
                     tableView.deleteSections(IndexSet(arrayLiteral: 0), with: .automatic)
-                    self.dataSource.reloadEmptyStateView()
+                    //TODO //self.dataSource.reloadEmptyStateView()
                 } else {
                     tableView.deleteRows(at: [indexPath], with: .automatic)
                 }

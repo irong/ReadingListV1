@@ -29,14 +29,13 @@ class Organize: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
         clearsSelectionOnViewWillAppear = true
-        configureNavigationBarButtons()
 
         tableView.register(BookTableHeader.self)
 
         searchController = UISearchController(filterPlaceholderText: "Your Lists")
         searchController.searchResultsUpdater = self
+        searchController.delegate = self
         navigationItem.searchController = searchController
 
         let fetchRequest = NSManagedObject.fetchRequest(List.self, batch: 25)
@@ -48,27 +47,20 @@ class Organize: UITableViewController {
         } else {
             dataSource = OrganizeTableViewDataSourceLegacy(tableView, resultsController: resultsController)
         }
-        resultsController.delegate = dataSource
-        
-        emptyDataSetManager = OrganizeEmptyDataSetManager(tableView, searchController: searchController)
+
+        emptyDataSetManager = OrganizeEmptyDataSetManager(tableView: tableView, navigationBar: navigationController?.navigationBar, navigationItem: navigationItem, searchController: searchController) { isEmpty in
+            self.navigationItem.leftBarButtonItem = isEmpty ? nil : self.editButtonItem
+        }
         dataSource.emptyDetectionDelegate = emptyDataSetManager
 
         tableView.dataSource = dataSource
-
         try! resultsController.performFetch()
         dataSource.updateData(animate: false)
+        resultsController.delegate = dataSource
 
-        NotificationCenter.default.addObserver(self, selector: #selector(refetch), name: NSNotification.Name.PersistentStoreBatchOperationOccurred, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(refetch), name: .PersistentStoreBatchOperationOccurred, object: nil)
 
         monitorThemeSetting()
-    }
-
-    func configureNavigationBarButtons() {
-        if true{//} !dataSource.isShowingEmptyState {
-            navigationItem.leftBarButtonItem = editButtonItem
-        } else {
-            navigationItem.leftBarButtonItem = nil
-        }
     }
 
     private func sortDescriptors() -> [NSSortDescriptor] {
@@ -106,26 +98,34 @@ class Organize: UITableViewController {
         }
         self.present(alert, animated: true)
     }
-    
+
+    override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        guard !emptyDataSetManager.isShowingEmptyState else { return .leastNonzeroMagnitude }
+        return BookTableHeader.height
+    }
+
     override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        guard section == 0 && tableView.numberOfRows(inSection: 0) > 0 else { return nil }
+        guard !emptyDataSetManager.isShowingEmptyState else { return nil }
         let header = tableView.dequeue(BookTableHeader.self)
         configureHeader(header, at: section)
         header.onSortButtonTap = self.onSortButtonTap
         return header
     }
 
-    private func renameList(_ list: List) {
+    private func renameList(_ list: List, completion: ((Bool) -> Void)? = nil) {
         let existingListNames = List.names(fromContext: PersistentStoreManager.container.viewContext)
         let renameListAlert = TextBoxAlert(title: "Rename List", message: "Choose a new name for this list", initialValue: list.name, placeholder: "New list name", keyboardAppearance: UserDefaults.standard[.theme].keyboardAppearance, textValidator: { listName in
                 guard let listName = listName, !listName.isEmptyOrWhitespace else { return false }
                 return listName == list.name || !existingListNames.contains(listName)
+            }, onCancel: {
+                completion?(false)
             }, onOK: {
                 guard let listName = $0 else { return }
                 UserEngagement.logEvent(.renameList)
                 list.managedObjectContext!.performAndSave {
                     list.name = listName
                 }
+                completion?(true)
             }
         )
 
@@ -135,15 +135,16 @@ class Organize: UITableViewController {
     override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         return UISwipeActionsConfiguration(performFirstActionWithFullSwipe: false, actions: [
             UIContextualAction(style: .destructive, title: "Delete") { _, _, callback in
-                self.deleteList(forRowAt: indexPath)
-                // We never perform the deletion right-away
-                callback(false)
+                self.deleteList(forRowAt: indexPath) { didDelete in
+                    callback(didDelete)
+                }
             },
             UIContextualAction(style: .normal, title: "Rename") { _, _, callback in
                 self.setEditing(false, animated: true)
                 let list = self.resultsController.object(at: indexPath)
-                self.renameList(list)
-                callback(true)
+                self.renameList(list) { didRename in
+                    callback(didRename)
+                }
             }
         ])
     }
@@ -158,20 +159,18 @@ class Organize: UITableViewController {
         }, animated: true)
     }
 
-    func deleteList(forRowAt indexPath: IndexPath) {
+    func deleteList(forRowAt indexPath: IndexPath, didDelete: ((Bool) -> Void)? = nil) {
         let confirmDelete = UIAlertController(title: "Confirm delete", message: nil, preferredStyle: .actionSheet)
 
         confirmDelete.addAction(UIAlertAction(title: "Delete", style: .destructive) { _ in
             self.resultsController.object(at: indexPath).deleteAndSave()
             UserEngagement.logEvent(.deleteList)
             self.setEditing(false, animated: true)
-
-            // When the table goes from 1 row to 0 rows in the single section, the section header remains unless the table is reloaded
-            if self.tableView.numberOfRows(inSection: 0) == 0 {
-                self.tableView.reloadData()
-            }
+            didDelete?(true)
         })
-        confirmDelete.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        confirmDelete.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
+            didDelete?(false)
+        })
 
         confirmDelete.popoverPresentationController?.setSourceCell(atIndexPath: indexPath, inTable: tableView)
         present(confirmDelete, animated: true, completion: nil)
@@ -217,7 +216,7 @@ class Organize: UITableViewController {
             ])
         }
     }
-    
+
     @available(iOS 13.0, *)
     override func tableView(_ tableView: UITableView, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {
         guard let indexPath = configuration.identifier as? IndexPath else { return }
@@ -230,11 +229,19 @@ class Organize: UITableViewController {
 extension Organize: HeaderConfigurable {
     func configureHeader(_ header: UITableViewHeaderFooterView, at index: Int) {
         guard let header = header as? BookTableHeader else { preconditionFailure() }
-        let numberOfRows = tableView.numberOfRows(inSection: index)
-        if numberOfRows == 0 {
-            header.removeFromSuperview()
-        } else {
-            header.configure(labelText: "YOUR LISTS", enableSort: !isEditing && !searchController.isActive)
+        header.configure(labelText: "YOUR LISTS", enableSort: !isEditing && !searchController.isActive)
+    }
+}
+
+extension Organize: UISearchControllerDelegate {
+    func didDismissSearchController(_ searchController: UISearchController) {
+        reloadHeaders()
+    }
+
+    func willPresentSearchController(_ searchController: UISearchController) {
+        // The search controller is not yet active, so queue up a reload of the headers once this presentation is has started
+        DispatchQueue.main.async {
+            self.reloadHeaders()
         }
     }
 }
@@ -255,11 +262,5 @@ extension Organize: UISearchResultsUpdating {
             try! resultsController.performFetch()
         }
         dataSource.updateData(animate: true)
-    }
-}
-
-extension Organize: UISearchBarDelegate {
-    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
-        //dataSource.searchWillBeDismissed()
     }
 }
