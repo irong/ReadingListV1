@@ -3,86 +3,6 @@ import UIKit
 import CoreData
 import ReadingList_Foundation
 
-enum ListBooksSource {
-    case controller(NSFetchedResultsController<Book>)
-    case orderedSet(NSOrderedSet)
-
-    func numberOfBooks() -> Int {
-        switch self {
-        case .controller(let controller):
-            return controller.sections![0].numberOfObjects
-        case .orderedSet(let set):
-            return set.count
-        }
-    }
-
-    func numberOfSections() -> Int {
-        switch self {
-        case .controller(let controller):
-            return controller.sections!.count
-        case .orderedSet(let set):
-            return set.isEmpty ? 0 : 1
-        }
-    }
-
-    func book(at indexPath: IndexPath) -> Book {
-        switch self {
-        case .controller(let controller):
-            return controller.object(at: indexPath)
-        case .orderedSet(let set):
-            return set.object(at: indexPath.row) as! Book
-        }
-    }
-}
-
-class ListBookTableDataSource: SearchableEmptyStateTableViewDataSource {
-
-    var listBookSource: ListBooksSource
-    let list: List
-
-    init(_ tableView: UITableView, searchController: UISearchController, navigationItem: UINavigationItem, list: List, listBookSource: ListBooksSource) {
-        self.listBookSource = listBookSource
-        self.list = list
-        super.init(tableView, searchController: searchController, navigationItem: navigationItem) { indexPath in
-            let cell = tableView.dequeue(BookTableViewCell.self, for: indexPath)
-            let book = listBookSource.book(at: indexPath)
-            if #available(iOS 13.0, *) { } else {
-                cell.initialise(withTheme: UserDefaults.standard[.theme])
-            }
-            cell.configureFrom(book, includeReadDates: false)
-            return cell
-
-        }
-    }
-
-    override func sectionCount(in tableView: UITableView) -> Int {
-        return listBookSource.numberOfSections()
-    }
-
-    override func rowCount(in tableView: UITableView, forSection section: Int) -> Int {
-        guard section == 0 else { assertionFailure(); return 0 }
-        return listBookSource.numberOfBooks()
-    }
-
-    override func titleForNonSearchEmptyState() -> String {
-        return "✨ Empty List"
-    }
-
-    override func textForSearchEmptyState() -> NSAttributedString {
-        return NSAttributedString(
-            "Try changing your search, or add another book to this list.",
-            font: emptyStateDescriptionFont)
-    }
-
-    override func textForNonSearchEmptyState() -> NSAttributedString {
-        return NSMutableAttributedString(
-            "The list \"\(list.name)\" is currently empty.  To add a book to it, find a book and tap ",
-            font: emptyStateDescriptionFont)
-            .appending("Manage Lists", font: emptyStateDescriptionBoldFont)
-            .appending(".", font: emptyStateDescriptionFont)
-    }
-}
-
 class ListBookTable: UITableViewController {
 
     var list: List!
@@ -91,7 +11,7 @@ class ListBookTable: UITableViewController {
     private var listBookSource: ListBooksSource!
 
     private var searchController: UISearchController!
-    private var dataSource: ListBookTableDataSource!
+    private var dataSource: ListBookTableDataSourceCommon!
 
     /// Used to work around a animation bug, which is resolved in iOS 13, by forcing the search bar into a visible state.
     @available(iOS, obsoleted: 13.0)
@@ -127,7 +47,13 @@ class ListBookTable: UITableViewController {
 
         searchController = UISearchController(filterPlaceholderText: "Filter List")
         searchController.searchResultsUpdater = self
-        dataSource = ListBookTableDataSource(tableView, searchController: searchController, navigationItem: navigationItem, list: list, listBookSource: listBookSource)
+
+        if #available(iOS 13.0, *) {
+            dataSource = ListBookTableDataSource(tableView, listBookSource: listBookSource)
+        } else {
+            dataSource = ListBookTableViewDataSourceLegacy(tableView, listBookSource: listBookSource)
+        }
+        dataSource.updateData(animate: false)
 
         NotificationCenter.default.addObserver(self, selector: #selector(objectContextChanged(_:)),
                                                name: .NSManagedObjectContextObjectsDidChange,
@@ -152,7 +78,6 @@ class ListBookTable: UITableViewController {
         let controller = NSFetchedResultsController(fetchRequest: fetchRequest,
                                                     managedObjectContext: PersistentStoreManager.container.viewContext,
                                                     sectionNameKeyPath: nil, cacheName: nil)
-        controller.delegate = self
         try! controller.performFetch()
         return controller
     }
@@ -330,53 +255,12 @@ class ListBookTable: UITableViewController {
         }]
     }
 
-    override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
-        guard !searchController.isActive else { return false }
-        return list.order == .listCustom && list.books.count > 1
-    }
-
-    override func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
-        guard list.order == .listCustom else { assertionFailure(); return }
-        guard case .orderedSet = listBookSource! else { assertionFailure(); return }
-        guard sourceIndexPath != destinationIndexPath else { return }
-        ignoringSaveNotifications {
-            var books = list.books.map { $0 as! Book }
-            let movedBook = books.remove(at: sourceIndexPath.row)
-            books.insert(movedBook, at: destinationIndexPath.row)
-            list.books = NSOrderedSet(array: books)
-            list.managedObjectContext!.saveAndLogIfErrored()
-
-            // Regenerate the table source
-            self.listBookSource = .orderedSet(list.books)
-        }
-        UserEngagement.logEvent(.reorderList)
-    }
-
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if let detailsViewController = (segue.destination as? UINavigationController)?.topViewController as? BookDetails {
             guard let senderIndex = sender as? IndexPath else { preconditionFailure() }
             let book = listBookSource.book(at: senderIndex)
             detailsViewController.book = book
         }
-    }
-}
-
-extension ListBookTable: NSFetchedResultsControllerDelegate {
-    func controllerWillChangeContent(_: NSFetchedResultsController<NSFetchRequestResult>) {
-        tableView.beginUpdates()
-    }
-
-    func controllerDidChangeContent(_: NSFetchedResultsController<NSFetchRequestResult>) {
-        tableView.endUpdates()
-        reloadHeaders()
-    }
-
-    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
-        tableView.controller(controller, didChange: anObject, at: indexPath, for: type, newIndexPath: newIndexPath)
-    }
-
-    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange sectionInfo: NSFetchedResultsSectionInfo, atSectionIndex sectionIndex: Int, for type: NSFetchedResultsChangeType) {
-        tableView.controller(controller, didChange: sectionInfo, atSectionIndex: sectionIndex, for: type)
     }
 }
 

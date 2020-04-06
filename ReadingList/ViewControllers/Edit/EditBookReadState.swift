@@ -204,6 +204,7 @@ class EditBookReadState: FormViewController {
         if let language = book.language, book.manualBookId != nil && newBook {
             UserDefaults.standard[.lastSelectedLanguage] = language
         }
+        editContext.obtainPermanentIDsAndLogIfErrored(for: [book])
         editContext.saveIfChanged()
 
         // FUTURE: Figure out a better way to solve this problem.

@@ -11,15 +11,15 @@ public protocol UITableViewEmptyDetectingDataSourceDelegate: class {
     func tableDidBecomeNonEmpty()
 }
 
-@available(iOS 13.0, *)
-open class UITableViewEmptyDetectingDiffableDataSource<SectionIdentifierType, ItemIdentifierType>: UITableViewDiffableDataSource<SectionIdentifierType, ItemIdentifierType>, UITableViewEmptyDetectingDataSource where SectionIdentifierType: Hashable, ItemIdentifierType: Hashable {
+@available(iOS 13.0, *) //swiftlint:disable:next generic_type_name
+open class EmptyDetectingTableDiffableDataSource<SectionIdentifierType, ItemIdentifierType>: UITableViewDiffableDataSource<SectionIdentifierType, ItemIdentifierType>, UITableViewEmptyDetectingDataSource where SectionIdentifierType: Hashable, ItemIdentifierType: Hashable {
     public weak var emptyDetectionDelegate: UITableViewEmptyDetectingDataSourceDelegate?
     var isEmpty = false
 
     public override init(tableView: UITableView, cellProvider: @escaping UITableViewDiffableDataSource<SectionIdentifierType, ItemIdentifierType>.CellProvider) {
         super.init(tableView: tableView, cellProvider: cellProvider)
     }
-    
+
     override public func apply(_ snapshot: NSDiffableDataSourceSnapshot<SectionIdentifierType, ItemIdentifierType>, animatingDifferences: Bool = true, completion: (() -> Void)? = nil) {
         if snapshot.numberOfItems == 0 {
             if !isEmpty {
@@ -58,24 +58,21 @@ extension UITableViewDataSourceFetchedResultsControllerDelegate {
 
 /// A UITableViewController that monitors calls to the numberOfSections and numberOfRows function calls, to determine when a
 /// table has become empty, and switches out a background view accordingly.
-open class UITableViewEmptyDetectingLegacyDataSource: NSObject, UITableViewEmptyDetectingDataSource {
-    // TODO send events to this
+open class LegacyEmptyDetectingTableDataSource: NSObject, UITableViewEmptyDetectingDataSource {
     public weak var emptyDetectionDelegate: UITableViewEmptyDetectingDataSourceDelegate?
+    public let tableView: UITableView
 
     public private(set) var isEmpty = false
     private var hasPerformedInitialLoad = false
     private var cachedNumberOfSections = 0
     private let emptyStateView = EmptyStateView()
-    private let tableView: UITableView
-    private let cellProvider: (IndexPath) -> UITableViewCell
 
-    public init(_ tableView: UITableView, cellProvider: @escaping (IndexPath) -> UITableViewCell) {
+    public init(_ tableView: UITableView) {
         self.tableView = tableView
-        self.cellProvider = cellProvider
     }
 
-    public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        return cellProvider(indexPath)
+    open func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        fatalError("tableView:cellForRowAt: must be overriden")
     }
 
     final public func numberOfSections(in tableView: UITableView) -> Int {

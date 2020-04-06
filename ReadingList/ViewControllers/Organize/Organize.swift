@@ -48,7 +48,7 @@ class Organize: UITableViewController {
             dataSource = OrganizeTableViewDataSourceLegacy(tableView, resultsController: resultsController)
         }
 
-        emptyDataSetManager = OrganizeEmptyDataSetManager(tableView: tableView, navigationBar: navigationController?.navigationBar, navigationItem: navigationItem, searchController: searchController) { isEmpty in
+        emptyDataSetManager = OrganizeEmptyDataSetManager(tableView: tableView, navigationBar: navigationController?.navigationBar, navigationItem: navigationItem, searchController: searchController) { [unowned self] isEmpty in
             self.navigationItem.leftBarButtonItem = isEmpty ? nil : self.editButtonItem
         }
         dataSource.emptyDetectionDelegate = emptyDataSetManager
@@ -56,7 +56,6 @@ class Organize: UITableViewController {
         tableView.dataSource = dataSource
         try! resultsController.performFetch()
         dataSource.updateData(animate: false)
-        resultsController.delegate = dataSource
 
         NotificationCenter.default.addObserver(self, selector: #selector(refetch), name: .PersistentStoreBatchOperationOccurred, object: nil)
 
@@ -86,7 +85,7 @@ class Organize: UITableViewController {
     }
 
     func onSortButtonTap(_ button: UIButton) {
-        let alert = UIAlertController.selectOption(ListSortOrder.allCases, title: "Choose Order", selected: UserDefaults.standard[.listSortOrder]) { [unowned self] sortOrder in
+        let alert = UIAlertController.selectOption(ListSortOrder.allCases, title: "Choose Order", selected: UserDefaults.standard[.listSortOrder]) { sortOrder in
             UserDefaults.standard[.listSortOrder] = sortOrder
             self.resultsController.fetchRequest.sortDescriptors = self.sortDescriptors()
             try! self.resultsController.performFetch()
@@ -150,9 +149,9 @@ class Organize: UITableViewController {
     }
 
     @IBAction private func addWasTapped(_ sender: UIBarButtonItem) {
-        present(ManageLists.newListAlertController([]) { [unowned self] list in
+        present(ManageLists.newListAlertController([]) { list in
             guard let indexPath = self.resultsController.indexPath(forObject: list) else {
-                assertionFailure()
+                //assertionFailure()
                 return
             }
             self.tableView.scrollToRow(at: indexPath, at: .top, animated: true)

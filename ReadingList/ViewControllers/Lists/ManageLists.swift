@@ -92,9 +92,11 @@ class ManageLists: UITableViewController {
 
         return TextBoxAlert(title: "Add New List", message: "Enter a name for your list", placeholder: "Enter list name",
                             keyboardAppearance: UserDefaults.standard[.theme].keyboardAppearance, textValidator: textValidator) {
-            let createdList = List(context: PersistentStoreManager.container.viewContext, name: $0!)
+            let childContext = PersistentStoreManager.container.viewContext.childContext()
+            let createdList = List(context: childContext, name: $0!)
             createdList.books = NSOrderedSet(array: books)
-            PersistentStoreManager.container.viewContext.saveAndLogIfErrored()
+            childContext.obtainPermanentIDsAndLogIfErrored(for: [createdList])
+            childContext.saveAndLogIfErrored()
             onComplete?(createdList)
         }
     }

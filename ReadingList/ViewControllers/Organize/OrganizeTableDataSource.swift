@@ -27,15 +27,11 @@ extension OrganizeTableViewDataSourceCommon {
     }
 }
 
-enum OrganizeTableSection {
-    case main
-}
-
 @available(iOS 13.0, *)
-final class OrganizeTableViewDataSource: UITableViewEmptyDetectingDiffableDataSource<OrganizeTableSection, List>, OrganizeTableViewDataSourceCommon, NSFetchedResultsControllerDelegate {
+final class OrganizeTableViewDataSource: EmptyDetectingTableDiffableDataSource<String, NSManagedObjectID>, OrganizeTableViewDataSourceCommon {
     let sortManager: SortManager<List>
     let resultsController: NSFetchedResultsController<List>
-    let changeAccumulator = ManagedObjectChangeAccumulator<List>()
+    var changeMediator: FetchedResultsControllerChangeProcessor!
 
     init(tableView: UITableView, resultsController: NSFetchedResultsController<List>) {
         self.resultsController = resultsController
@@ -43,37 +39,21 @@ final class OrganizeTableViewDataSource: UITableViewEmptyDetectingDiffableDataSo
             resultsController.object(at: $0)
         }
 
-        super.init(tableView: tableView) { _, indexPath, itemId in
+        super.init(tableView: tableView) { _, indexPath, _ in
             let cell = tableView.dequeueReusableCell(withIdentifier: "ListCell", for: indexPath)
-            cell.configure(from: itemId)
+            cell.configure(from: resultsController.object(at: indexPath))
             return cell
         }
-    }
-
-    private func generateAndApplySnapshot(identifiers: [List]?, animate: Bool) {
-        var diffableDataSourceSnapshot = NSDiffableDataSourceSnapshot<OrganizeTableSection, List>()
-        if let identifiers = identifiers {
-            diffableDataSourceSnapshot.appendSections([.main])
-            diffableDataSourceSnapshot.appendItems(identifiers, toSection: .main)
+        changeMediator = FetchedResultsControllerChangeProcessor { [unowned self] in
+            self.snapshot()
         }
-        apply(diffableDataSourceSnapshot, animatingDifferences: animate)
+        changeMediator.delegate = self
+
+        resultsController.delegate = changeMediator
     }
 
     func updateData(animate: Bool) {
-        generateAndApplySnapshot(identifiers: resultsController.fetchedObjects, animate: animate)
-    }
-
-    func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-        changeAccumulator.clearAll()
-    }
-
-    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
-        changeAccumulator.loadChange(changedObject: anObject, at: indexPath, for: type, newIndexPath: newIndexPath)
-    }
-
-    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-        let newSnapshot = changeAccumulator.applyChangesToSnapshot(initialSnapshot: snapshot())
-        apply(newSnapshot)
+        apply(resultsController.snapshot(), animatingDifferences: animate)
     }
 
     final override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
@@ -89,23 +69,30 @@ final class OrganizeTableViewDataSource: UITableViewEmptyDetectingDiffableDataSo
     }
 }
 
+@available(iOS 13.0, *)
+extension OrganizeTableViewDataSource: FetchedResultsControllerChangeProcessorDelegate {
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChangeProducingSnapshot snapshot: NSDiffableDataSourceSnapshot<String, NSManagedObjectID>) {
+        apply(snapshot, animatingDifferences: true)
+    }
+}
+
 @available(iOS, obsoleted: 13.0)
-final class OrganizeTableViewDataSourceLegacy: UITableViewEmptyDetectingLegacyDataSource, OrganizeTableViewDataSourceCommon, NSFetchedResultsControllerDelegate {
-    let tableView: UITableView
+final class OrganizeTableViewDataSourceLegacy: LegacyEmptyDetectingTableDataSource, OrganizeTableViewDataSourceCommon {
     let sortManager: SortManager<List>
     let resultsController: NSFetchedResultsController<List>
 
     init(_ tableView: UITableView, resultsController: NSFetchedResultsController<List>) {
-        self.tableView = tableView
         self.resultsController = resultsController
         self.sortManager = SortManager(tableView) {
             resultsController.object(at: $0)
         }
-        super.init(tableView) { indexPath in
-            let cell = tableView.dequeueReusableCell(withIdentifier: "ListCell", for: indexPath)
-            cell.configure(from: resultsController.object(at: indexPath))
-            return cell
-        }
+        super.init(tableView)
+    }
+
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "ListCell", for: indexPath)
+        cell.configure(from: resultsController.object(at: indexPath))
+        return cell
     }
 
     final override func sectionCount(in tableView: UITableView) -> Int {
@@ -131,6 +118,14 @@ final class OrganizeTableViewDataSourceLegacy: UITableViewEmptyDetectingLegacyDa
         resultsController.delegate = delegateReference
     }
 
+    func updateData(animate: Bool) {
+        // Brute force approach for pre-iOS 13
+        tableView.reloadData()
+    }
+}
+
+@available(iOS, obsoleted: 13.0)
+extension OrganizeTableViewDataSourceLegacy: NSFetchedResultsControllerDelegate {
     func controllerWillChangeContent(_: NSFetchedResultsController<NSFetchRequestResult>) {
         tableView.beginUpdates()
     }
@@ -145,10 +140,5 @@ final class OrganizeTableViewDataSourceLegacy: UITableViewEmptyDetectingLegacyDa
 
     func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange sectionInfo: NSFetchedResultsSectionInfo, atSectionIndex sectionIndex: Int, for type: NSFetchedResultsChangeType) {
         tableView.controller(controller, didChange: sectionInfo, atSectionIndex: sectionIndex, for: type)
-    }
-
-    func updateData(animate: Bool) {
-        // Brute force approach for pre-iOS 13
-        tableView.reloadData()
     }
 }
