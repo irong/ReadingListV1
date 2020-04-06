@@ -65,6 +65,7 @@ class EditBookNotes: FormViewController {
                 self.dismiss(animated: true)
             })
             confirmExit.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+            confirmExit.popoverPresentationController?.barButtonItem = navigationItem.leftBarButtonItem
             present(confirmExit, animated: true, completion: nil)
             return
         }

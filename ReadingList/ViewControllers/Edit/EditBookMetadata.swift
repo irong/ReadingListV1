@@ -184,8 +184,8 @@ class EditBookMetadata: FormViewController {
             <<< ButtonRow(deleteRowKey) {
                 $0.title = "Delete"
                 $0.cellSetup { cell, _ in cell.tintColor = .systemRed }
-                $0.onCellSelection { [unowned self] _, _ in
-                    self.deletePressed()
+                $0.onCellSelection { [unowned self] cell, _ in
+                    self.deletePressed(sender: cell)
                 }
                 $0.hidden = Condition(booleanLiteral: isAddingNewBook)
             }
@@ -243,10 +243,10 @@ class EditBookMetadata: FormViewController {
         }
     }
 
-    func deletePressed() {
+    func deletePressed(sender deleteCell: UITableViewCell) {
         guard !isAddingNewBook else { return }
 
-        let confirmDeleteAlert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+        let confirmDeleteAlert = UIAlertController(title: "Confirm deletion", message: nil, preferredStyle: .actionSheet)
         confirmDeleteAlert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         confirmDeleteAlert.addAction(UIAlertAction(title: "Delete", style: .destructive) { _ in
             // Delete the book, log the event, and dismiss this modal view
@@ -256,6 +256,7 @@ class EditBookMetadata: FormViewController {
             UserEngagement.logEvent(.deleteBook)
             self.dismiss(animated: true)
         })
+        confirmDeleteAlert.popoverPresentationController?.setSourceCell(deleteCell, inTableView: tableView)
 
         self.present(confirmDeleteAlert, animated: true, completion: nil)
     }
@@ -302,6 +303,7 @@ class EditBookMetadata: FormViewController {
                 self.dismiss(animated: true)
             })
             confirmExit.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+            confirmExit.popoverPresentationController?.barButtonItem = navigationItem.leftBarButtonItem
             present(confirmExit, animated: true, completion: nil)
             return
         }
