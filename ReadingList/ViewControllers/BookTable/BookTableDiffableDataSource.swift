@@ -1,22 +1,27 @@
 import ReadingList_Foundation
 import CoreData
 
+/// The common functions exposed by all BookTable data sources
 protocol BookTableDataSourceCommon: UITableViewEmptyDetectingDataSource, NSFetchedResultsControllerDelegate {
     var sortManager: SortManager<Book> { get }
     var searchController: UISearchController { get }
-    var context: NSManagedObjectContext { get }
 
     func updateData(animate: Bool)
     func replaceControllers(_ controllers: [NSFetchedResultsController<Book>])
+    
     func sectionCount() -> Int
     func rowCount(in section: Int) -> Int
+    
     func readState(forSection section: Int) -> BookReadState
     func object(at indexPath: IndexPath) -> Book
     func indexPath(forObject object: Book) -> IndexPath?
+    
     func performFetch() throws
 }
 
 extension BookTableDataSourceCommon {
+    /// Returns the read state associated with a BookReadState section name, which are the string representations of the backing raw integers.
+    /// E.g., provided the string "1", would return BookReadState.reading. If the provided string is not valid, will throw an error.
     func readState(forSectionName sectionName: String) -> BookReadState {
         guard let sectionNameInt = Int16(sectionName), let readState = BookReadState(rawValue: sectionNameInt) else {
             preconditionFailure("Unexpected section name \"\(sectionName)\"")
@@ -41,21 +46,25 @@ extension BookTableDataSourceCommon {
         guard UserDefaults.standard[UserSettingsCollection.sortSetting(for: readState)] == .custom else { return }
 
         sortManager.move(objectAt: sourceIndexPath, to: destinationIndexPath)
-        context.saveAndLogIfErrored()
+        PersistentStoreManager.container.viewContext.saveAndLogIfErrored()
         try! performFetch()
     }
 }
 
+/// A non-diffable BookTable data source. Uses the legacy APIs `numberOfSections(in:)` and `tableView(_:numberOfRowsInSection:)`.
 @available(iOS, obsoleted: 13.0)
 final class BookTableLegacyDataSource: LegacyEmptyDetectingTableDataSource, BookTableDataSourceCommon {
     var resultsController: CompoundFetchedResultsController<Book>
     let sortManager: SortManager<Book>
     let searchController: UISearchController
-    let context = PersistentStoreManager.container.viewContext
     let onChange: () -> Void
 
-    init(_ tableView: UITableView, resultsControllers: [NSFetchedResultsController<Book>], sortManager: SortManager<Book>, searchController: UISearchController, onChange: @escaping () -> Void) {
-        self.resultsController = CompoundFetchedResultsController(controllers: resultsControllers)
+    /**
+      - Parameters:
+         - onChange: Called once a data model change has completed procesing.
+     */
+    init(_ tableView: UITableView, controllers: [NSFetchedResultsController<Book>], sortManager: SortManager<Book>, searchController: UISearchController, onChange: @escaping () -> Void) {
+        self.resultsController = CompoundFetchedResultsController(controllers: controllers)
         self.sortManager = sortManager
         self.searchController = searchController
         self.onChange = onChange
@@ -144,7 +153,6 @@ final class BookTableLegacyDataSource: LegacyEmptyDetectingTableDataSource, Book
 
 @available(iOS 13.0, *)
 final class BookTableDiffableDataSource: EmptyDetectingTableDiffableDataSource<BookReadState, NSManagedObjectID>, BookTableDataSourceCommon {
-    let context: NSManagedObjectContext
     var controllers: [NSFetchedResultsController<Book>]
     let onChange: () -> Void
     let sortManager: SortManager<Book>
@@ -153,16 +161,15 @@ final class BookTableDiffableDataSource: EmptyDetectingTableDiffableDataSource<B
     var changeProcessors = [ResultsControllerSnapshotGenerator<BookTableDiffableDataSource>]()
     var cachedSnapshots = [NSFetchedResultsController<Book>: NSDiffableDataSourceSnapshot<BookReadState, NSManagedObjectID>]()
 
-    init(_ tableView: UITableView, context: NSManagedObjectContext, controllers: [NSFetchedResultsController<Book>], sortManager: SortManager<Book>, searchController: UISearchController, onChange: @escaping () -> Void) {
+    init(_ tableView: UITableView, controllers: [NSFetchedResultsController<Book>], sortManager: SortManager<Book>, searchController: UISearchController, onChange: @escaping () -> Void) {
         self.controllers = controllers
-        self.context = context
         self.sortManager = sortManager
         self.searchController = searchController
         self.onChange = onChange
 
         super.init(tableView: tableView) { _, indexPath, itemId in
             let cell = tableView.dequeue(BookTableViewCell.self, for: indexPath)
-            let book = context.object(with: itemId) as! Book
+            let book = PersistentStoreManager.container.viewContext.object(with: itemId) as! Book
             cell.configureFrom(book)
             return cell
         }
@@ -217,7 +224,7 @@ final class BookTableDiffableDataSource: EmptyDetectingTableDiffableDataSource<B
 
     func object(at indexPath: IndexPath) -> Book {
         guard let itemId = itemIdentifier(for: indexPath) else { preconditionFailure() }
-        return context.object(with: itemId) as! Book
+        return PersistentStoreManager.container.viewContext.object(with: itemId) as! Book
     }
 
     func readState(forSection section: Int) -> BookReadState {

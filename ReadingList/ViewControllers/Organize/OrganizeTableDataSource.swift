@@ -31,7 +31,7 @@ extension OrganizeTableViewDataSourceCommon {
 final class OrganizeTableViewDataSource: EmptyDetectingTableDiffableDataSource<String, NSManagedObjectID>, OrganizeTableViewDataSourceCommon {
     let sortManager: SortManager<List>
     let resultsController: NSFetchedResultsController<List>
-    var changeMediator: FetchedResultsControllerChangeProcessor!
+    var changeMediator: ResultsControllerSnapshotGenerator<OrganizeTableViewDataSource>!
 
     init(tableView: UITableView, resultsController: NSFetchedResultsController<List>) {
         self.resultsController = resultsController
@@ -44,12 +44,12 @@ final class OrganizeTableViewDataSource: EmptyDetectingTableDiffableDataSource<S
             cell.configure(from: resultsController.object(at: indexPath))
             return cell
         }
-        changeMediator = FetchedResultsControllerChangeProcessor { [unowned self] in
+        changeMediator = ResultsControllerSnapshotGenerator { [unowned self] in
             self.snapshot()
         }
         changeMediator.delegate = self
 
-        resultsController.delegate = changeMediator
+        resultsController.delegate = changeMediator.controllerDelegate
     }
 
     func updateData(animate: Bool) {
@@ -70,8 +70,10 @@ final class OrganizeTableViewDataSource: EmptyDetectingTableDiffableDataSource<S
 }
 
 @available(iOS 13.0, *)
-extension OrganizeTableViewDataSource: FetchedResultsControllerChangeProcessorDelegate {
-    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChangeProducingSnapshot snapshot: NSDiffableDataSourceSnapshot<String, NSManagedObjectID>) {
+extension OrganizeTableViewDataSource: ResultsControllerSnapshotGeneratorDelegate {
+    typealias SectionType = String
+
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChangeProducingSnapshot snapshot: NSDiffableDataSourceSnapshot<String, NSManagedObjectID>, withChangedObjects changedObjects: [NSManagedObjectID]) {
         apply(snapshot, animatingDifferences: true)
     }
 }
@@ -87,6 +89,8 @@ final class OrganizeTableViewDataSourceLegacy: LegacyEmptyDetectingTableDataSour
             resultsController.object(at: $0)
         }
         super.init(tableView)
+
+        self.resultsController.delegate = self
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {

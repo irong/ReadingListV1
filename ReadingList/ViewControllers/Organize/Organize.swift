@@ -38,9 +38,7 @@ class Organize: UITableViewController {
         searchController.delegate = self
         navigationItem.searchController = searchController
 
-        let fetchRequest = NSManagedObject.fetchRequest(List.self, batch: 25)
-        fetchRequest.sortDescriptors = sortDescriptors()
-        resultsController = NSFetchedResultsController<List>(fetchRequest: fetchRequest, managedObjectContext: PersistentStoreManager.container.viewContext, sectionNameKeyPath: nil, cacheName: nil)
+        resultsController = buildResultsController()
 
         if #available(iOS 13.0, *) {
             dataSource = OrganizeTableViewDataSource(tableView: tableView, resultsController: resultsController)
@@ -53,13 +51,19 @@ class Organize: UITableViewController {
         }
         dataSource.emptyDetectionDelegate = emptyDataSetManager
 
-        tableView.dataSource = dataSource
         try! resultsController.performFetch()
         dataSource.updateData(animate: false)
 
         NotificationCenter.default.addObserver(self, selector: #selector(refetch), name: .PersistentStoreBatchOperationOccurred, object: nil)
 
         monitorThemeSetting()
+    }
+
+    private func buildResultsController() -> NSFetchedResultsController<List> {
+        let fetchRequest = NSManagedObject.fetchRequest(List.self, batch: 25)
+        fetchRequest.sortDescriptors = sortDescriptors()
+
+        return NSFetchedResultsController<List>(fetchRequest: fetchRequest, managedObjectContext: PersistentStoreManager.container.viewContext, sectionNameKeyPath: nil, cacheName: nil)
     }
 
     private func sortDescriptors() -> [NSSortDescriptor] {
@@ -81,13 +85,13 @@ class Organize: UITableViewController {
 
     @objc func refetch() {
         try! resultsController.performFetch()
-        tableView.reloadData()
+        dataSource.updateData(animate: true)
     }
 
     func onSortButtonTap(_ button: UIButton) {
         let alert = UIAlertController.selectOption(ListSortOrder.allCases, title: "Choose Order", selected: UserDefaults.standard[.listSortOrder]) { sortOrder in
             UserDefaults.standard[.listSortOrder] = sortOrder
-            self.resultsController.fetchRequest.sortDescriptors = self.sortDescriptors()
+            self.resultsController = self.buildResultsController()
             try! self.resultsController.performFetch()
             self.dataSource.updateData(animate: true)
         }
@@ -235,6 +239,9 @@ extension Organize: HeaderConfigurable {
 extension Organize: UISearchControllerDelegate {
     func didDismissSearchController(_ searchController: UISearchController) {
         reloadHeaders()
+        // If we caused all data to be deleted while searching, the empty state view might now need to be a "no lists" view
+        // rather than a "no results" view.
+        emptyDataSetManager.reloadEmptyStateView()
     }
 
     func willPresentSearchController(_ searchController: UISearchController) {

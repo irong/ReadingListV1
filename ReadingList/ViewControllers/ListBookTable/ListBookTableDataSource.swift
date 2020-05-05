@@ -3,161 +3,155 @@ import CoreData
 import UIKit
 import ReadingList_Foundation
 
-protocol ListBookTableDataSourceCommon: UITableViewEmptyDetectingDataSource {
+protocol ListBookDataSource: class, UITableViewEmptyDetectingDataSource {
     func updateData(animate: Bool)
-}
-
-enum ListBooksSource {
-    case controller(NSFetchedResultsController<Book>)
-    case orderedSet(NSOrderedSet)
-
-    func bookIds() -> [NSManagedObjectID] {
-        switch self {
-        case .controller(let controller):
-            return controller.fetchedObjects!.map(\.objectID)
-        case .orderedSet(let set):
-            return set.array.map { ($0 as! NSManagedObject).objectID }
-        }
-    }
-
-    func isEmpty() -> Bool {
-        switch self {
-        case .controller(let controller):
-            return controller.fetchedObjects!.isEmpty
-        case .orderedSet(let set):
-            return set.isEmpty
-        }
-    }
-
-    func book(at indexPath: IndexPath) -> Book {
-        switch self {
-        case .controller(let controller):
-            return controller.object(at: indexPath)
-        case .orderedSet(let set):
-            return set.object(at: indexPath.row) as! Book
-        }
-    }
+    func getBook(at indexPath: IndexPath) -> Book
+    var controllerDataProvider: ListBookControllerDataProvider? { get }
+    var setDataProvider: ListBookSetDataProvider? { get }
 }
 
 @available(iOS 13.0, *)
-final class ListBookTableDataSource: EmptyDetectingTableDiffableDataSource<String, NSManagedObjectID>, ListBookTableDataSourceCommon {
-    var listBookSource: ListBooksSource {
-        didSet {
-            if case .controller(let controller) = listBookSource {
-                controller.delegate = changeMediator
-            }
+final class ListBookDiffableDataSource: EmptyDetectingTableDiffableDataSource<String, NSManagedObjectID>, ResultsControllerSnapshotGeneratorDelegate, ListBookDataSource {
+    typealias SectionType = String
+
+    var dataProvider: DiffableListBookDataProvider {
+        get {
+            wrappedDataProvider.wrappedValue
+        }
+        set {
+            wrappedDataProvider.wrappedValue = newValue
+            wrappedDataProvider.wrappedValue.dataSource = self
         }
     }
+    private let wrappedDataProvider: Wrapped<DiffableListBookDataProvider>
+    private let list: List
+    private let searchIsActive: () -> Bool
+    var controllerDataProvider: ListBookControllerDataProvider? { dataProvider as? ListBookControllerDataProvider }
+    var setDataProvider: ListBookSetDataProvider? { dataProvider as? ListBookSetDataProvider }
 
-    var changeMediator: FetchedResultsControllerChangeProcessor!
+    init(_ tableView: UITableView, list: List, dataProvider: DiffableListBookDataProvider, searchIsActive: @escaping () -> Bool) {
+        // This wrapping business gets around the inabiliy to refer to self in the closure passed to super.init.
+        // We need to refer to the data provider which self will have at the time the closure is run. To achieve this,
+        // create a simple wrapping object: this reference stays the same, but _its_ reference can change later on.
+        let wrappedDataProvider = Wrapped(dataProvider)
+        self.wrappedDataProvider = wrappedDataProvider
 
-    init(_ tableView: UITableView, listBookSource: ListBooksSource) {
-        self.listBookSource = listBookSource
+        self.searchIsActive = searchIsActive
+        self.list = list
         super.init(tableView: tableView) { _, indexPath, _ in
             let cell = tableView.dequeue(BookTableViewCell.self, for: indexPath)
-            let book = listBookSource.book(at: indexPath)
+            let book = wrappedDataProvider.wrappedValue.getBook(at: indexPath)
             cell.configureFrom(book, includeReadDates: false)
             return cell
         }
 
-        // Set up the change mediator, which translates NSFetchedResultsControllerDelegate changes into snapshots
-        changeMediator = FetchedResultsControllerChangeProcessor { [unowned self] in
-            self.snapshot()
-        }
-        changeMediator.delegate = self
-
-        if case .controller(let controller) = listBookSource {
-            controller.delegate = changeMediator
-        }
+        self.dataProvider.dataSource = self
     }
 
     override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
         return true
     }
 
-    func updateData(animate: Bool) {
-        var diffableDataSourceSnapshot: NSDiffableDataSourceSnapshot<String, NSManagedObjectID>
-        switch listBookSource {
-        case .controller(let controller):
-            diffableDataSourceSnapshot = controller.snapshot()
-        case .orderedSet(let set):
-            diffableDataSourceSnapshot = NSDiffableDataSourceSnapshot<String, NSManagedObjectID>()
-            if !listBookSource.isEmpty() {
-                diffableDataSourceSnapshot.appendSections([""])
-                diffableDataSourceSnapshot.appendItems(set.array.map { $0 as! NSManagedObject }.map(\.objectID), toSection: "")
-            }
-        }
-
-        apply(diffableDataSourceSnapshot, animatingDifferences: animate)
-    }
-
-    /*
     override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
-        guard !searchController.isActive else { return false }
-        return list.order == .listCustom && list.books.count > 1
+        guard !searchIsActive() else { return false }
+        // Lists with a custom ordering use a Set data provider
+        guard let setDataProvider = dataProvider as? ListBookSetDataProvider else { return false }
+        return setDataProvider.books.count > 1
     }
 
     override func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
-        guard list.order == .listCustom else { assertionFailure(); return }
-        guard case .orderedSet = listBookSource! else { assertionFailure(); return }
+        guard !searchIsActive() else { return }
         guard sourceIndexPath != destinationIndexPath else { return }
-        ignoringSaveNotifications {
-            var books = list.books.map { $0 as! Book }
-            let movedBook = books.remove(at: sourceIndexPath.row)
-            books.insert(movedBook, at: destinationIndexPath.row)
-            list.books = NSOrderedSet(array: books)
-            list.managedObjectContext!.saveAndLogIfErrored()
+        guard dataProvider is ListBookSetDataProvider else { return }
 
-            // Regenerate the table source
-            self.listBookSource = .orderedSet(list.books)
-        }
+        // Disable change notification updates
+        dataProvider.dataSource = nil
+
+        var books = list.books.map { $0 as! Book }
+        let movedBook = books.remove(at: sourceIndexPath.row)
+        books.insert(movedBook, at: destinationIndexPath.row)
+        list.books = NSOrderedSet(array: books)
+        list.managedObjectContext!.saveAndLogIfErrored()
+
+        // Regenerate the table source
+        dataProvider.dataSource = self
         UserEngagement.logEvent(.reorderList)
-    }*/
-}
 
-@available(iOS 13.0, *)
-extension ListBookTableDataSource: FetchedResultsControllerChangeProcessorDelegate {
-    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChangeProducingSnapshot snapshot: NSDiffableDataSourceSnapshot<String, NSManagedObjectID>) {
+        // Delay slightly so that the UI update doesn't interfere with the animation of the row reorder completing.
+        // This is quite ugly code, but leads to a less ugly UI.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [unowned self] in
+            self.updateData(animate: false)
+        }
+    }
+
+    func getBook(at indexPath: IndexPath) -> Book {
+        return dataProvider.getBook(at: indexPath)
+    }
+
+    func updateData(animate: Bool) {
+        apply(dataProvider.snapshot(), animatingDifferences: animate)
+    }
+
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChangeProducingSnapshot snapshot: NSDiffableDataSourceSnapshot<String, NSManagedObjectID>, withChangedObjects changedObjects: [NSManagedObjectID]) {
         apply(snapshot, animatingDifferences: true)
     }
 }
 
 @available(iOS, obsoleted: 13.0)
-final class ListBookTableViewDataSourceLegacy: LegacyEmptyDetectingTableDataSource, ListBookTableDataSourceCommon {
-    var listBookSource: ListBooksSource
+final class ListBookLegacyDataSource: LegacyEmptyDetectingTableDataSource, NSFetchedResultsControllerDelegate, ListBookDataSource {
 
-    init(_ tableView: UITableView, listBookSource: ListBooksSource) {
-        self.listBookSource = listBookSource
+    var dataProvider: LegacyListBookDataProvider {
+        didSet {
+            dataProvider.dataSource = self
+            configureChangeMonitoring()
+        }
+    }
+    var controllerDataProvider: ListBookControllerDataProvider? { dataProvider as? ListBookControllerDataProvider }
+    var setDataProvider: ListBookSetDataProvider? { dataProvider as? ListBookSetDataProvider }
+
+    init(_ tableView: UITableView, dataProvider: LegacyListBookDataProvider) {
+        self.dataProvider = dataProvider
         super.init(tableView)
+
+        self.dataProvider.dataSource = self
+        configureChangeMonitoring()
+    }
+
+    private func configureChangeMonitoring() {
+        if let controllerProvider = dataProvider as? LegacyListBookControllerDataProvider {
+            controllerProvider.controller.delegate = self
+        }
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeue(BookTableViewCell.self, for: indexPath)
-        let book = listBookSource.book(at: indexPath)
+        let book = dataProvider.getBook(at: indexPath)
         cell.initialise(withTheme: UserDefaults.standard[.theme])
         cell.configureFrom(book, includeReadDates: false)
         return cell
-    }
-
-    final override func sectionCount(in tableView: UITableView) -> Int {
-        return listBookSource.isEmpty() ? 0 : 1
-    }
-
-    final override func rowCount(in tableView: UITableView, forSection section: Int) -> Int {
-        return listBookSource.bookIds().count
     }
 
     func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
         return true
     }
 
+    func getBook(at indexPath: IndexPath) -> Book {
+        return dataProvider.getBook(at: indexPath)
+    }
+
+    override func sectionCount(in tableView: UITableView) -> Int {
+        return dataProvider.sectionCount()
+    }
+
+    override func rowCount(in tableView: UITableView, forSection section: Int) -> Int {
+        return dataProvider.rowCount(in: section)
+    }
+
     func updateData(animate: Bool) {
        // Brute force approach for pre-iOS 13
        tableView.reloadData()
     }
-}
 
-extension ListBookTableViewDataSourceLegacy: NSFetchedResultsControllerDelegate {
     func controllerWillChangeContent(_: NSFetchedResultsController<NSFetchRequestResult>) {
         tableView.beginUpdates()
     }

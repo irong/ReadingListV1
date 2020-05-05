@@ -3,17 +3,18 @@ import CoreData
 import ReadingList_Foundation
 import os.log
 
-class BookTable: UITableViewController { //swiftlint:disable:this type_body_length
+final class BookTable: UITableViewController { //swiftlint:disable:this type_body_length
 
+    // The read states that this book table initially shows books for, in order that they should appear
     var readStates: [BookReadState]!
 
-    private var sortManager: SortManager<Book>!
-    var dataSource: BookTableDataSourceCommon!
-    var resultsControllers: [(readState: BookReadState, controller: NSFetchedResultsController<Book>)]!
-    var searchController: UISearchController!
-    var emptyDataSourceManager: BookTableEmptyDataSourceManager!
+    private var dataSource: BookTableDataSourceCommon!
+    private var resultsControllers: [(readState: BookReadState, controller: NSFetchedResultsController<Book>)]!
+    private var searchController: UISearchController!
+    private var emptyStateManager: BookTableEmptyDataSourceManager!
 
     private let allReadStatesSearchBarScopeIndex = 1
+    private var sortManager: SortManager<Book>!
 
     override func viewDidLoad() {
         // Register the headers and cells we use for this table
@@ -53,23 +54,23 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
 
         // On iOS 13 we use Diffable Data Sources; on prior OSes we use the legacy data source which peforms more manual row interactions
         if #available(iOS 13.0, *) {
-            dataSource = BookTableDataSource(tableView, context: PersistentStoreManager.container.viewContext, controllers: resultsControllers,
-                                             sortManager: sortManager, searchController: searchController, onChange: reconfigureHeaders)
+            dataSource = BookTableDiffableDataSource(tableView, controllers: resultsControllers.map(\.controller), sortManager: sortManager,
+                                                     searchController: searchController, onChange: reconfigureHeaders)
         } else {
-            dataSource = BookTableDataSourceLegacy(tableView, resultsControllers: resultsControllers.map { $0.controller }, sortManager: sortManager,
-                                                   searchController: searchController)
+            dataSource = BookTableLegacyDataSource(tableView, controllers: resultsControllers.map(\.controller), sortManager: sortManager,
+                                                   searchController: searchController, onChange: reconfigureHeaders)
         }
-        tableView.dataSource = dataSource
 
         // The empty data source manager is in charge of handling and reacting to the empty table state
-        emptyDataSourceManager = BookTableEmptyDataSourceManager(tableView: tableView, navigationBar: navigationController?.navigationBar, navigationItem: navigationItem, searchController: searchController, readStates: readStates) { [weak self] _ in
+        emptyStateManager = BookTableEmptyDataSourceManager(tableView: tableView, navigationBar: navigationController?.navigationBar, navigationItem: navigationItem,
+                                                            searchController: searchController, readStates: readStates) { [weak self] _ in
             self?.configureNavigationBarButtons()
         }
-        dataSource.emptyDetectionDelegate = emptyDataSourceManager
+        dataSource.emptyDetectionDelegate = emptyStateManager
 
-        // Perform the initial data source load
+        // Perform the initial data source load, and then configure the navigation bar buttons, which depend on the empty state of the table
         dataSource.updateData(animate: false)
-        if !emptyDataSourceManager.isShowingEmptyState {
+        if !emptyStateManager.isShowingEmptyState {
             configureNavigationBarButtons()
         }
 
@@ -79,66 +80,60 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         monitorThemeSetting()
         super.viewDidLoad()
     }
-
-    private func reconfigureHeaders() {
-        configureNavigationBarButtons()
-        for index in 0..<dataSource.sectionCount() {
-            guard let headerView = tableView.headerView(forSection: index) else { continue }
-            configureHeader(headerView, at: index)
-        }
-    }
-
-    private func buildResultsControllers() -> [(readState: BookReadState, controller: NSFetchedResultsController<Book>)] {
-        return readStates.appendingRemaining(BookReadState.allCases).map { readState in
-            let fetchRequest = NSManagedObject.fetchRequest(Book.self, batch: 25)
-            fetchRequest.predicate = NSPredicate(boolean: false)
-            fetchRequest.sortDescriptors = UserDefaults.standard[UserSettingsCollection.sortSetting(for: readState)].sortDescriptors
-
-            // If we are using the legacy data source, we use the section names to identify the read state when changes get detected.
-            // This isn't required with the contemporary data source though. TODO: check whether it would be easy to remove this requirement?
-            let sectionNameKeyPath: String?
-            if #available(iOS 13.0, *) {
-                sectionNameKeyPath = nil
-            } else {
-                sectionNameKeyPath = #keyPath(Book.readState)
-            }
-            let controller = NSFetchedResultsController<Book>(fetchRequest: fetchRequest, managedObjectContext: PersistentStoreManager.container.viewContext,
-                                                              sectionNameKeyPath: sectionNameKeyPath, cacheName: nil)
-            return (readState, controller)
-        }
-    }
-
-    private func searchTextIsSufficientForSearch(_ searchText: String) -> Bool {
-        return !searchText.isEmptyOrWhitespace && searchText.trimming().count >= 2
-    }
-
-    /// Supply search text to filter the books if appropriate
-    private func configureControllersPredicates(searchText: String? = nil) {
-        for (readState, controller) in resultsControllers {
-            var predicate: NSPredicate
-            if readStates.contains(readState) || (searchController.isActive && searchController.searchBar.selectedScopeButtonIndex == allReadStatesSearchBarScopeIndex) {
-                predicate = NSPredicate(format: "%K == %ld", #keyPath(Book.readState), readState.rawValue)
-            } else {
-                predicate = NSPredicate(boolean: false)
-            }
-
-            if let searchText = searchText, searchTextIsSufficientForSearch(searchText) {
-                controller.fetchRequest.predicate = NSPredicate.and([predicate,
-                    NSPredicate.wordsWithinFields(searchText, fieldNames: #keyPath(Book.title), #keyPath(Book.subtitle), #keyPath(Book.authorSort),
-                                                  "ANY \(#keyPath(Book.subjects)).name")
-                ])
-            } else {
-                controller.fetchRequest.predicate = predicate
-            }
-        }
-    }
-
+    
     override func viewDidAppear(_ animated: Bool) {
         // Deselect selected rows, so they don't stay highlighted, but only when in non-split mode
         if let selectedIndexPath = self.tableView.indexPathForSelectedRow, !splitViewController!.detailIsPresented {
             self.tableView.deselectRow(at: selectedIndexPath, animated: animated)
         }
         super.viewDidAppear(animated)
+    }
+
+    private func reconfigureHeaders() {
+        configureNavigationBarButtons()
+        for index in 0..<tableView.numberOfSections {
+            guard let headerView = tableView.headerView(forSection: index) else { continue }
+            configureHeader(headerView, at: index)
+        }
+    }
+
+    /// Build a results controller for all read states, with "our" read states first, followed by everything else.
+    private func buildResultsControllers() -> [(readState: BookReadState, controller: NSFetchedResultsController<Book>)] {
+        return readStates.appendingRemaining(BookReadState.allCases).map { readState in
+            let fetchRequest = NSManagedObject.fetchRequest(Book.self, batch: 25)
+            fetchRequest.predicate = NSPredicate(boolean: false)
+            fetchRequest.sortDescriptors = UserDefaults.standard[UserSettingsCollection.sortSetting(for: readState)].sortDescriptors
+            let controller = NSFetchedResultsController<Book>(fetchRequest: fetchRequest, managedObjectContext: PersistentStoreManager.container.viewContext,
+                                                              sectionNameKeyPath: #keyPath(Book.readState), cacheName: nil)
+            return (readState, controller)
+        }
+    }
+
+    /// Configures the controller predicates
+    private func configureControllersPredicates() {
+        for (readState, controller) in resultsControllers {
+            controller.fetchRequest.predicate = predicate(for: readState)
+        }
+    }
+    
+    /// Returns the predicate which should be currently used for the results controller predicate
+    private func predicate(for readState: BookReadState) -> NSPredicate {
+        // If this read state is not actually relevant, return the false predicate - we don't want any books.
+        guard readStates.contains(readState) || (searchController.isActive && searchController.searchBar.selectedScopeButtonIndex == allReadStatesSearchBarScopeIndex) else {
+            return NSPredicate(boolean: false)
+        }
+        
+        // The base predicate just checks the read state
+        let readStatePredicate = NSPredicate(format: "%K == %ld", #keyPath(Book.readState), readState.rawValue)
+        
+        // If we have a searchable search text, add this condition too.
+        if let searchText = searchController.searchBar.text, searchText.isSufficientForSearch() {
+            let searchPredicate = NSPredicate.wordsWithinFields(searchText, fieldNames: #keyPath(Book.title), #keyPath(Book.subtitle), #keyPath(Book.authorSort),
+                                                                "ANY \(#keyPath(Book.subjects)).name")
+            return NSPredicate.and([readStatePredicate, searchPredicate])
+        }
+
+        return readStatePredicate
     }
 
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
@@ -150,14 +145,17 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
     }
 
     override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        guard section < dataSource.sectionCount() else { return nil }
         let header = tableView.dequeue(BookTableHeader.self)
         header.presenter = self
-        header.onSortChanged = {
+        header.onSortChanged = { [weak self] in
+            guard let `self` = self else { return }
+
             // Results controller delegates don't seem to play nicely with changing sort descriptors. So instead, we rebuild the whole
             // set of result controllers, not forgetting to pass the new ones to the data source.
             self.resultsControllers = self.buildResultsControllers()
             self.configureControllersPredicates()
-            self.dataSource.replaceControllers(self.resultsControllers)
+            self.dataSource.replaceControllers(self.resultsControllers.map(\.controller))
 
             try! self.dataSource.performFetch()
             self.dataSource.updateData(animate: true)
@@ -179,11 +177,12 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
             navigationItem.title = readStates.last!.description
         }
 
+        // The naviation bar buttons and the section headers both change between edit/non-edit mode, so we need to trigger this change
         configureNavigationBarButtons()
         reloadHeaders()
     }
 
-    func configureNavigationBarButtons() {
+    private func configureNavigationBarButtons() {
         let leftButton: UIBarButtonItem?
         let rightButton: UIBarButtonItem
         if isEditing {
@@ -193,8 +192,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
             rightButton.isEnabled = false
         } else {
             // If we're not editing, the right button should revert back to being an Add button
-            let isEmpty = emptyDataSourceManager.isShowingEmptyState
-            leftButton = isEmpty ? nil : UIBarButtonItem(title: "Edit", style: .plain, target: self, action: #selector(toggleEditingAnimated))
+            leftButton = emptyStateManager.isShowingEmptyState ? nil : UIBarButtonItem(title: "Edit", style: .plain, target: self, action: #selector(toggleEditingAnimated))
             rightButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addWasPressed(_:)))
         }
 
@@ -203,9 +201,8 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
     }
 
     @objc private func refetch() {
-        // FUTURE: This can leave the EmptyDataSet off-screen if a bulk delete has occurred. Can't find a way to prevent this.
-        try! self.dataSource.performFetch()
-        self.dataSource.updateData(animate: false)
+        try! dataSource.performFetch()
+        dataSource.updateData(animate: false)
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -231,35 +228,35 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
     }
 
     @available(iOS 13.0, *)
+    override func tableView(_ tableView: UITableView, didBeginMultipleSelectionInteractionAt indexPath: IndexPath) {
+        // This enables the two-finger drag to select multiple books at once. When the interaction begins, ensure we are in edit mode
+        // so that multiple rows can be selected.
+        setEditing(true, animated: true)
+    }
+
+    @available(iOS 13.0, *)
     override func tableView(_ tableView: UITableView, shouldBeginMultipleSelectionInteractionAt indexPath: IndexPath) -> Bool {
         return true
     }
 
     @available(iOS 13.0, *)
-    override func tableView(_ tableView: UITableView, didBeginMultipleSelectionInteractionAt indexPath: IndexPath) {
-        setEditing(true, animated: true)
-    }
-
-    @available(iOS 13.0, *)
     override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         let book = dataSource.object(at: indexPath)
-        return UIContextMenuConfiguration(identifier: book.objectID, previewProvider: {
-            let bookDetails = UIStoryboard.BookDetails.instantiateViewController(withIdentifier: "BookDetails") as! BookDetails
-            bookDetails.book = book
-            return bookDetails
-        }, actionProvider: { _ in
+        let previewProvider = { BookDetails.instantiate(withBook: book) }
+        return UIContextMenuConfiguration(identifier: book.objectID, previewProvider: previewProvider) { _ in
+            // Fist set up the set of menu items which are always returned
             var menuItems: [UIMenuElement] = [
                 UIAction(title: "Update Notes", image: UIImage(systemName: "text.bubble")) { _ in
-                    self.present(EditBookNotes(existingBookID: book.objectID).inThemedNavController(), animated: true)
+                    self.present(EditBookNotes(existingBookID: book.objectID).inNavigationController(), animated: true)
                 },
                 UIAction(title: "Manage Lists", image: UIImage(systemName: "tray.2")) { _ in
                     self.present(ManageLists.getAppropriateVcForManagingLists([book]), animated: true)
                 },
                 UIAction(title: "Edit Book", image: UIImage(systemName: "square.and.pencil")) { _ in
-                    self.present(EditBookMetadata(bookToEditID: book.objectID).inThemedNavController(), animated: true)
+                    self.present(EditBookMetadata(bookToEditID: book.objectID).inNavigationController(), animated: true)
                 },
                 UIAction(title: "Manage Log", image: UIImage(systemName: "calendar")) { _ in
-                    self.present(EditBookReadState(existingBookID: self.dataSource.object(at: indexPath).objectID).inThemedNavController(), animated: true)
+                    self.present(EditBookReadState(existingBookID: self.dataSource.object(at: indexPath).objectID).inNavigationController(), animated: true)
                 },
                 UIAction(title: "Delete", image: UIImage(systemName: "trash.fill"), attributes: .destructive) { _ in
                     let confirm = self.confirmDeleteAlert(indexPaths: [indexPath])
@@ -267,66 +264,79 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
                     self.present(confirm, animated: true)
                 }
             ]
-            if UserDefaults.standard[UserSettingsCollection.sortSetting(for: book.readState)] == .custom {
+            
+            // If book ordering can be edited, then add actions to move this book to the top or bottom.
+            if UserDefaults.standard[.sortSetting(for: book.readState)] == .custom {
                 let minSort = Book.minSort(with: book.readState, from: PersistentStoreManager.container.viewContext)
                 let maxSort = Book.maxSort(with: book.readState, from: PersistentStoreManager.container.viewContext)
                 var moveUpOrDownActions = [UIMenuElement]()
                 if let minSort = minSort, book.sort != minSort {
                     moveUpOrDownActions.append(UIAction(title: "Move To Top", image: UIImage(systemName: "arrow.up")) { _ in
+                        guard let context = book.managedObjectContext else { return }
                         UserEngagement.logEvent(.moveBookToTop)
                         book.sort = minSort - 1
-                        book.managedObjectContext!.saveAndLogIfErrored()
+                        context.saveAndLogIfErrored()
                     })
                 }
                 if let maxSort = maxSort, book.sort != maxSort {
                     moveUpOrDownActions.append(UIAction(title: "Move To Bottom", image: UIImage(systemName: "arrow.down")) { _ in
+                        guard let context = book.managedObjectContext else { return }
                         UserEngagement.logEvent(.moveBookToBottom)
                         book.sort = maxSort + 1
-                        book.managedObjectContext!.saveAndLogIfErrored()
+                        context.saveAndLogIfErrored()
                     })
                 }
-                if moveUpOrDownActions.count > 1 {
-                    menuItems.insert(UIMenu(title: "Move...", image: UIImage(systemName: "arrow.up.arrow.down"), children: moveUpOrDownActions), at: 0)
-                } else if moveUpOrDownActions.count == 1 {
+                
+                // Put the actions behind a menu, if there isn't just one.
+                if moveUpOrDownActions.count == 1 {
                     menuItems.insert(moveUpOrDownActions[0], at: 0)
+                } else {
+                    menuItems.insert(UIMenu(title: "Move...", image: UIImage(systemName: "arrow.up.arrow.down"), children: moveUpOrDownActions), at: 0)
                 }
             }
+            
+            // Add an action to move the book's read state, if suitable
             if book.readState == .toRead {
                 menuItems.insert(UIAction(title: "Start", image: UIImage(systemName: "play")) { _ in
-                    // Schedule the change after a slight delay so that the animation of the row resuming into place does not
-                    // interfere with the animation of the row being removed from the table section
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                        UserEngagement.logEvent(.transitionReadState)
-                        book.setReading(started: Date())
-                        book.updateSortIndex()
-                        book.managedObjectContext!.saveAndLogIfErrored()
-                    }
+                    guard let context = book.managedObjectContext else { return }
+                    UserEngagement.logEvent(.transitionReadState)
+                    book.setReading(started: Date())
+                    book.updateSortIndex()
+                    context.saveAndLogIfErrored()
                 }, at: 0)
             } else if book.readState == .reading {
                 menuItems.insert(UIAction(title: "Finish", image: UIImage(systemName: "checkmark")) { _ in
-                    guard let started = book.startedReading else { return }
-                    // Schedule the change after a slight delay so that the animation of the row resuming into place does not
-                    // interfere with the animation of the row being removed from the table section
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                        UserEngagement.logEvent(.transitionReadState)
-                        book.setFinished(started: started, finished: Date())
-                        book.updateSortIndex()
-                        book.managedObjectContext!.saveAndLogIfErrored()
-                    }
+                    guard let context = book.managedObjectContext, let started = book.startedReading else { return }
+                    UserEngagement.logEvent(.transitionReadState)
+                    book.setFinished(started: started, finished: Date())
+                    book.updateSortIndex()
+                    context.saveAndLogIfErrored()
                 }, at: 0)
             }
+
             return UIMenu(title: "", children: menuItems)
-        })
+        }
     }
 
     @available(iOS 13.0, *)
     override func tableView(_ tableView: UITableView, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {
         guard let splitViewController = splitViewController else { preconditionFailure("Missing SplitViewController") }
         guard let previewVC = animator.previewViewController else { return }
+
+        // Called when a preview is tapped, commiting the previewed action. If we are in split mode with the book details controller
+        // currently presented, we should just update the book on that controller. We don't expect the displayed controller - if
+        // present - to be anything other than the BookDetails controller
         if splitViewController.detailIsPresented {
-            guard let objectId = configuration.identifier as? NSManagedObjectID else { return }
+            guard let objectId = configuration.identifier as? NSManagedObjectID, let bookDetailsVc = splitViewController.displayedDetailViewController as? BookDetails else {
+                return
+            }
             let book = PersistentStoreManager.container.viewContext.object(with: objectId) as! Book
-            (splitViewController.displayedDetailViewController as? BookDetails)?.book = book
+            bookDetailsVc.book = book
+            
+            // To ensure that the relevant row is highlighted once the detail display is updated, find its index path and select the row
+            if let indexPath = dataSource.indexPath(forObject: book) {
+                tableView.selectRow(at: indexPath, animated: true, scrollPosition: .none)
+            }
         } else {
             animator.addAnimations {
                 self.show(previewVC, sender: self)
@@ -336,13 +346,11 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
 
     @objc private func editActionButtonPressed(_ sender: UIBarButtonItem) {
         guard let selectedRows = tableView.indexPathsForSelectedRows, !selectedRows.isEmpty else { return }
-        let selectedReadStates = selectedRows.map { dataSource.readState(forIndex: $0) }.distinct()
+        let selectedReadStates = selectedRows.map { dataSource.readState(forSection: $0.section) }.distinct()
 
         let optionsAlert = UIAlertController(title: "Edit \(selectedRows.count) book\(selectedRows.count == 1 ? "" : "s")", message: nil, preferredStyle: .actionSheet)
         optionsAlert.addAction(UIAlertAction(title: "Manage Lists", style: .default) { _ in
-            let books = selectedRows.map(self.dataSource.object)
-
-            self.present(ManageLists.getAppropriateVcForManagingLists(books) {
+            self.present(ManageLists.getAppropriateVcForManagingLists(selectedRows.map(self.dataSource.object)) {
                 self.setEditing(false, animated: true)
                 UserEngagement.logEvent(.bulkAddBookToList)
                 UserEngagement.onReviewTrigger()
@@ -377,19 +385,26 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         }
 
         optionsAlert.addAction(UIAlertAction(title: "Delete\(selectedRows.count > 1 ? " All" : "")", style: .destructive) { _ in
-            let confirm = self.confirmDeleteAlert(indexPaths: selectedRows)
+            let confirm = self.confirmDeleteAlert(indexPaths: selectedRows) { didDelete in
+                // Once the deletion has happened, switch editing mode off. Do this on the next run loop to avoid
+                // messing with the row deletion animations
+                guard didDelete else { return }
+                DispatchQueue.main.async {
+                    self.setEditing(false, animated: true)
+                }
+            }
             confirm.popoverPresentationController?.barButtonItem = sender
             self.present(confirm, animated: true)
         })
         optionsAlert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         optionsAlert.popoverPresentationController?.barButtonItem = sender
 
-        self.present(optionsAlert, animated: true, completion: nil)
+        present(optionsAlert, animated: true, completion: nil)
     }
 
     func simulateBookSelection(_ bookID: NSManagedObjectID, allowTableObscuring: Bool = true) {
         let book = PersistentStoreManager.container.viewContext.object(with: bookID) as! Book
-        let indexPathOfSelectedBook = self.dataSource.indexPath(forObject: book)
+        let indexPathOfSelectedBook = dataSource.indexPath(forObject: book)
 
         // If there is a row (there might not be is there is a search filtering the results, and
         // clearing the search creates animations which mess up push segues), then scroll to it.
@@ -427,7 +442,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         guard let navController = segue.destination as? UINavigationController,
             let detailsViewController = navController.topViewController as? BookDetails else { return }
 
-        if let cell = sender as? UITableViewCell, let selectedIndex = self.tableView.indexPath(for: cell) {
+        if let cell = sender as? UITableViewCell, let selectedIndex = tableView.indexPath(for: cell) {
             detailsViewController.book = self.dataSource.object(at: selectedIndex)
         } else if let book = sender as? Book {
             // When a simulated selection triggers a segue, the sender is the Book
@@ -451,7 +466,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
         optionsAlert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         optionsAlert.popoverPresentationController?.barButtonItem = sender
 
-        self.present(optionsAlert, animated: true, completion: nil)
+        present(optionsAlert, animated: true, completion: nil)
     }
 
     override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
@@ -507,7 +522,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
             callback(true)
         }]
 
-        let readStateOfSection = dataSource.readState(forIndex: indexPath)
+        let readStateOfSection = dataSource.readState(forSection: indexPath.section)
         guard readStateOfSection == .toRead || (readStateOfSection == .reading && dataSource.object(at: indexPath).startedReading! < Date()) else {
             // It is not "invalid" to have a book with a started date in the future; but it is invalid
             // to have a finish date before the start date. Therefore, hide the finish action if
@@ -558,7 +573,6 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
             indexPaths.map(self.dataSource.object).forEach { $0.delete() }
             PersistentStoreManager.container.viewContext.saveAndLogIfErrored()
             UserEngagement.logEvent(indexPaths.count > 1 ? .bulkDeleteBook : .deleteBook)
-            self.setEditing(false, animated: true)
             callback?(true)
         })
         return confirmDeleteAlert
@@ -581,7 +595,7 @@ class BookTable: UITableViewController { //swiftlint:disable:this type_body_leng
     }
 
     private func configurePredicatesAndUpdateData() {
-        configureControllersPredicates(searchText: searchController.searchBar.text)
+        configureControllersPredicates()
         try! dataSource.performFetch()
         dataSource.updateData(animate: true)
         reconfigureHeaders()
@@ -602,6 +616,9 @@ extension BookTable: UISearchControllerDelegate {
 
     func didDismissSearchController(_ searchController: UISearchController) {
         configurePredicatesAndUpdateData()
+        // If we caused all data to be deleted while searching, the empty state view might now need to be a "no books" view
+        // rather than a "no results" view.
+        emptyStateManager.reloadEmptyStateView()
     }
 }
 
@@ -615,7 +632,7 @@ extension BookTable: UISearchBarDelegate {
 extension BookTable: HeaderConfigurable {
     func configureHeader(_ header: UITableViewHeaderFooterView, at index: Int) {
         guard let header = header as? BookTableHeader else { preconditionFailure() }
-        let readState = dataSource.readState(forIndex: IndexPath(item: 0, section: index))
+        let readState = dataSource.readState(forSection: index)
         guard let controller = resultsControllers.first(where: { $0.0 == readState })?.1 else { assertionFailure(); return }
         header.configure(readState: readState, bookCount: controller.fetchedObjects?.count ?? 0,
                          enableSort: !isEditing && !searchController.isActive)
@@ -631,13 +648,18 @@ extension BookTable: UIViewControllerPreviewingDelegate {
         }
 
         previewingContext.sourceRect = cell.frame
-        let bookDetails = UIStoryboard.BookDetails.instantiateViewController(withIdentifier: "BookDetails") as! BookDetails
-        bookDetails.book = dataSource.object(at: indexPath)
-        return bookDetails
+        return BookDetails.instantiate(withBook: dataSource.object(at: indexPath))
     }
 
     func previewingContext(_ previewingContext: UIViewControllerPreviewing, commit viewControllerToCommit: UIViewController) {
         show(viewControllerToCommit, sender: self)
+    }
+}
+
+private extension String {
+    /// Returns true if the string is non-empty and non-whitespace, and has more than 2 characters, excluding leading and trailing spaces.
+    func isSufficientForSearch() -> Bool {
+        return !isEmptyOrWhitespace && trimming().count >= 2
     }
 }
 

@@ -29,6 +29,13 @@ class BookDetails: UIViewController, UIScrollViewDelegate { //swiftlint:disable:
 
     var didShowNavigationItemTitle = false
 
+    /// Instantiates the BookDetails view controller from its storyboard
+    static func instantiate(withBook book: Book) -> BookDetails {
+        guard let viewController = UIStoryboard.BookDetails.instantiateViewController(withIdentifier: "BookDetails") as? BookDetails else { fatalError() }
+        viewController.book = book
+        return viewController
+    }
+    
     func setViewEnabled(_ enabled: Bool) {
         // Show or hide the whole view and nav bar buttons. Exit early if nothing to do.
         if view.isHidden != !enabled {

@@ -8,10 +8,10 @@ class ListBookTable: UITableViewController {
     var list: List!
     private var cachedListNames: [String]!
     private var ignoreNotifications = false
-    private var listBookSource: ListBooksSource!
 
     private var searchController: UISearchController!
-    private var dataSource: ListBookTableDataSourceCommon!
+    private var dataSource: ListBookDataSource!
+    private var emptyStateManager: ListBookTableEmptyDataSetManager!
 
     /// Used to work around a animation bug, which is resolved in iOS 13, by forcing the search bar into a visible state.
     @available(iOS, obsoleted: 13.0)
@@ -43,16 +43,19 @@ class ListBookTable: UITableViewController {
         navigationItem.title = list.name
         navigationItem.rightBarButtonItem = editButtonItem
 
-        buildBookSource()
-
         searchController = UISearchController(filterPlaceholderText: "Filter List")
         searchController.searchResultsUpdater = self
+        searchController.delegate = self
+        navigationItem.searchController = searchController
 
         if #available(iOS 13.0, *) {
-            dataSource = ListBookTableDataSource(tableView, listBookSource: listBookSource)
+            dataSource = ListBookDiffableDataSource(tableView, list: list, dataProvider: buildDiffableDataProvider(), searchIsActive: { self.searchController.isActive })
         } else {
-            dataSource = ListBookTableViewDataSourceLegacy(tableView, listBookSource: listBookSource)
+            dataSource = ListBookLegacyDataSource(tableView, dataProvider: buildLegacyDataProvider())
         }
+
+        emptyStateManager = ListBookTableEmptyDataSetManager(tableView: tableView, navigationBar: navigationController?.navigationBar, navigationItem: navigationItem, searchController: searchController, list: list)
+        dataSource.emptyDetectionDelegate = emptyStateManager
         dataSource.updateData(animate: false)
 
         NotificationCenter.default.addObserver(self, selector: #selector(objectContextChanged(_:)),
@@ -61,13 +64,33 @@ class ListBookTable: UITableViewController {
         monitorThemeSetting()
     }
 
-    private func buildBookSource() {
-        // We cannot use a fetched results controller when ordering by the underlying ordered predicate order.
-        // Instead, we just use the ordered set as our source.
-        if list.order == .listCustom {
-            listBookSource = .orderedSet(list.books)
+    private func rebuildDataProvider() {
+        if #available(iOS 13.0, *), let diffableDataSource = dataSource as? ListBookDiffableDataSource {
+            diffableDataSource.dataProvider = buildDiffableDataProvider()
+        } else if let legacyDataSource = dataSource as? ListBookLegacyDataSource {
+            legacyDataSource.dataProvider = buildLegacyDataProvider()
         } else {
-            listBookSource = .controller(buildResultsController())
+            preconditionFailure()
+        }
+    }
+
+    @available(iOS 13.0, *)
+    private func buildDiffableDataProvider() -> DiffableListBookDataProvider {
+        if list.order == .listCustom {
+            // We cannot use a fetched results controller when ordering by the underlying ordered predicate order.
+            // Instead, we just use the ordered set as our source.
+            return DiffableListBookSetDataProvider(list)
+        } else {
+            return DiffableListBookControllerDataProvider(buildResultsController())
+        }
+    }
+
+    @available(iOS, obsoleted: 13.0)
+    private func buildLegacyDataProvider() -> LegacyListBookDataProvider {
+        if list.order == .listCustom {
+            return LegacyListBookSetDataProvider(list)
+        } else {
+            return LegacyListBookControllerDataProvider(buildResultsController())
         }
     }
 
@@ -190,11 +213,11 @@ class ListBookTable: UITableViewController {
             assertionFailure()
             searchController.isActive = false
         }
-        buildBookSource()
-        tableView.reloadData()
+        rebuildDataProvider()
+        dataSource.updateData(animate: true)
 
         // Put the top row at the "middle", so that the top row is not right up at the top of the table
-        tableView.scrollToRow(at: IndexPath(row: 0, section: 0), at: .middle, animated: false)
+        //is this needed? tableView.scrollToRow(at: IndexPath(row: 0, section: 0), at: .middle, animated: false)
         UserEngagement.logEvent(.changeListSortOrder)
     }
 
@@ -210,11 +233,6 @@ class ListBookTable: UITableViewController {
 
         // Repopulate the list names cache
         cachedListNames = List.names(fromContext: PersistentStoreManager.container.viewContext)
-
-        // If we are not using a controller, reload the table
-        if case .orderedSet = listBookSource! {
-            tableView.reloadData()
-        }
     }
 
     private func ignoringSaveNotifications(_ block: () -> Void) {
@@ -233,24 +251,32 @@ class ListBookTable: UITableViewController {
 
     override func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath) -> [UITableViewRowAction]? {
         return [UITableViewRowAction(style: .destructive, title: "Remove") { _, indexPath in
-            let bookToRemove = self.listBookSource.book(at: indexPath)
-            self.list.removeBooks(NSSet(object: bookToRemove))
-            // Ignore save notifications, so we don't reload the table when using the set: we will remove the row manually
-            self.ignoringSaveNotifications {
-                self.list.managedObjectContext!.saveAndLogIfErrored()
-            }
-            if case .orderedSet(let set) = self.listBookSource! {
-                let mutableSet = set.mutableCopy() as! NSMutableOrderedSet
-                mutableSet.remove(bookToRemove)
-                self.listBookSource = .orderedSet(mutableSet)
+            let bookToRemove = self.dataSource.getBook(at: indexPath)
 
-                if mutableSet.isEmpty {
+            // This does the actual removal
+            self.list.removeBooks(NSSet(object: bookToRemove))
+
+            // We don't have "nice" automatic handling of book removal from a list when using the legacy set based data provider.
+            // We can detect that case, though, and handle the row removal ourselves.
+            if let legacyDataSource = self.dataSource as? ListBookLegacyDataSource, let dataProvider = legacyDataSource.setDataProvider as? LegacyListBookSetDataProvider {
+                // Remove the dataSource reference from the dataProvider, so it cannot request a reload of the table
+                dataProvider.dataSource = nil
+                self.list.managedObjectContext!.saveAndLogIfErrored()
+
+                // Perform the table update
+                if self.list.books.isEmpty {
                     tableView.deleteSections(IndexSet(arrayLiteral: 0), with: .automatic)
-                    //TODO //self.dataSource.reloadEmptyStateView()
+                    self.emptyStateManager.reloadEmptyStateView()
                 } else {
                     tableView.deleteRows(at: [indexPath], with: .automatic)
                 }
+
+                // Reactivate change detection
+                dataProvider.dataSource = legacyDataSource
+            } else {
+                self.list.managedObjectContext!.saveAndLogIfErrored()
             }
+
             UserEngagement.logEvent(.removeBookFromList)
         }]
     }
@@ -258,9 +284,17 @@ class ListBookTable: UITableViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if let detailsViewController = (segue.destination as? UINavigationController)?.topViewController as? BookDetails {
             guard let senderIndex = sender as? IndexPath else { preconditionFailure() }
-            let book = listBookSource.book(at: senderIndex)
+            let book = dataSource.getBook(at: senderIndex)
             detailsViewController.book = book
         }
+    }
+}
+
+extension ListBookTable: UISearchControllerDelegate {
+    func didDismissSearchController(_ searchController: UISearchController) {
+        // If we caused all data to be deleted while searching, the empty state view might now need to be a "no books" view
+        // rather than a "no results" view.
+        emptyStateManager.reloadEmptyStateView()
     }
 }
 
@@ -277,22 +311,22 @@ extension ListBookTable: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
         let searchPredicate = getSearchPredicate()
 
-        switch listBookSource! {
-        case .controller(let controller):
+        if let controllerDataProvider = dataSource.controllerDataProvider {
             if let searchPredicate = searchPredicate {
-                controller.fetchRequest.predicate = NSPredicate.and([defaultPredicate, searchPredicate])
+                controllerDataProvider.controller.fetchRequest.predicate = NSPredicate.and([defaultPredicate, searchPredicate])
             } else {
-                controller.fetchRequest.predicate = defaultPredicate
+                controllerDataProvider.controller.fetchRequest.predicate = defaultPredicate
             }
-            try! controller.performFetch()
-        case .orderedSet:
+            try! controllerDataProvider.controller.performFetch()
+        } else if var setDataProvider = dataSource.setDataProvider {
             if let searchPredicate = searchPredicate {
-                listBookSource = .orderedSet(list.books.filtered(using: searchPredicate))
+                setDataProvider.filterPredicate = searchPredicate
             } else {
-                listBookSource = .orderedSet(list.books)
+                setDataProvider.filterPredicate = NSPredicate(boolean: true)
             }
         }
-        tableView.reloadData()
+
+        dataSource.updateData(animate: true)
     }
 }
 

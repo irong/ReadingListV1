@@ -7,7 +7,7 @@ public protocol HeaderConfigurable where Self: UITableViewController {
 
 public extension HeaderConfigurable {
     func reloadHeaders() {
-        for index in 0..<numberOfSections(in: tableView) {
+        for index in 0..<tableView.numberOfSections {
             guard let header = tableView.headerView(forSection: index) else { continue }
             configureHeader(header, at: index)
         }

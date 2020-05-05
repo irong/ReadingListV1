@@ -23,6 +23,15 @@ class UITableViewSearchableEmptyStateManager: UITableViewEmptyStateManager {
         self.initialLargeTitleDisplayMode = navigationItem.largeTitleDisplayMode
         self.initialPrefersLargeTitles = navigationBar?.prefersLargeTitles ?? false
         super.init(tableView)
+
+        if #available(iOS 13.0, *) { } else {
+            NotificationCenter.default.addObserver(self, selector: #selector(themeSettingDidChange), name: .ThemeSettingChanged, object: nil)
+        }
+    }
+
+    @available(iOS, obsoleted: 13.0)
+    @objc private func themeSettingDidChange() {
+        reloadEmptyStateView()
     }
 
     override func emptyStateDidChange() {
@@ -40,11 +49,11 @@ class UITableViewSearchableEmptyStateManager: UITableViewEmptyStateManager {
         }
     }
 
-    private func attributeWithThemeColor(_ attributedString: NSAttributedString) -> NSAttributedString {
+    private func attributeWithThemeColor(_ attributedString: NSAttributedString, color: @autoclosure () -> UIColor) -> NSAttributedString {
         if #available(iOS 13.0, *) {
             return attributedString
         } else {
-            return attributedString.mutable().attributedWithColor(UserDefaults.standard[.theme].titleTextColor)
+            return attributedString.mutable().attributedWithColor(color())
         }
     }
 
@@ -56,7 +65,7 @@ class UITableViewSearchableEmptyStateManager: UITableViewEmptyStateManager {
             title = titleForNonSearchEmptyState().attributedWithFont(emptyStateTitleFont)
         }
 
-        return attributeWithThemeColor(title)
+        return attributeWithThemeColor(title, color: UserDefaults.standard[.theme].titleTextColor)
     }
 
     final override func textForEmptyState() -> NSAttributedString {
@@ -67,7 +76,7 @@ class UITableViewSearchableEmptyStateManager: UITableViewEmptyStateManager {
             text = textForNonSearchEmptyState()
         }
 
-        return attributeWithThemeColor(text)
+        return attributeWithThemeColor(text, color: UserDefaults.standard[.theme].subtitleTextColor)
     }
 
     final override func positionForEmptyState() -> EmptyStatePosition {
