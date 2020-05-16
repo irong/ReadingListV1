@@ -20,7 +20,7 @@ extension UITableViewCell {
     }
 }
 
-class Organize: UITableViewController {
+final class Organize: UITableViewController {
 
     var resultsController: NSFetchedResultsController<List>!
     var searchController: UISearchController!

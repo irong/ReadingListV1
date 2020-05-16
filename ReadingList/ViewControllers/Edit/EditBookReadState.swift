@@ -3,7 +3,7 @@ import Eureka
 import UIKit
 import CoreData
 
-class EditBookReadState: FormViewController {
+final class EditBookReadState: FormViewController {
 
     private var editContext: NSManagedObjectContext!
     private var book: Book!

@@ -14,7 +14,6 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
     private var emptyStateManager: BookTableEmptyDataSourceManager!
 
     private let allReadStatesSearchBarScopeIndex = 1
-    private var sortManager: SortManager<Book>!
 
     override func viewDidLoad() {
         // Register the headers and cells we use for this table
@@ -37,11 +36,6 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
         searchController.delegate = self
         navigationItem.searchController = searchController
 
-        // The sort manager is responsible for calculating new sort indexes of items following a reordering
-        sortManager = SortManager<Book>(tableView) {
-            self.dataSource.object(at: $0)
-        }
-
         // Build the results controllers, and then configure their predicates. We do this in two separate functions as
         // it is a quite frequent operation that we wish to update the results controller predicates later on.
         resultsControllers = buildResultsControllers()
@@ -52,18 +46,26 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
             try! controller.controller.performFetch()
         }
 
+        // The sort manager is responsible for calculating new sort indexes of items following a reordering. It would be nicer
+        // to move this entirely within the data source, but that is a bit tricky since it requires a reference to the data source
+        // at the point of initialization.
+        let sortManager = SortManager<Book>(tableView) { [unowned self] in
+            self.dataSource.object(at: $0)
+        }
+
         // On iOS 13 we use Diffable Data Sources; on prior OSes we use the legacy data source which peforms more manual row interactions
         if #available(iOS 13.0, *) {
             dataSource = BookTableDiffableDataSource(tableView, controllers: resultsControllers.map(\.controller), sortManager: sortManager,
-                                                     searchController: searchController, onChange: reconfigureHeaders)
+                                                     searchController: searchController, onContentChanged: reconfigureHeaders)
         } else {
             dataSource = BookTableLegacyDataSource(tableView, controllers: resultsControllers.map(\.controller), sortManager: sortManager,
-                                                   searchController: searchController, onChange: reconfigureHeaders)
+                                                   searchController: searchController, onContentChanged: reconfigureHeaders)
         }
 
         // The empty data source manager is in charge of handling and reacting to the empty table state
+        let emptyStateMode = BookTableEmptyDataSourceManager.mode(from: readStates)
         emptyStateManager = BookTableEmptyDataSourceManager(tableView: tableView, navigationBar: navigationController?.navigationBar, navigationItem: navigationItem,
-                                                            searchController: searchController, readStates: readStates) { [weak self] _ in
+                                                            searchController: searchController, mode: emptyStateMode) { [weak self] _ in
             self?.configureNavigationBarButtons()
         }
         dataSource.emptyDetectionDelegate = emptyStateManager
@@ -74,13 +76,13 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
             configureNavigationBarButtons()
         }
 
-        // Watch for changes
+        // Watch for batch changes which may occur due to a CSV import or bulk delete
         NotificationCenter.default.addObserver(self, selector: #selector(refetch), name: .PersistentStoreBatchOperationOccurred, object: nil)
 
         monitorThemeSetting()
         super.viewDidLoad()
     }
-    
+
     override func viewDidAppear(_ animated: Bool) {
         // Deselect selected rows, so they don't stay highlighted, but only when in non-split mode
         if let selectedIndexPath = self.tableView.indexPathForSelectedRow, !splitViewController!.detailIsPresented {
@@ -115,17 +117,17 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
             controller.fetchRequest.predicate = predicate(for: readState)
         }
     }
-    
+
     /// Returns the predicate which should be currently used for the results controller predicate
     private func predicate(for readState: BookReadState) -> NSPredicate {
         // If this read state is not actually relevant, return the false predicate - we don't want any books.
         guard readStates.contains(readState) || (searchController.isActive && searchController.searchBar.selectedScopeButtonIndex == allReadStatesSearchBarScopeIndex) else {
             return NSPredicate(boolean: false)
         }
-        
+
         // The base predicate just checks the read state
         let readStatePredicate = NSPredicate(format: "%K == %ld", #keyPath(Book.readState), readState.rawValue)
-        
+
         // If we have a searchable search text, add this condition too.
         if let searchText = searchController.searchBar.text, searchText.isSufficientForSearch() {
             let searchPredicate = NSPredicate.wordsWithinFields(searchText, fieldNames: #keyPath(Book.title), #keyPath(Book.subtitle), #keyPath(Book.authorSort),
@@ -264,7 +266,7 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
                     self.present(confirm, animated: true)
                 }
             ]
-            
+
             // If book ordering can be edited, then add actions to move this book to the top or bottom.
             if UserDefaults.standard[.sortSetting(for: book.readState)] == .custom {
                 let minSort = Book.minSort(with: book.readState, from: PersistentStoreManager.container.viewContext)
@@ -286,7 +288,7 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
                         context.saveAndLogIfErrored()
                     })
                 }
-                
+
                 // Put the actions behind a menu, if there isn't just one.
                 if moveUpOrDownActions.count == 1 {
                     menuItems.insert(moveUpOrDownActions[0], at: 0)
@@ -294,7 +296,7 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
                     menuItems.insert(UIMenu(title: "Move...", image: UIImage(systemName: "arrow.up.arrow.down"), children: moveUpOrDownActions), at: 0)
                 }
             }
-            
+
             // Add an action to move the book's read state, if suitable
             if book.readState == .toRead {
                 menuItems.insert(UIAction(title: "Start", image: UIImage(systemName: "play")) { _ in
@@ -332,9 +334,9 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
             }
             let book = PersistentStoreManager.container.viewContext.object(with: objectId) as! Book
             bookDetailsVc.book = book
-            
+
             // To ensure that the relevant row is highlighted once the detail display is updated, find its index path and select the row
-            if let indexPath = dataSource.indexPath(forObject: book) {
+            if let indexPath = dataSource.indexPath(for: book) {
                 tableView.selectRow(at: indexPath, animated: true, scrollPosition: .none)
             }
         } else {
@@ -404,7 +406,7 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
 
     func simulateBookSelection(_ bookID: NSManagedObjectID, allowTableObscuring: Bool = true) {
         let book = PersistentStoreManager.container.viewContext.object(with: bookID) as! Book
-        let indexPathOfSelectedBook = dataSource.indexPath(forObject: book)
+        let indexPathOfSelectedBook = dataSource.indexPath(for: book)
 
         // If there is a row (there might not be is there is a search filtering the results, and
         // clearing the search creates animations which mess up push segues), then scroll to it.
@@ -632,10 +634,9 @@ extension BookTable: UISearchBarDelegate {
 extension BookTable: HeaderConfigurable {
     func configureHeader(_ header: UITableViewHeaderFooterView, at index: Int) {
         guard let header = header as? BookTableHeader else { preconditionFailure() }
+        let bookCount = dataSource.rowCount(in: index)
         let readState = dataSource.readState(forSection: index)
-        guard let controller = resultsControllers.first(where: { $0.0 == readState })?.1 else { assertionFailure(); return }
-        header.configure(readState: readState, bookCount: controller.fetchedObjects?.count ?? 0,
-                         enableSort: !isEditing && !searchController.isActive)
+        header.configure(readState: readState, bookCount: bookCount, enableSort: !isEditing && !searchController.isActive)
     }
 }
 

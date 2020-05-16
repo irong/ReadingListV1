@@ -5,7 +5,7 @@ import ReadingList_Foundation
 import CoreData
 import os.log
 
-class ScanBarcode: UIViewController {
+final class ScanBarcode: UIViewController {
 
     // Communicate with the session and other session objects on this queue.
     private let sessionQueue = DispatchQueue(label: "session queue")

@@ -3,7 +3,7 @@ import UIKit
 import CoreData
 import ReadingList_Foundation
 
-class ManageLists: UITableViewController {
+final class ManageLists: UITableViewController {
     var books: [Book]!
     var onComplete: (() -> Void)?
     private var candidateListsExist = false

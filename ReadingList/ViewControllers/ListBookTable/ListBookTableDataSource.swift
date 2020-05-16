@@ -3,11 +3,66 @@ import CoreData
 import UIKit
 import ReadingList_Foundation
 
+// TODO Diffable mode doesn't update table headers.
+
 protocol ListBookDataSource: class, UITableViewEmptyDetectingDataSource {
     func updateData(animate: Bool)
     func getBook(at indexPath: IndexPath) -> Book
+    var list: List { get }
+    var searchController: UISearchController { get }
     var controllerDataProvider: ListBookControllerDataProvider? { get }
     var setDataProvider: ListBookSetDataProvider? { get }
+}
+
+extension ListBookDataSource {
+    func canMoveRow() -> Bool {
+        guard !searchController.hasActiveSearchTerms else { return false }
+        // Lists with a custom ordering use a Set data provider
+        guard let setDataProvider = setDataProvider else { return false }
+        return setDataProvider.books.count > 1
+    }
+
+    func moveRow(at sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
+        guard !searchController.hasActiveSearchTerms else { return }
+        guard sourceIndexPath != destinationIndexPath else { return }
+        guard let setDataProvider = setDataProvider else { return }
+
+        // Disable change notification updates. Since we could be running this code in either of a diffable or legacy data source,
+        // with corresponding diffable or legacy data provider, we need to do some verbose type checks. It isn't trivial to expose
+        // a generic property which works in all cases.
+        if #available(iOS 13.0, *), let diffableSetDataProvider = setDataProvider as? DiffableListBookSetDataProvider {
+            diffableSetDataProvider.dataSource = nil
+        } else if let legacySetDataProvider = setDataProvider as? LegacyListBookSetDataProvider {
+            legacySetDataProvider.dataSource = nil
+        } else {
+            preconditionFailure()
+        }
+
+        var books = list.books.map { $0 as! Book }
+        let movedBook = books.remove(at: sourceIndexPath.row)
+        books.insert(movedBook, at: destinationIndexPath.row)
+        list.books = NSOrderedSet(array: books)
+        list.managedObjectContext!.saveAndLogIfErrored()
+
+        // Reneable change notification updates. Since we could be running this code in either of a diffable or legacy data source,
+        // with corresponding diffable or legacy data provider, we need to do some verbose type checks. It isn't trivial to expose
+        // a generic property which works in all cases.
+        if #available(iOS 13.0, *), let diffableSetDataProvider = setDataProvider as? DiffableListBookSetDataProvider,
+            let diffableDataSource = self as? ListBookDiffableDataSource {
+            diffableSetDataProvider.dataSource = diffableDataSource
+        } else if let legacySetDataProvider = setDataProvider as? LegacyListBookSetDataProvider, let legacyDataSource = self as? ListBookLegacyDataSource {
+            legacySetDataProvider.dataSource = legacyDataSource
+        } else {
+            preconditionFailure()
+        }
+        UserEngagement.logEvent(.reorderList)
+
+        // Delay slightly so that the UI update doesn't interfere with the animation of the row reorder completing.
+        // This is quite ugly code, but leads to a less ugly UI.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [unowned self] in
+            self.updateData(animate: false)
+        }
+    }
 }
 
 @available(iOS 13.0, *)
@@ -24,19 +79,19 @@ final class ListBookDiffableDataSource: EmptyDetectingTableDiffableDataSource<St
         }
     }
     private let wrappedDataProvider: Wrapped<DiffableListBookDataProvider>
-    private let list: List
-    private let searchIsActive: () -> Bool
+    let list: List
+    let searchController: UISearchController
     var controllerDataProvider: ListBookControllerDataProvider? { dataProvider as? ListBookControllerDataProvider }
     var setDataProvider: ListBookSetDataProvider? { dataProvider as? ListBookSetDataProvider }
 
-    init(_ tableView: UITableView, list: List, dataProvider: DiffableListBookDataProvider, searchIsActive: @escaping () -> Bool) {
+    init(_ tableView: UITableView, list: List, dataProvider: DiffableListBookDataProvider, searchController: UISearchController) {
         // This wrapping business gets around the inabiliy to refer to self in the closure passed to super.init.
         // We need to refer to the data provider which self will have at the time the closure is run. To achieve this,
         // create a simple wrapping object: this reference stays the same, but _its_ reference can change later on.
         let wrappedDataProvider = Wrapped(dataProvider)
         self.wrappedDataProvider = wrappedDataProvider
 
-        self.searchIsActive = searchIsActive
+        self.searchController = searchController
         self.list = list
         super.init(tableView: tableView) { _, indexPath, _ in
             let cell = tableView.dequeue(BookTableViewCell.self, for: indexPath)
@@ -53,35 +108,11 @@ final class ListBookDiffableDataSource: EmptyDetectingTableDiffableDataSource<St
     }
 
     override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
-        guard !searchIsActive() else { return false }
-        // Lists with a custom ordering use a Set data provider
-        guard let setDataProvider = dataProvider as? ListBookSetDataProvider else { return false }
-        return setDataProvider.books.count > 1
+        return canMoveRow()
     }
 
     override func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
-        guard !searchIsActive() else { return }
-        guard sourceIndexPath != destinationIndexPath else { return }
-        guard dataProvider is ListBookSetDataProvider else { return }
-
-        // Disable change notification updates
-        dataProvider.dataSource = nil
-
-        var books = list.books.map { $0 as! Book }
-        let movedBook = books.remove(at: sourceIndexPath.row)
-        books.insert(movedBook, at: destinationIndexPath.row)
-        list.books = NSOrderedSet(array: books)
-        list.managedObjectContext!.saveAndLogIfErrored()
-
-        // Regenerate the table source
-        dataProvider.dataSource = self
-        UserEngagement.logEvent(.reorderList)
-
-        // Delay slightly so that the UI update doesn't interfere with the animation of the row reorder completing.
-        // This is quite ugly code, but leads to a less ugly UI.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [unowned self] in
-            self.updateData(animate: false)
-        }
+        moveRow(at: sourceIndexPath, to: destinationIndexPath)
     }
 
     func getBook(at indexPath: IndexPath) -> Book {
@@ -108,9 +139,13 @@ final class ListBookLegacyDataSource: LegacyEmptyDetectingTableDataSource, NSFet
     }
     var controllerDataProvider: ListBookControllerDataProvider? { dataProvider as? ListBookControllerDataProvider }
     var setDataProvider: ListBookSetDataProvider? { dataProvider as? ListBookSetDataProvider }
+    let list: List
+    let searchController: UISearchController
 
-    init(_ tableView: UITableView, dataProvider: LegacyListBookDataProvider) {
+    init(_ tableView: UITableView, list: List, dataProvider: LegacyListBookDataProvider, searchController: UISearchController) {
+        self.list = list
         self.dataProvider = dataProvider
+        self.searchController = searchController
         super.init(tableView)
 
         self.dataProvider.dataSource = self
@@ -145,6 +180,14 @@ final class ListBookLegacyDataSource: LegacyEmptyDetectingTableDataSource, NSFet
 
     override func rowCount(in tableView: UITableView, forSection section: Int) -> Int {
         return dataProvider.rowCount(in: section)
+    }
+
+    func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
+        return canMoveRow()
+    }
+
+    func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
+        moveRow(at: sourceIndexPath, to: destinationIndexPath)
     }
 
     func updateData(animate: Bool) {

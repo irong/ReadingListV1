@@ -3,7 +3,7 @@ import UIKit
 import Eureka
 import ReadingList_Foundation
 
-class General: FormViewController {
+final class General: FormViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 

@@ -3,7 +3,7 @@ import UIKit
 import CoreData
 import ReadingList_Foundation
 
-class ListBookTable: UITableViewController {
+final class ListBookTable: UITableViewController {
 
     var list: List!
     private var cachedListNames: [String]!
@@ -34,11 +34,11 @@ class ListBookTable: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        //normalLargeTitleDisplayMode = .never
 
         tableView.register(BookTableViewCell.self)
         tableView.register(BookTableHeader.self)
 
+        // Cache the list names so we know which names are disallowed when editing this list's name
         cachedListNames = List.names(fromContext: PersistentStoreManager.container.viewContext)
         navigationItem.title = list.name
         navigationItem.rightBarButtonItem = editButtonItem
@@ -49,9 +49,9 @@ class ListBookTable: UITableViewController {
         navigationItem.searchController = searchController
 
         if #available(iOS 13.0, *) {
-            dataSource = ListBookDiffableDataSource(tableView, list: list, dataProvider: buildDiffableDataProvider(), searchIsActive: { self.searchController.isActive })
+            dataSource = ListBookDiffableDataSource(tableView, list: list, dataProvider: buildDiffableDataProvider(), searchController: searchController)
         } else {
-            dataSource = ListBookLegacyDataSource(tableView, dataProvider: buildLegacyDataProvider())
+            dataSource = ListBookLegacyDataSource(tableView, list: list, dataProvider: buildLegacyDataProvider(), searchController: searchController)
         }
 
         emptyStateManager = ListBookTableEmptyDataSetManager(tableView: tableView, navigationBar: navigationController?.navigationBar, navigationItem: navigationItem, searchController: searchController, list: list)

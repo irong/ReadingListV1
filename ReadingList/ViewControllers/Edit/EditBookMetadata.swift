@@ -6,7 +6,7 @@ import CoreData
 import SVProgressHUD
 import ReadingList_Foundation
 
-class EditBookMetadata: FormViewController {
+final class EditBookMetadata: FormViewController {
 
     private var editBookContext: NSManagedObjectContext!
     private var book: Book!
@@ -336,7 +336,7 @@ extension EditBookMetadata: UIAdaptivePresentationControllerDelegate {
     }
 }
 
-class AuthorSection: MultivaluedSection {
+final class AuthorSection: MultivaluedSection {
 
     // This form is only presented by a metadata form, so does not need to maintain
     // a strong reference to the book's object context

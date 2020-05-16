@@ -4,7 +4,7 @@ import CoreData
 import Cosmos
 import ReadingList_Foundation
 
-class BookDetails: UIViewController, UIScrollViewDelegate { //swiftlint:disable:this type_body_length
+final class BookDetails: UIViewController, UIScrollViewDelegate { //swiftlint:disable:this type_body_length
     @IBOutlet private weak var cover: UIImageView!
     @IBOutlet private weak var changeReadStateButton: StartFinishButton!
 
@@ -31,11 +31,11 @@ class BookDetails: UIViewController, UIScrollViewDelegate { //swiftlint:disable:
 
     /// Instantiates the BookDetails view controller from its storyboard
     static func instantiate(withBook book: Book) -> BookDetails {
-        guard let viewController = UIStoryboard.BookDetails.instantiateViewController(withIdentifier: "BookDetails") as? BookDetails else { fatalError() }
+        guard let viewController = UIStoryboard.BookDetails.instantiateViewController(withIdentifier: "BookDetails") as? BookDetails else { preconditionFailure() }
         viewController.book = book
         return viewController
     }
-    
+
     func setViewEnabled(_ enabled: Bool) {
         // Show or hide the whole view and nav bar buttons. Exit early if nothing to do.
         if view.isHidden != !enabled {

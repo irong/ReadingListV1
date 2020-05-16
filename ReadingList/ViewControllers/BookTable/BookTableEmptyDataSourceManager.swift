@@ -2,33 +2,48 @@ import ReadingList_Foundation
 
 final class BookTableEmptyDataSourceManager: UITableViewSearchableEmptyStateManager {
 
-    let readStates: [BookReadState]
-    let onEmptyStateChange: (Bool) -> Void
+    private let mode: Mode
+    private let onEmptyStateChange: (Bool) -> Void
+
+    enum Mode {
+        case toReadAndReading
+        case finished
+    }
+
+    static func mode(from readStates: [BookReadState]) -> Mode {
+        if readStates.contains(.toRead) {
+            return .toReadAndReading
+        } else if readStates.contains(.finished) {
+            return .finished
+        } else { preconditionFailure() }
+    }
 
     init(tableView: UITableView, navigationBar: UINavigationBar?, navigationItem: UINavigationItem, searchController: UISearchController,
-         readStates: [BookReadState], onEmptyStateChange: @escaping (Bool) -> Void) {
+         mode: Mode, onEmptyStateChange: @escaping (Bool) -> Void) {
         self.onEmptyStateChange = onEmptyStateChange
-        self.readStates = readStates
+        self.mode = mode
         super.init(tableView, navigationBar: navigationBar, navigationItem: navigationItem, searchController: searchController)
     }
 
     final override func titleForNonSearchEmptyState() -> String {
-        if readStates.contains(.reading) {
+        switch mode {
+        case .toReadAndReading:
             return "📚 To Read"
-        } else {
+        case .finished:
             return "🎉 Finished"
         }
     }
 
     override func textForNonSearchEmptyState() -> NSAttributedString {
         let mutableString: NSMutableAttributedString
-        if readStates.contains(.reading) {
+        switch mode {
+        case .toReadAndReading:
             mutableString = NSMutableAttributedString("Books you add to your ", font: emptyStateDescriptionFont)
                 .appending("To Read", font: emptyStateDescriptionBoldFont)
                 .appending(" list, or mark as currently ", font: emptyStateDescriptionFont)
                 .appending("Reading", font: emptyStateDescriptionBoldFont)
                 .appending(" will show up here.", font: emptyStateDescriptionFont)
-        } else {
+        case .finished:
             mutableString = NSMutableAttributedString("Books you mark as ", font: emptyStateDescriptionFont)
                 .appending("Finished", font: emptyStateDescriptionBoldFont)
                 .appending(" will show up here.", font: emptyStateDescriptionFont)

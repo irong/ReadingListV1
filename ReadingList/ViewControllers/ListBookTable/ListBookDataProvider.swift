@@ -35,7 +35,7 @@ extension ListBookControllerDataProvider {
 }
 
 @available(iOS, obsoleted: 13.0)
-class LegacyListBookControllerDataProvider: ListBookControllerDataProvider, LegacyListBookDataProvider {
+final class LegacyListBookControllerDataProvider: ListBookControllerDataProvider, LegacyListBookDataProvider {
     let controller: NSFetchedResultsController<Book>
     weak var dataSource: ListBookLegacyDataSource?
 
@@ -57,7 +57,7 @@ class LegacyListBookControllerDataProvider: ListBookControllerDataProvider, Lega
 }
 
 @available(iOS 13.0, *)
-class DiffableListBookControllerDataProvider: ListBookControllerDataProvider, DiffableListBookDataProvider {
+final class DiffableListBookControllerDataProvider: ListBookControllerDataProvider, DiffableListBookDataProvider {
     private var changeMediator: ResultsControllerSnapshotGenerator<ListBookDiffableDataSource>!
     let controller: NSFetchedResultsController<Book>
 
@@ -126,14 +126,15 @@ class BaseListBookSetDataProvider {
             self.books = []
             NotificationCenter.default.removeObserver(self)
             return
-        }*/ // todo relocate to VC
+        }*/
+        // TODO relocate to VC
         buildBooksList()
         handleSave(userInfo: userInfo)
     }
 }
 
 @available(iOS, obsoleted: 13.0)
-class LegacyListBookSetDataProvider: BaseListBookSetDataProvider, ListBookSetDataProvider, LegacyListBookDataProvider {
+final class LegacyListBookSetDataProvider: BaseListBookSetDataProvider, ListBookSetDataProvider, LegacyListBookDataProvider {
 
     weak var dataSource: ListBookLegacyDataSource?
 
@@ -156,7 +157,7 @@ class LegacyListBookSetDataProvider: BaseListBookSetDataProvider, ListBookSetDat
 }
 
 @available(iOS 13.0, *)
-class DiffableListBookSetDataProvider: BaseListBookSetDataProvider, ListBookSetDataProvider, DiffableListBookDataProvider {
+final class DiffableListBookSetDataProvider: BaseListBookSetDataProvider, ListBookSetDataProvider, DiffableListBookDataProvider {
     weak var dataSource: ListBookDiffableDataSource?
     private var updatedBookIds = [NSManagedObjectID]()
 

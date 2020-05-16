@@ -5,7 +5,7 @@ import Eureka
 import SVProgressHUD
 import Crashlytics
 
-class DebugForm: FormViewController {
+final class DebugForm: FormViewController {
 
     @objc func dismissSelf() {
         dismiss(animated: true, completion: nil)

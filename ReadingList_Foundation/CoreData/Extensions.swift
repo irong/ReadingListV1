@@ -156,7 +156,7 @@ public extension NSDiffableDataSourceSnapshot where ItemIdentifierType == NSMana
     Constructs a `NSDiffableDataSourceSnapshot` where the section identifiers are the fetched section names with the provided mapping function applied, and the
      item identifiers are the fetched object's `NSManagedObjectID`.
     */
-    init(_ controller: NSFetchedResultsController<NSFetchRequestResult>, mappingSections: (String) -> SectionIdentifierType) {
+    init<FetchedResultType>(_ controller: NSFetchedResultsController<FetchedResultType>, mappingSections: (String) -> SectionIdentifierType) {
         self.init()
         guard let sections = controller.sections else { preconditionFailure("Controller sections info was nil: a fetch must be performed before generating a snapshot") }
 
@@ -166,8 +166,8 @@ public extension NSDiffableDataSourceSnapshot where ItemIdentifierType == NSMana
             appendSections([mappedSection])
             appendItems(objects.map { ($0 as! NSManagedObject).objectID }.filter { !$0.isTemporaryID }, toSection: mappedSection)
         }
-        
-        os_log(.debug, "Generated snapshot from controller:\n%{public}s", sectionIdentifiers.map { "Section \(String(describing: $0))\n\(itemIdentifiers(inSection: $0).map { String(describing: $0)}.joined(separator: "\n"))" }.joined(separator: "\n------\n"))
+
+        os_log(.debug, "Generated snapshot from controller:\n%{public}s", sectionIdentifiers.map { "Section \(String(describing: $0))\n\(itemIdentifiers(inSection: $0).map { String(describing: $0) }.joined(separator: "\n"))" }.joined(separator: "\n------\n"))
     }
 }
 

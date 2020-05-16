@@ -2,7 +2,7 @@ import Foundation
 import UIKit
 import CoreData
 
-class RemoveFromExistingLists: UITableViewController {
+final class RemoveFromExistingLists: UITableViewController {
     var book: Book!
     private var resultsController: NSFetchedResultsController<List>!
 
