@@ -56,10 +56,10 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
         // On iOS 13 we use Diffable Data Sources; on prior OSes we use the legacy data source which peforms more manual row interactions
         if #available(iOS 13.0, *) {
             dataSource = BookTableDiffableDataSource(tableView, controllers: resultsControllers.map(\.controller), sortManager: sortManager,
-                                                     searchController: searchController, onContentChanged: reconfigureHeaders)
+                                                     searchController: searchController, onContentChanged: reconfigureNavigationBarAndSectionHeaders)
         } else {
             dataSource = BookTableLegacyDataSource(tableView, controllers: resultsControllers.map(\.controller), sortManager: sortManager,
-                                                   searchController: searchController, onContentChanged: reconfigureHeaders)
+                                                   searchController: searchController, onContentChanged: reconfigureNavigationBarAndSectionHeaders)
         }
 
         // The empty data source manager is in charge of handling and reacting to the empty table state
@@ -91,12 +91,9 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
         super.viewDidAppear(animated)
     }
 
-    private func reconfigureHeaders() {
+    private func reconfigureNavigationBarAndSectionHeaders() {
         configureNavigationBarButtons()
-        for index in 0..<tableView.numberOfSections {
-            guard let headerView = tableView.headerView(forSection: index) else { continue }
-            configureHeader(headerView, at: index)
-        }
+        reloadHeaders()
     }
 
     /// Build a results controller for all read states, with "our" read states first, followed by everything else.
@@ -600,7 +597,7 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
         configureControllersPredicates()
         try! dataSource.performFetch()
         dataSource.updateData(animate: true)
-        reconfigureHeaders()
+        reconfigureNavigationBarAndSectionHeaders()
     }
 }
 

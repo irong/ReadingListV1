@@ -49,17 +49,18 @@ final class ListBookTable: UITableViewController {
         navigationItem.searchController = searchController
 
         if #available(iOS 13.0, *) {
-            dataSource = ListBookDiffableDataSource(tableView, list: list, dataProvider: buildDiffableDataProvider(), searchController: searchController)
+            dataSource = ListBookDiffableDataSource(tableView, list: list, dataProvider: buildDiffableDataProvider(), searchController: searchController, onContentChanged: reloadHeaders)
         } else {
-            dataSource = ListBookLegacyDataSource(tableView, list: list, dataProvider: buildLegacyDataProvider(), searchController: searchController)
+            dataSource = ListBookLegacyDataSource(tableView, list: list, dataProvider: buildLegacyDataProvider(), searchController: searchController, onContentChanged: reloadHeaders)
         }
 
+        // Configure the empty state manager to detect when the table becomes empty
         emptyStateManager = ListBookTableEmptyDataSetManager(tableView: tableView, navigationBar: navigationController?.navigationBar, navigationItem: navigationItem, searchController: searchController, list: list)
         dataSource.emptyDetectionDelegate = emptyStateManager
         dataSource.updateData(animate: false)
 
         NotificationCenter.default.addObserver(self, selector: #selector(objectContextChanged(_:)),
-                                               name: .NSManagedObjectContextObjectsDidChange,
+                                               name: .NSManagedObjectContextDidSave,
                                                object: PersistentStoreManager.container.viewContext)
         monitorThemeSetting()
     }
@@ -172,7 +173,7 @@ final class ListBookTable: UITableViewController {
         configureNavigationItem()
         reloadHeaders()
     }
-
+    
     override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         guard section == 0 && tableView.numberOfRows(inSection: 0) > 0 else { return nil }
         let header = tableView.dequeue(BookTableHeader.self)
@@ -225,7 +226,7 @@ final class ListBookTable: UITableViewController {
         guard !ignoreNotifications else { return }
         guard let userInfo = notification.userInfo else { return }
 
-        if (userInfo[NSDeletedObjectsKey] as? NSSet)?.contains(list!) == true {
+        if let deletedObjects = userInfo[NSDeletedObjectsKey] as? NSSet, deletedObjects.contains(list!) {
             // If the list was deleted, pop back. This can't happen through any normal means at the moment.
             navigationController?.popViewController(animated: false)
             return

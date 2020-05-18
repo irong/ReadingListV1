@@ -81,10 +81,11 @@ final class ListBookDiffableDataSource: EmptyDetectingTableDiffableDataSource<St
     private let wrappedDataProvider: Wrapped<DiffableListBookDataProvider>
     let list: List
     let searchController: UISearchController
+    let onContentChanged: () -> Void
     var controllerDataProvider: ListBookControllerDataProvider? { dataProvider as? ListBookControllerDataProvider }
     var setDataProvider: ListBookSetDataProvider? { dataProvider as? ListBookSetDataProvider }
 
-    init(_ tableView: UITableView, list: List, dataProvider: DiffableListBookDataProvider, searchController: UISearchController) {
+    init(_ tableView: UITableView, list: List, dataProvider: DiffableListBookDataProvider, searchController: UISearchController, onContentChanged: @escaping () -> Void) {
         // This wrapping business gets around the inabiliy to refer to self in the closure passed to super.init.
         // We need to refer to the data provider which self will have at the time the closure is run. To achieve this,
         // create a simple wrapping object: this reference stays the same, but _its_ reference can change later on.
@@ -93,6 +94,7 @@ final class ListBookDiffableDataSource: EmptyDetectingTableDiffableDataSource<St
 
         self.searchController = searchController
         self.list = list
+        self.onContentChanged = onContentChanged
         super.init(tableView: tableView) { _, indexPath, _ in
             let cell = tableView.dequeue(BookTableViewCell.self, for: indexPath)
             let book = wrappedDataProvider.wrappedValue.getBook(at: indexPath)
@@ -124,6 +126,7 @@ final class ListBookDiffableDataSource: EmptyDetectingTableDiffableDataSource<St
     }
 
     func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChangeProducingSnapshot snapshot: NSDiffableDataSourceSnapshot<String, NSManagedObjectID>, withChangedObjects changedObjects: [NSManagedObjectID]) {
+        onContentChanged()
         apply(snapshot, animatingDifferences: true)
     }
 }
@@ -140,12 +143,14 @@ final class ListBookLegacyDataSource: LegacyEmptyDetectingTableDataSource, NSFet
     var controllerDataProvider: ListBookControllerDataProvider? { dataProvider as? ListBookControllerDataProvider }
     var setDataProvider: ListBookSetDataProvider? { dataProvider as? ListBookSetDataProvider }
     let list: List
+    let onContentChanged: () -> Void
     let searchController: UISearchController
 
-    init(_ tableView: UITableView, list: List, dataProvider: LegacyListBookDataProvider, searchController: UISearchController) {
+    init(_ tableView: UITableView, list: List, dataProvider: LegacyListBookDataProvider, searchController: UISearchController, onContentChanged: @escaping () -> Void) {
         self.list = list
         self.dataProvider = dataProvider
         self.searchController = searchController
+        self.onContentChanged = onContentChanged
         super.init(tableView)
 
         self.dataProvider.dataSource = self
@@ -201,6 +206,7 @@ final class ListBookLegacyDataSource: LegacyEmptyDetectingTableDataSource, NSFet
 
     func controllerDidChangeContent(_: NSFetchedResultsController<NSFetchRequestResult>) {
         tableView.endUpdates()
+        onContentChanged()
     }
 
     func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {

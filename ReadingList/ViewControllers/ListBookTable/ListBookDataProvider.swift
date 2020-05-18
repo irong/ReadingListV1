@@ -95,9 +95,10 @@ extension ListBookSetDataProvider {
     }
 }
 
-class BaseListBookSetDataProvider {
+class BaseListBookSetDataProvider<DataSource: ListBookDataSource> {
     let list: List
-
+    weak var dataSource: DataSource?
+    
     var filterPredicate = NSPredicate(boolean: true) {
         didSet { buildBooksList() }
     }
@@ -117,30 +118,19 @@ class BaseListBookSetDataProvider {
         NotificationCenter.default.addObserver(self, selector: #selector(managedObjectContextChanged(_:)), name: .NSManagedObjectContextDidSave, object: list.managedObjectContext)
     }
 
-    func handleSave(userInfo: [AnyHashable: Any]) { }
+    func handleSave(userInfo: [AnyHashable: Any]) {
+        dataSource?.updateData(animate: true)
+    }
 
     @objc final func managedObjectContextChanged(_ notification: Notification) {
         guard let userInfo = notification.userInfo else { return }
-        /*if (userInfo[NSDeletedObjectsKey] as? NSSet)?.contains(list) == true {
-            // If the list was deleted, treat the list as empty now, and unregister notification observing
-            self.books = []
-            NotificationCenter.default.removeObserver(self)
-            return
-        }*/
-        // TODO relocate to VC
         buildBooksList()
         handleSave(userInfo: userInfo)
     }
 }
 
 @available(iOS, obsoleted: 13.0)
-final class LegacyListBookSetDataProvider: BaseListBookSetDataProvider, ListBookSetDataProvider, LegacyListBookDataProvider {
-
-    weak var dataSource: ListBookLegacyDataSource?
-
-    override func handleSave(userInfo: [AnyHashable: Any]) {
-        dataSource?.updateData(animate: true)
-    }
+final class LegacyListBookSetDataProvider: BaseListBookSetDataProvider<ListBookLegacyDataSource>, ListBookSetDataProvider, LegacyListBookDataProvider {
 
     func count() -> Int {
         return books.count
@@ -157,20 +147,20 @@ final class LegacyListBookSetDataProvider: BaseListBookSetDataProvider, ListBook
 }
 
 @available(iOS 13.0, *)
-final class DiffableListBookSetDataProvider: BaseListBookSetDataProvider, ListBookSetDataProvider, DiffableListBookDataProvider {
-    weak var dataSource: ListBookDiffableDataSource?
+final class DiffableListBookSetDataProvider: BaseListBookSetDataProvider<ListBookDiffableDataSource>, ListBookSetDataProvider, DiffableListBookDataProvider {
     private var updatedBookIds = [NSManagedObjectID]()
 
     override func handleSave(userInfo: [AnyHashable: Any]) {
         // We should remember which books have been changed, and store their IDs so we can request a reload of those rows in the next
         // snapshot generation. Otherwise, changes to books which were, and remain, in the list would not get picked up.
         // This variable will be used (and then cleared out) the next time snapshot() is called. There is a slight assumption that
-        // it is only called by code which will actually apply the snapshot. But given that we call updateData below, we should be fine.
+        // it is only called by code which will actually apply the snapshot. But given that handleSave below will call updateData,
+        // we should be fine.
         if let updatedObjects = userInfo[NSUpdatedObjectsKey] as? NSSet {
             updatedBookIds = updatedObjects.compactMap { $0 as? Book }.filter { list.books.contains($0) }.map(\.objectID)
         }
 
-        dataSource?.apply(snapshot(), animatingDifferences: true)
+        super.handleSave(userInfo: userInfo)
     }
 
     func snapshot() -> NSDiffableDataSourceSnapshot<String, NSManagedObjectID> {
