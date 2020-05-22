@@ -3,29 +3,26 @@ import CoreData
 import UIKit
 import ReadingList_Foundation
 
-// TODO Diffable mode doesn't update table headers.
-
 protocol ListBookDataSource: class, UITableViewEmptyDetectingDataSource {
     func updateData(animate: Bool)
     func getBook(at indexPath: IndexPath) -> Book
     var list: List { get }
     var searchController: UISearchController { get }
-    var controllerDataProvider: ListBookControllerDataProvider? { get }
-    var setDataProvider: ListBookSetDataProvider? { get }
+    var dataProvider: ListBookDataProvider { get }
 }
 
 extension ListBookDataSource {
     func canMoveRow() -> Bool {
         guard !searchController.hasActiveSearchTerms else { return false }
         // Lists with a custom ordering use a Set data provider
-        guard let setDataProvider = setDataProvider else { return false }
+        guard let setDataProvider = dataProvider as? ListBookSetDataProvider else { return false }
         return setDataProvider.books.count > 1
     }
 
     func moveRow(at sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
         guard !searchController.hasActiveSearchTerms else { return }
         guard sourceIndexPath != destinationIndexPath else { return }
-        guard let setDataProvider = setDataProvider else { return }
+        guard let setDataProvider = dataProvider as? ListBookSetDataProvider else { return }
 
         // Disable change notification updates. Since we could be running this code in either of a diffable or legacy data source,
         // with corresponding diffable or legacy data provider, we need to do some verbose type checks. It isn't trivial to expose
@@ -69,7 +66,7 @@ extension ListBookDataSource {
 final class ListBookDiffableDataSource: EmptyDetectingTableDiffableDataSource<String, NSManagedObjectID>, ResultsControllerSnapshotGeneratorDelegate, ListBookDataSource {
     typealias SectionType = String
 
-    var dataProvider: DiffableListBookDataProvider {
+    var diffableDataProvider: DiffableListBookDataProvider {
         get {
             wrappedDataProvider.wrappedValue
         }
@@ -79,6 +76,8 @@ final class ListBookDiffableDataSource: EmptyDetectingTableDiffableDataSource<St
         }
     }
     private let wrappedDataProvider: Wrapped<DiffableListBookDataProvider>
+
+    var dataProvider: ListBookDataProvider { diffableDataProvider }
     let list: List
     let searchController: UISearchController
     let onContentChanged: () -> Void
@@ -102,7 +101,7 @@ final class ListBookDiffableDataSource: EmptyDetectingTableDiffableDataSource<St
             return cell
         }
 
-        self.dataProvider.dataSource = self
+        self.diffableDataProvider.dataSource = self
     }
 
     override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
@@ -122,38 +121,38 @@ final class ListBookDiffableDataSource: EmptyDetectingTableDiffableDataSource<St
     }
 
     func updateData(animate: Bool) {
-        apply(dataProvider.snapshot(), animatingDifferences: animate)
+        apply(diffableDataProvider.snapshot(), animatingDifferences: animate)
+        onContentChanged()
     }
 
     func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChangeProducingSnapshot snapshot: NSDiffableDataSourceSnapshot<String, NSManagedObjectID>, withChangedObjects changedObjects: [NSManagedObjectID]) {
-        onContentChanged()
         apply(snapshot, animatingDifferences: true)
+        onContentChanged()
     }
 }
 
 @available(iOS, obsoleted: 13.0)
 final class ListBookLegacyDataSource: LegacyEmptyDetectingTableDataSource, NSFetchedResultsControllerDelegate, ListBookDataSource {
-
-    var dataProvider: LegacyListBookDataProvider {
+    typealias DataProvider = LegacyListBookDataProvider
+    var legacyDataProvider: LegacyListBookDataProvider {
         didSet {
-            dataProvider.dataSource = self
+            legacyDataProvider.dataSource = self
             configureChangeMonitoring()
         }
     }
-    var controllerDataProvider: ListBookControllerDataProvider? { dataProvider as? ListBookControllerDataProvider }
-    var setDataProvider: ListBookSetDataProvider? { dataProvider as? ListBookSetDataProvider }
+    var dataProvider: ListBookDataProvider { legacyDataProvider }
     let list: List
     let onContentChanged: () -> Void
     let searchController: UISearchController
 
     init(_ tableView: UITableView, list: List, dataProvider: LegacyListBookDataProvider, searchController: UISearchController, onContentChanged: @escaping () -> Void) {
         self.list = list
-        self.dataProvider = dataProvider
+        self.legacyDataProvider = dataProvider
         self.searchController = searchController
         self.onContentChanged = onContentChanged
         super.init(tableView)
 
-        self.dataProvider.dataSource = self
+        self.legacyDataProvider.dataSource = self
         configureChangeMonitoring()
     }
 
@@ -180,11 +179,11 @@ final class ListBookLegacyDataSource: LegacyEmptyDetectingTableDataSource, NSFet
     }
 
     override func sectionCount(in tableView: UITableView) -> Int {
-        return dataProvider.sectionCount()
+        return legacyDataProvider.sectionCount()
     }
 
     override func rowCount(in tableView: UITableView, forSection section: Int) -> Int {
-        return dataProvider.rowCount(in: section)
+        return legacyDataProvider.rowCount(in: section)
     }
 
     func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
@@ -196,8 +195,9 @@ final class ListBookLegacyDataSource: LegacyEmptyDetectingTableDataSource, NSFet
     }
 
     func updateData(animate: Bool) {
-       // Brute force approach for pre-iOS 13
-       tableView.reloadData()
+        // Brute force approach for pre-iOS 13
+        tableView.reloadData()
+        onContentChanged()
     }
 
     func controllerWillChangeContent(_: NSFetchedResultsController<NSFetchRequestResult>) {

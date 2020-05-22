@@ -95,10 +95,20 @@ extension ListBookSetDataProvider {
     }
 }
 
-class BaseListBookSetDataProvider<DataSource: ListBookDataSource> {
+class BaseListBookSetDataProvider {
+
+    /**
+     The currently-displayed list of books.
+     */
+    private(set) var books: [Book]
     let list: List
-    weak var dataSource: DataSource?
-    
+
+    init(_ list: List) {
+        self.list = list
+        self.books = list.books.map { $0 as! Book }
+        NotificationCenter.default.addObserver(self, selector: #selector(managedObjectContextChanged(_:)), name: .NSManagedObjectContextDidSave, object: list.managedObjectContext)
+    }
+
     var filterPredicate = NSPredicate(boolean: true) {
         didSet { buildBooksList() }
     }
@@ -107,19 +117,8 @@ class BaseListBookSetDataProvider<DataSource: ListBookDataSource> {
         books = list.books.filtered(using: filterPredicate).map { $0 as! Book }
     }
 
-    /**
-     The currently-displayed list of books.
-     */
-    private(set) var books: [Book]
-
-    init(_ list: List) {
-        self.list = list
-        self.books = list.books.map { $0 as! Book }
-        NotificationCenter.default.addObserver(self, selector: #selector(managedObjectContextChanged(_:)), name: .NSManagedObjectContextDidSave, object: list.managedObjectContext)
-    }
-
     func handleSave(userInfo: [AnyHashable: Any]) {
-        dataSource?.updateData(animate: true)
+        fatalError("handleSave(userInfo:) not overriden")
     }
 
     @objc final func managedObjectContextChanged(_ notification: Notification) {
@@ -130,7 +129,12 @@ class BaseListBookSetDataProvider<DataSource: ListBookDataSource> {
 }
 
 @available(iOS, obsoleted: 13.0)
-final class LegacyListBookSetDataProvider: BaseListBookSetDataProvider<ListBookLegacyDataSource>, ListBookSetDataProvider, LegacyListBookDataProvider {
+final class LegacyListBookSetDataProvider: BaseListBookSetDataProvider, ListBookSetDataProvider, LegacyListBookDataProvider {
+    var dataSource: ListBookLegacyDataSource?
+
+    override func handleSave(userInfo: [AnyHashable: Any]) {
+        dataSource?.updateData(animate: true)
+    }
 
     func count() -> Int {
         return books.count
@@ -147,7 +151,9 @@ final class LegacyListBookSetDataProvider: BaseListBookSetDataProvider<ListBookL
 }
 
 @available(iOS 13.0, *)
-final class DiffableListBookSetDataProvider: BaseListBookSetDataProvider<ListBookDiffableDataSource>, ListBookSetDataProvider, DiffableListBookDataProvider {
+final class DiffableListBookSetDataProvider: BaseListBookSetDataProvider, ListBookSetDataProvider, DiffableListBookDataProvider {
+    var dataSource: ListBookDiffableDataSource?
+
     private var updatedBookIds = [NSManagedObjectID]()
 
     override func handleSave(userInfo: [AnyHashable: Any]) {
@@ -160,7 +166,7 @@ final class DiffableListBookSetDataProvider: BaseListBookSetDataProvider<ListBoo
             updatedBookIds = updatedObjects.compactMap { $0 as? Book }.filter { list.books.contains($0) }.map(\.objectID)
         }
 
-        super.handleSave(userInfo: userInfo)
+        dataSource?.updateData(animate: true)
     }
 
     func snapshot() -> NSDiffableDataSourceSnapshot<String, NSManagedObjectID> {

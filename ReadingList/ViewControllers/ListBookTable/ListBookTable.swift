@@ -67,9 +67,9 @@ final class ListBookTable: UITableViewController {
 
     private func rebuildDataProvider() {
         if #available(iOS 13.0, *), let diffableDataSource = dataSource as? ListBookDiffableDataSource {
-            diffableDataSource.dataProvider = buildDiffableDataProvider()
+            diffableDataSource.diffableDataProvider = buildDiffableDataProvider()
         } else if let legacyDataSource = dataSource as? ListBookLegacyDataSource {
-            legacyDataSource.dataProvider = buildLegacyDataProvider()
+            legacyDataSource.legacyDataProvider = buildLegacyDataProvider()
         } else {
             preconditionFailure()
         }
@@ -173,7 +173,7 @@ final class ListBookTable: UITableViewController {
         configureNavigationItem()
         reloadHeaders()
     }
-    
+
     override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         guard section == 0 && tableView.numberOfRows(inSection: 0) > 0 else { return nil }
         let header = tableView.dequeue(BookTableHeader.self)
@@ -259,7 +259,7 @@ final class ListBookTable: UITableViewController {
 
             // We don't have "nice" automatic handling of book removal from a list when using the legacy set based data provider.
             // We can detect that case, though, and handle the row removal ourselves.
-            if let legacyDataSource = self.dataSource as? ListBookLegacyDataSource, let dataProvider = legacyDataSource.setDataProvider as? LegacyListBookSetDataProvider {
+            if let legacyDataSource = self.dataSource as? ListBookLegacyDataSource, let dataProvider = legacyDataSource.dataProvider as? LegacyListBookSetDataProvider {
                 // Remove the dataSource reference from the dataProvider, so it cannot request a reload of the table
                 dataProvider.dataSource = nil
                 self.list.managedObjectContext!.saveAndLogIfErrored()
@@ -274,6 +274,9 @@ final class ListBookTable: UITableViewController {
 
                 // Reactivate change detection
                 dataProvider.dataSource = legacyDataSource
+
+                // Reload the headers to refresh the book count
+                self.reloadHeaders()
             } else {
                 self.list.managedObjectContext!.saveAndLogIfErrored()
             }
@@ -312,19 +315,21 @@ extension ListBookTable: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
         let searchPredicate = getSearchPredicate()
 
-        if let controllerDataProvider = dataSource.controllerDataProvider {
+        if let controllerDataProvider = dataSource.dataProvider as? ListBookControllerDataProvider {
             if let searchPredicate = searchPredicate {
                 controllerDataProvider.controller.fetchRequest.predicate = NSPredicate.and([defaultPredicate, searchPredicate])
             } else {
                 controllerDataProvider.controller.fetchRequest.predicate = defaultPredicate
             }
             try! controllerDataProvider.controller.performFetch()
-        } else if var setDataProvider = dataSource.setDataProvider {
+        } else if var setDataProvider = dataSource.dataProvider as? ListBookSetDataProvider {
             if let searchPredicate = searchPredicate {
                 setDataProvider.filterPredicate = searchPredicate
             } else {
                 setDataProvider.filterPredicate = NSPredicate(boolean: true)
             }
+        } else {
+            preconditionFailure("Unexpected data provider type: \(dataSource.dataProvider)")
         }
 
         dataSource.updateData(animate: true)
@@ -334,12 +339,19 @@ extension ListBookTable: UISearchResultsUpdating {
 extension ListBookTable: HeaderConfigurable {
     func configureHeader(_ header: UITableViewHeaderFooterView, at index: Int) {
         guard let header = header as? BookTableHeader else { preconditionFailure() }
-        let numberOfRows = tableView.numberOfRows(inSection: index)
-        if numberOfRows == 0 {
-            header.removeFromSuperview()
+        let numberOfRows: Int
+        if let controllerDataProvider = dataSource.dataProvider as? ListBookControllerDataProvider {
+            numberOfRows = controllerDataProvider.controller.sections![0].numberOfObjects
+        } else if let setDataProvider = dataSource.dataProvider as? ListBookSetDataProvider {
+            numberOfRows = setDataProvider.books.count
         } else {
-            header.configure(list: list, bookCount: numberOfRows, enableSort: !isEditing && !searchController.isActive)
+            preconditionFailure("Unexpected data provider type \(dataSource.dataProvider)")
         }
+
+        if numberOfRows == 0 {
+            assertionFailure("Should not be configuring a header when there are no books.")
+        }
+        header.configure(list: list, bookCount: numberOfRows, enableSort: !isEditing && !searchController.isActive)
     }
 }
 
