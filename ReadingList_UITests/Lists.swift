@@ -34,7 +34,7 @@ class Lists: XCTestCase {
         modalTable.cells.element(boundBy: 0).tap()
         XCTAssertEqual(app.alerts.count, 1, "Alert should appear when adding new list")
         let addList2Alert = app.alerts.firstMatch
-        let enterList2NameTextField = addNewListAlert.collectionViews.textFields.firstMatch
+        let enterList2NameTextField = addList2Alert.collectionViews.textFields.firstMatch
         enterList2NameTextField.typeText("B List")
         addList2Alert.buttons["OK"].tap()
     }

@@ -3,7 +3,7 @@ import UIKit
 import CoreData
 import ReadingList_Foundation
 
-class ManageLists: UITableViewController {
+final class ManageLists: UITableViewController {
     var books: [Book]!
     var onComplete: (() -> Void)?
     private var candidateListsExist = false
@@ -91,10 +91,14 @@ class ManageLists: UITableViewController {
         }
 
         return TextBoxAlert(title: "Add New List", message: "Enter a name for your list", placeholder: "Enter list name",
-                            keyboardAppearance: UserDefaults.standard[.theme].keyboardAppearance, textValidator: textValidator) {
-            let createdList = List(context: PersistentStoreManager.container.viewContext, name: $0!)
-            createdList.books = NSOrderedSet(array: books)
-            PersistentStoreManager.container.viewContext.saveAndLogIfErrored()
+                            keyboardAppearance: UserDefaults.standard[.theme].keyboardAppearance, textValidator: textValidator) { listName in
+            guard let listName = listName else { preconditionFailure() }
+            let childContext = PersistentStoreManager.container.viewContext.childContext()
+            let createdList = List(context: childContext, name: listName)
+            // Map the books to a set of books on this child context
+            createdList.books = NSOrderedSet(array: books.map { childContext.object(with: $0.objectID) })
+            childContext.obtainPermanentIDsAndLogIfErrored(for: [createdList])
+            childContext.saveAndLogIfErrored()
             onComplete?(createdList)
         }
     }

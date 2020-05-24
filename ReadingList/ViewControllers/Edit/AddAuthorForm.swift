@@ -2,7 +2,7 @@ import Foundation
 import UIKit
 import Eureka
 
-class AddAuthorForm: FormViewController {
+final class AddAuthorForm: FormViewController {
 
     weak var presentingRow: AuthorRow!
 

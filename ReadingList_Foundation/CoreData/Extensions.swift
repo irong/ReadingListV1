@@ -82,3 +82,101 @@ public extension NSEntityMigrationPolicy {
         }
     }
 }
+
+@available(iOS 13.0, *)
+public extension NSFetchedResultsController {
+    /**
+     Generates a `NSDiffableDataSourceSnapshot` where the section identifiers are the fetched section names, and the item identifiers are the fetched object's `NSManagedObjectID`.
+     */
+    @objc func snapshot() -> NSDiffableDataSourceSnapshot<String, NSManagedObjectID> {
+        return NSDiffableDataSourceSnapshot<String, NSManagedObjectID>(self as! NSFetchedResultsController<NSFetchRequestResult>)
+    }
+}
+
+@available(iOS 13.0, *)
+public extension NSDiffableDataSourceSnapshot {
+    mutating func loadSectionChanges(_ change: CollectionDifference<SectionIdentifierType>.Change) {
+        switch change {
+        case .insert(offset: sectionIdentifiers.count, let element, _):
+            // If the offset is such that it places this item at the end of collection, append it
+            appendSections([element])
+        case .insert(let offset, let element, _):
+            // Otherwise, insert the new item before the item which is currently at the desired position
+            let existingSection = sectionIdentifiers[offset]
+            insertSections([element], beforeSection: existingSection)
+        case .remove(_, let element, _):
+            deleteSections([element])
+        }
+    }
+
+    mutating func loadItemChanges(_ change: CollectionDifference<ItemIdentifierType>.Change, inSection section: SectionIdentifierType) {
+        switch change {
+        case .insert(itemIdentifiers(inSection: section).count, let element, _):
+            // If the offset is such that it places this item at the end of collection, append it
+            appendItems([element], toSection: section)
+        case .insert(let offset, let element, _):
+            // Otherwise, insert the new item before the item which is currently at the desired position
+            let existingItem = itemIdentifiers(inSection: section)[offset]
+            insertItems([element], beforeItem: existingItem)
+        case .remove(_, let element, _):
+            deleteItems([element])
+        }
+    }
+
+    /**
+     Appends the sections and items from the provided snapshot to this snapshot.
+     */
+    mutating func append(_ snapshot: NSDiffableDataSourceSnapshot<SectionIdentifierType, ItemIdentifierType>) {
+        appendSections(snapshot.sectionIdentifiers)
+        for section in snapshot.sectionIdentifiers {
+            appendItems(snapshot.itemIdentifiers(inSection: section), toSection: section)
+        }
+    }
+
+    /**
+    Appends the sections and items from the provided snapshots to this snapshot, in order.
+    */
+    mutating func append(_ snapshots: [NSDiffableDataSourceSnapshot<SectionIdentifierType, ItemIdentifierType>]) {
+        for snapshot in snapshots {
+            append(snapshot)
+        }
+    }
+
+    /**
+     Calls `reloadItems` with the supplied items filtered to only include those which are present in the current snapshot.
+     */
+    mutating func reloadValidItems(_ changedObjects: [ItemIdentifierType]) {
+        reloadItems(changedObjects.filter { self.itemIdentifiers.contains($0) })
+    }
+}
+
+@available(iOS 13.0, *)
+public extension NSDiffableDataSourceSnapshot where ItemIdentifierType == NSManagedObjectID {
+    /**
+    Constructs a `NSDiffableDataSourceSnapshot` where the section identifiers are the fetched section names with the provided mapping function applied, and the
+     item identifiers are the fetched object's `NSManagedObjectID`.
+    */
+    init<FetchedResultType>(_ controller: NSFetchedResultsController<FetchedResultType>, mappingSections: (String) -> SectionIdentifierType) {
+        self.init()
+        guard let sections = controller.sections else { preconditionFailure("Controller sections info was nil: a fetch must be performed before generating a snapshot") }
+
+        for section in sections {
+            let mappedSection = mappingSections(section.name)
+            guard let objects = section.objects else { preconditionFailure() }
+            appendSections([mappedSection])
+            appendItems(objects.map { ($0 as! NSManagedObject).objectID }.filter { !$0.isTemporaryID }, toSection: mappedSection)
+        }
+
+        os_log(.debug, "Generated snapshot from controller:\n%{public}s", sectionIdentifiers.map { "Section \(String(describing: $0))\n\(itemIdentifiers(inSection: $0).map { String(describing: $0) }.joined(separator: "\n"))" }.joined(separator: "\n------\n"))
+    }
+}
+
+@available(iOS 13.0, *)
+public extension NSDiffableDataSourceSnapshot where SectionIdentifierType == String, ItemIdentifierType == NSManagedObjectID {
+    /**
+    Constructs a `NSDiffableDataSourceSnapshot` where the section identifiers are the fetched section names, and the item identifiers are the fetched object's `NSManagedObjectID`.
+    */
+    init(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        self.init(controller) { $0 }
+    }
+}

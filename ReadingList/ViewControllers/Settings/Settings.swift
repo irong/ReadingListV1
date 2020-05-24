@@ -3,7 +3,7 @@ import MessageUI
 import ReadingList_Foundation
 import Crashlytics
 
-class Settings: UITableViewController {
+final class Settings: UITableViewController {
 
     static let appStoreAddress = "itunes.apple.com/gb/app/reading-list-book-tracker/id1217139955"
     static let feedbackEmailAddress = "feedback@readinglist.app"

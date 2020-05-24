@@ -5,7 +5,7 @@ import CoreData
 import Promises
 import ReadingList_Foundation
 
-class SearchOnline: UITableViewController {
+final class SearchOnline: UITableViewController {
 
     var initialSearchString: String?
     var tableItems = [SearchResult]()

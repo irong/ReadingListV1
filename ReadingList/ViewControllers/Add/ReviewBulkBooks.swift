@@ -2,7 +2,7 @@ import Foundation
 import CoreData
 import UIKit
 
-class ReviewBulkBooks: UITableViewController {
+final class ReviewBulkBooks: UITableViewController {
 
     var books = [Book]()
     var context: NSManagedObjectContext!

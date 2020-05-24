@@ -18,10 +18,11 @@ class EditBookNotes: FormViewController {
         configureNavigationItem()
 
         form +++ Section(header: "Notes", footer: "")
-            <<< StarRatingRow { [unowned self] in
+            <<< StarRatingRow {
                 $0.value = Double(self.book.rating ?? 0) / 2
-                $0.onChange { [unowned self] in
-                    if let rating = $0.value {
+                $0.onChange { [weak self] cell in
+                    guard let `self` = self else { return }
+                    if let rating = cell.value {
                         self.book.rating = Int16(floor(rating * 2))
                     } else {
                         self.book.rating = nil
@@ -31,10 +32,16 @@ class EditBookNotes: FormViewController {
             <<< TextAreaRow {
                 $0.placeholder = "Add your personal notes here..."
                 $0.value = book.notes
-                $0.cellSetup { [unowned self] cell, _ in
-                    cell.height = { (self.view.frame.height / 3) - 10 }
+                $0.cellSetup { [weak self] cell, _ in
+                    guard let `self` = self else { return }
+                    cell.height = { [weak self] in
+                        // Just return some default value if self has been deallocated by the time this block is called
+                        guard let `self` = self else { return 100 }
+                        return (self.view.frame.height / 3) - 10
+                    }
                 }
-                $0.onChange { [unowned self] cell in
+                $0.onChange { [weak self] cell in
+                    guard let `self` = self else { return }
                     self.book.notes = cell.value
                 }
             }

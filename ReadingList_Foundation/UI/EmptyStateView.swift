@@ -6,7 +6,7 @@ public enum EmptyStatePosition {
     case center
 }
 
-class EmptyStateView: UIView {
+public class EmptyStateView: UIView {
 
     override init(frame: CGRect) {
         super.init(frame: frame)

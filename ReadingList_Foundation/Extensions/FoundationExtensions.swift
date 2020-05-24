@@ -183,6 +183,14 @@ public extension Array where Element: Equatable {
         }
         return uniqueValues
     }
+
+    func appendingRemaining(_ array: [Element]) -> [Element] {
+        return self + array.subtracting(self)
+    }
+
+    func subtracting(_ array: [Element]) -> [Element] {
+        self.filter { !array.contains($0) }
+    }
 }
 
 public extension Date {

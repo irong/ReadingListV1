@@ -29,6 +29,18 @@ extension NSManagedObjectContext {
         }
     }
 
+    /**
+     Calls `obtainPermanentIDs(for:)`; if any error occured, the error is logged and a precondition failure is thrown.
+     */
+    func obtainPermanentIDsAndLogIfErrored(for objects: [NSManagedObject]) {
+        do {
+            try self.obtainPermanentIDs(for: objects)
+        } catch let error as NSError {
+            UserEngagement.logError(error)
+            preconditionFailure(error.localizedDescription)
+        }
+    }
+
     @objc private func mergeAndSave(fromChildContextDidSave notification: Notification) {
         self.mergeChanges(fromContextDidSave: notification)
         self.saveAndLogIfErrored()

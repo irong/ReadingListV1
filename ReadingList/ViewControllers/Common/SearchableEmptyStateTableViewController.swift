@@ -1,36 +1,59 @@
 import Foundation
 import UIKit
+import CoreData
 import os.log
 import ReadingList_Foundation
 
-class SearchableEmptyStateTableViewController: EmptyStateTableViewController {
+class UITableViewSearchableEmptyStateManager: UITableViewEmptyStateManager {
 
-    /// Must be assigned as soon as possible - e.g. during `viewDidLoad()`
-    var searchController: UISearchController!
-    var normalLargeTitleDisplayMode = UINavigationItem.LargeTitleDisplayMode.automatic
+    let searchController: UISearchController
+    let navigationBar: UINavigationBar?
+    let navigationItem: UINavigationItem
+    let initialLargeTitleDisplayMode: UINavigationItem.LargeTitleDisplayMode
+    let initialPrefersLargeTitles: Bool
+
     let emptyStateTitleFont = UIFont.gillSans(forTextStyle: .title1)
     let emptyStateDescriptionFont = UIFont.gillSans(forTextStyle: .title2)
     let emptyStateDescriptionBoldFont = UIFont.gillSansSemiBold(forTextStyle: .title2)
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
+    init(_ tableView: UITableView, navigationBar: UINavigationBar?, navigationItem: UINavigationItem, searchController: UISearchController) {
+        self.searchController = searchController
+        self.navigationBar = navigationBar
+        self.navigationItem = navigationItem
+        self.initialLargeTitleDisplayMode = navigationItem.largeTitleDisplayMode
+        self.initialPrefersLargeTitles = navigationBar?.prefersLargeTitles ?? false
+        super.init(tableView)
 
-        // Start with "never"; we will switch to the desired large title mode when/if we detect items
-        navigationItem.largeTitleDisplayMode = .never
-    }
-
-    override func initialise(withTheme theme: Theme) {
-        super.initialise(withTheme: theme)
-        if isShowingEmptyState {
-            reloadEmptyStateView()
+        if #available(iOS 13.0, *) { } else {
+            NotificationCenter.default.addObserver(self, selector: #selector(themeSettingDidChange), name: .ThemeSettingChanged, object: nil)
         }
     }
 
-    private func attributeWithThemeColor(_ attributedString: NSAttributedString) -> NSAttributedString {
+    @available(iOS, obsoleted: 13.0)
+    @objc private func themeSettingDidChange() {
+        reloadEmptyStateView()
+    }
+
+    override func emptyStateDidChange() {
+        super.emptyStateDidChange()
+        if isShowingEmptyState {
+            if !searchController.isActive {
+                navigationItem.searchController?.searchBar.isHidden = true
+                navigationItem.largeTitleDisplayMode = .never
+                navigationBar?.prefersLargeTitles = false
+            }
+        } else {
+            navigationItem.searchController?.searchBar.isHidden = false
+            navigationItem.largeTitleDisplayMode = initialLargeTitleDisplayMode
+            navigationBar?.prefersLargeTitles = initialPrefersLargeTitles
+        }
+    }
+
+    private func attributeWithThemeColor(_ attributedString: NSAttributedString, color: @autoclosure () -> UIColor) -> NSAttributedString {
         if #available(iOS 13.0, *) {
             return attributedString
         } else {
-            return attributedString.mutable().attributedWithColor(UserDefaults.standard[.theme].titleTextColor)
+            return attributedString.mutable().attributedWithColor(color())
         }
     }
 
@@ -42,7 +65,7 @@ class SearchableEmptyStateTableViewController: EmptyStateTableViewController {
             title = titleForNonSearchEmptyState().attributedWithFont(emptyStateTitleFont)
         }
 
-        return attributeWithThemeColor(title)
+        return attributeWithThemeColor(title, color: UserDefaults.standard[.theme].titleTextColor)
     }
 
     final override func textForEmptyState() -> NSAttributedString {
@@ -53,7 +76,7 @@ class SearchableEmptyStateTableViewController: EmptyStateTableViewController {
             text = textForNonSearchEmptyState()
         }
 
-        return attributeWithThemeColor(text)
+        return attributeWithThemeColor(text, color: UserDefaults.standard[.theme].subtitleTextColor)
     }
 
     final override func positionForEmptyState() -> EmptyStatePosition {
@@ -74,42 +97,5 @@ class SearchableEmptyStateTableViewController: EmptyStateTableViewController {
 
     func textForSearchEmptyState() -> NSAttributedString {
         fatalError("textForNonSearchEmptyState() not implemented")
-    }
-
-    override func tableDidBecomeNonEmpty() {
-        updateEmptyStateRelatedItems()
-    }
-
-    override func tableDidBecomeEmpty() {
-        updateEmptyStateRelatedItems()
-    }
-
-    func configureNavigationBarButtons() { }
-
-    func updateEmptyStateRelatedItems() {
-        if isShowingEmptyState {
-            if !searchController.isActive {
-                navigationItem.searchController = nil
-                navigationItem.largeTitleDisplayMode = .never
-            }
-        } else {
-            navigationItem.largeTitleDisplayMode = normalLargeTitleDisplayMode
-            navigationItem.searchController = searchController
-        }
-
-        configureNavigationBarButtons()
-    }
-
-    func searchWillBeDismissed() {
-        // Schedule a call to update the other bits of UI when the search controller is being dismissed. We do this so
-        // that we can properly reflect the inactive state of the search controller (it will only be inactive at the end
-        // of this main run-loop). Some UI depends on whether the search controller is active; hence the need to rerun the update,
-        // even if we are going from empty --> empty.
-        DispatchQueue.main.async {
-            self.updateEmptyStateRelatedItems()
-            if self.isShowingEmptyState {
-                self.reloadEmptyStateView()
-            }
-        }
     }
 }

@@ -3,7 +3,7 @@ import Eureka
 import UIKit
 import CoreData
 
-class EditBookReadState: FormViewController {
+final class EditBookReadState: FormViewController {
 
     private var editContext: NSManagedObjectContext!
     private var book: Book!
@@ -205,6 +205,7 @@ class EditBookReadState: FormViewController {
         if let language = book.language, book.manualBookId != nil && newBook {
             UserDefaults.standard[.lastSelectedLanguage] = language
         }
+        editContext.obtainPermanentIDsAndLogIfErrored(for: [book])
         editContext.saveIfChanged()
 
         // FUTURE: Figure out a better way to solve this problem.
