@@ -61,7 +61,7 @@ final class EditBookMetadata: FormViewController {
         }
     }
 
-    override func viewDidLoad() {
+    override func viewDidLoad() { //swiftlint:disable:this cyclomatic_complexity
         super.viewDidLoad()
 
         configureNavigationItem()
@@ -69,20 +69,26 @@ final class EditBookMetadata: FormViewController {
         // Watch the book object for changes and validate the form
         NotificationCenter.default.addObserver(self, selector: #selector(validateBook), name: .NSManagedObjectContextObjectsDidChange, object: editBookContext)
 
-        // Just to prevent having to reference `self` in the onChange handlers...
-        let book = self.book!
-
         // Prepopulate last selected language, if appropriate to do so. Do this before the configuration of the form so that the form is accurate
         if shouldPrepopulateLastLanguageSelection {
             book.language = UserDefaults.standard[.lastSelectedLanguage]
         }
 
+        // General approach regarding capturing references to `self`:
+        // initialization functions are run once, not stored, so we don't need to capture self weakly.
+        // Stored closures, such as onChange, cellUpdate, etc, should capture `self` weakly to avoid a reference cycle
+        // causing a memory leak. We use `weak self` references rather than `unowned self` references, in case there are some
+        // specific timing issues whereby the closure runs after the view controller is deallocated (though unlikely).
+
         form +++ Section(header: "Title", footer: "")
             <<< TextRow {
                 $0.cell.textField.autocapitalizationType = .words
                 $0.placeholder = "Title"
-                $0.value = book.title
-                $0.onChange { book.title = $0.value ?? "" }
+                $0.value = self.book.title
+                $0.onChange { [weak self] cell in
+                    guard let `self` = self else { return }
+                    self.book.title = cell.value ?? ""
+                }
             }
 
             +++ AuthorSection(book: book, navigationController: navigationController!)
@@ -92,50 +98,65 @@ final class EditBookMetadata: FormViewController {
                 $0.cell.textField.autocapitalizationType = .words
                 $0.title = "Subtitle"
                 $0.value = book.subtitle
-                $0.onChange { book.subtitle = $0.value }
+                $0.onChange { [weak self] cell in
+                    guard let `self` = self else { return }
+                    self.book.subtitle = cell.value
+                }
             }
             <<< Int32Row {
                 $0.title = "Page Count"
                 $0.value = book.pageCount
-                $0.onChange {
-                    guard let pageCount = $0.value else { book.pageCount = nil; return }
-                    guard pageCount >= 0 else { book.pageCount = nil; return }
-                    book.pageCount = pageCount
+                $0.onChange { [weak self] cell in
+                    guard let `self` = self else { return }
+                    guard let pageCount = cell.value, pageCount >= 0 else {
+                        self.book.pageCount = nil
+                        return
+                    }
+                    self.book.pageCount = pageCount
                 }
             }
             <<< PickerInlineRow<LanguageSelection> {
                 $0.title = "Language"
                 $0.value = {
-                    if let language = book.language {
+                    if let language = self.book.language {
                         return .some(language)
                     } else {
                         return .blank
                     }
                 }()
                 $0.options = [.blank] + LanguageIso639_1.allCases.map { .some($0) }
-                $0.onChange {
-                    if let selection = $0.value, case let .some(language) = selection {
-                        book.language = language
+                $0.onChange { [weak self] cell in
+                    guard let `self` = self else { return }
+                    if let selection = cell.value, case let .some(language) = selection {
+                        self.book.language = language
                     } else {
-                        book.language = nil
+                        self.book.language = nil
                     }
                 }
             }
             <<< DateRow {
                 $0.title = "Publication Date"
                 $0.value = book.publicationDate
-                $0.onChange { book.publicationDate = $0.value }
+                $0.onChange { [weak self] cell in
+                    guard let `self` = self else { return }
+                    self.book.publicationDate = cell.value
+                }
             }
+
             <<< TextRow {
                 $0.cell.textField.autocapitalizationType = .words
                 $0.title = "Publisher"
                 $0.value = book.publisher
-                $0.onChange { book.publisher = $0.value }
+                $0.onChange { [weak self] cell in
+                    guard let `self` = self else { return }
+                    self.book.publisher = cell.value
+                }
             }
             <<< ButtonRow {
                 $0.title = "Subjects"
                 $0.cellStyle = .value1
-                $0.cellUpdate { cell, _ in
+                $0.cellUpdate { [weak self] cell, _ in
+                    guard let `self` = self else { return }
                     cell.textLabel!.textAlignment = .left
                     if #available(iOS 13.0, *) {
                         cell.textLabel!.textColor = .label
@@ -143,24 +164,29 @@ final class EditBookMetadata: FormViewController {
                         cell.textLabel!.textColor = UserDefaults.standard[.theme].titleTextColor
                     }
                     cell.accessoryType = .disclosureIndicator
-                    cell.detailTextLabel?.text = book.subjects.map { $0.name }.sorted().joined(separator: ", ")
+                    cell.detailTextLabel?.text = self.book.subjects.map { $0.name }.sorted().joined(separator: ", ")
                 }
-                $0.onCellSelection { [unowned self] _, row in
-                    self.navigationController!.pushViewController(EditBookSubjectsForm(book: book, sender: row), animated: true)
+                $0.onCellSelection { [weak self] _, row in
+                    guard let `self` = self else { return }
+                    self.navigationController!.pushViewController(EditBookSubjectsForm(book: self.book, sender: row), animated: true)
                 }
             }
             <<< ImageRow {
                 $0.title = "Cover Image"
                 $0.cell.height = { 100 }
-                $0.value = UIImage(optionalData: book.coverImage)
-                $0.onChange { book.coverImage = $0.value == nil ? nil : $0.value!.jpegData(compressionQuality: 0.7) }
+                $0.value = UIImage(optionalData: self.book.coverImage)
+                $0.onChange { [weak self] cell in
+                    guard let `self` = self else { return }
+                    self.book.coverImage = cell.value?.jpegData(compressionQuality: 0.7)
+                }
             }
             <<< Int64Row(isbnRowKey) {
                 $0.title = "ISBN-13"
                 $0.value = book.isbn13
                 $0.formatter = nil
-                $0.onChange {
-                    book.isbn13 = $0.value
+                $0.onChange { [weak self] cell in
+                    guard let `self` = self else { return }
+                    self.book.isbn13 = cell.value
                 }
             }
 
@@ -168,9 +194,17 @@ final class EditBookMetadata: FormViewController {
             <<< TextAreaRow {
                 $0.placeholder = "Description"
                 $0.value = book.bookDescription
-                $0.onChange { book.bookDescription = $0.value }
-                $0.cellSetup { [unowned self] cell, _ in
-                    cell.height = { (self.view.frame.height / 3) - 10 }
+                $0.onChange { [weak self] cell in
+                    guard let `self` = self else { return }
+                    self.book.bookDescription = cell.value
+                }
+                $0.cellSetup { [weak self] cell, _ in
+                    guard let `self` = self else { return }
+                    cell.height = { [weak self] in
+                        // Just return some default value if self has been deallocated by the time this block is called
+                        guard let `self` = self else { return 100 }
+                        return (self.view.frame.height / 3) - 10
+                    }
                 }
             }
 
@@ -178,13 +212,19 @@ final class EditBookMetadata: FormViewController {
             +++ Section()
             <<< ButtonRow(updateFromGoogleRowKey) {
                 $0.title = "Update from Google Books"
-                $0.hidden = Condition(booleanLiteral: isAddingNewBook || book.googleBooksId == nil)
-                $0.onCellSelection(updateFromGooglePressed(cell:row:))
+                $0.hidden = Condition(booleanLiteral: isAddingNewBook || self.book.googleBooksId == nil)
+                $0.onCellSelection { [weak self] cell, row in
+                    guard let `self` = self else { return }
+                    self.updateFromGooglePressed(cell: cell, row: row)
+                }
             }
             <<< ButtonRow(deleteRowKey) {
                 $0.title = "Delete"
-                $0.cellSetup { cell, _ in cell.tintColor = .systemRed }
-                $0.onCellSelection { [unowned self] cell, _ in
+                $0.cellSetup { cell, _ in
+                    cell.tintColor = .systemRed
+                }
+                $0.onCellSelection { [weak self] cell, _ in
+                    guard let `self` = self else { return }
                     self.deletePressed(sender: cell)
                 }
                 $0.hidden = Condition(booleanLiteral: isAddingNewBook)
@@ -195,8 +235,9 @@ final class EditBookMetadata: FormViewController {
             <<< Int32Row {
                 $0.title = "Sort"
                 $0.value = book.sort
-                $0.onChange {
-                    book.sort = $0.value ?? 0
+                $0.onChange { [weak self] cell in
+                    guard let `self` = self else { return }
+                    self.book.sort = cell.value ?? 0
                 }
             }
             <<< LabelRow {
@@ -206,8 +247,9 @@ final class EditBookMetadata: FormViewController {
             <<< TextRow {
                 $0.title = "Google Books ID"
                 $0.value = book.googleBooksId
-                $0.onChange {
-                    book.googleBooksId = $0.value
+                $0.onChange { [weak self] cell in
+                    guard let `self` = self else { return }
+                    self.book.googleBooksId = cell.value
                 }
             }
         #endif
