@@ -3,7 +3,7 @@ import UIKit
 import CoreData
 import ReadingList_Foundation
 
-class AddToExistingLists: UITableViewController {
+final class AddToExistingLists: UITableViewController {
     var resultsController: NSFetchedResultsController<List>!
     var onComplete: (() -> Void)?
     var books: Set<Book>!

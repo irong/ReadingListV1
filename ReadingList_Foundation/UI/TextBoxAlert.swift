@@ -10,7 +10,7 @@ public class TextBoxAlert: UIAlertController {
     var textValidator: ((String?) -> Bool)?
 
     public convenience init(title: String, message: String? = nil, initialValue: String? = nil, placeholder: String? = nil,
-                            keyboardAppearance: UIKeyboardAppearance = .default, keyboardType: UIKeyboardType = .default, textValidator: ((String?) -> Bool)? = nil, onOK: @escaping (String?) -> Void) {
+                            keyboardAppearance: UIKeyboardAppearance = .default, keyboardType: UIKeyboardType = .default, textValidator: ((String?) -> Bool)? = nil, onCancel: (() -> Void)? = nil, onOK: @escaping (String?) -> Void) {
         self.init(title: title, message: message, preferredStyle: .alert)
         self.textValidator = textValidator
 
@@ -23,7 +23,9 @@ public class TextBoxAlert: UIAlertController {
             textField.text = initialValue
         }
 
-        addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
+            onCancel?()
+        })
         let okAction = UIAlertAction(title: "OK", style: .default) { _ in
             onOK(self.textFields![0].text)
         }

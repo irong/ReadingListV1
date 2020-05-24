@@ -1,7 +1,7 @@
 import SwiftyStoreKit
 import StoreKit
 
-class Tip: UIViewController, ThemeableViewController {
+final class Tip: UIViewController, ThemeableViewController {
     let tipProductIds = ["smalltip", "mediumtip", "largetip", "verylargetip", "gianttip"]
     var tipProducts: Set<SKProduct>?
 

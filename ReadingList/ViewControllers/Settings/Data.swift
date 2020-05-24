@@ -4,7 +4,7 @@ import SVProgressHUD
 import CoreData
 import ReadingList_Foundation
 
-class DataVC: UITableViewController {
+final class DataVC: UITableViewController {
 
     var importUrl: URL?
     var csvImporter: BookCSVImporter?

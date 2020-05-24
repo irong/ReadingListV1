@@ -2,7 +2,7 @@ import UIKit
 import CoreSpotlight
 import Eureka
 
-class TabBarController: UITabBarController {
+final class TabBarController: UITabBarController {
 
     convenience init() {
         self.init(nibName: nil, bundle: nil)

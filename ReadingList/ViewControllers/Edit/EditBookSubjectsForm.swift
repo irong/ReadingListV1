@@ -2,7 +2,7 @@ import Foundation
 import UIKit
 import Eureka
 
-class EditBookSubjectsForm: FormViewController {
+final class EditBookSubjectsForm: FormViewController {
 
     convenience init(book: Book, sender: _ButtonRowOf<String>) {
         self.init()

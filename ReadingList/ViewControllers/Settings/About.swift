@@ -2,7 +2,7 @@ import Foundation
 import UIKit
 import MessageUI
 
-class About: UITableViewController {
+final class About: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()

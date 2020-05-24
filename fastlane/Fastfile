@@ -1,5 +1,5 @@
 default_platform(:ios)
-xcversion(version: "11.3.1")
+xcversion(version: "11.4")
 
 platform :ios do
 
@@ -18,6 +18,9 @@ platform :ios do
   end
 
   lane :test do
+    # Disable hardware keyboard connection during UITests.
+    sh "defaults write com.apple.iphonesimulator ConnectHardwareKeyboard 0"
+
     # run tests synchronously as a bug in xcpretty will hide test results when multiple devices are used
     scan(
       scheme: "ReadingList",

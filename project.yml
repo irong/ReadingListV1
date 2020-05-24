@@ -24,7 +24,7 @@ packages:
     branch: stable 
   Eureka:
     url: https://github.com/xmartlabs/Eureka
-    minorVersion: 5.2.0
+    minorVersion: 5.2.1
   ImageRow:
     url: https://github.com/funkenstrahlen/ImageRow
     branch: master
@@ -75,7 +75,6 @@ targets:
           OTHER_SWIFT_FLAGS: $(inherited) "-D" "DEBUG"
         Release:
           PROVISIONING_PROFILE_SPECIFIER: match AppStore com.andrewbennet.books
-          CODE_SIGN_IDENTITY[sdk=iphoneos*]: "iPhone Distribution: Andrew Bennet (YPDEV2E775)"
           OTHER_SWIFT_FLAGS: $(inherited) "-D" "RELEASE"
     attributes:
       SystemCapabilities:
@@ -89,8 +88,6 @@ targets:
     platform: iOS
     deploymentTarget: 11.0
     sources: [ReadingList_Foundation]
-    dependencies:
-     - package: SwiftyJSON
 
   ReadingList_UnitTests:
     type: bundle.unit-test

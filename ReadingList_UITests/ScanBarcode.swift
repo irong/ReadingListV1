@@ -20,7 +20,9 @@ class ScanBarcode: XCTestCase {
     private func scanBarcode(app: ReadingListApp) {
         app.clickTab(.toRead)
         app.navigationBars["To Read"].buttons["Add"].tap()
-        app.sheets.buttons["Scan Barcode"].tap()
+        let scanButton = app.sheets.buttons["Scan Barcode"]
+        XCTAssert(scanButton.waitForExistence(timeout: 1))
+        scanButton.tap()
     }
 
     func testBarcodeScannerNormal() {

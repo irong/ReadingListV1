@@ -1,7 +1,7 @@
 import Foundation
 import UIKit
 
-class Attributions: UITableViewController {
+final class Attributions: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
