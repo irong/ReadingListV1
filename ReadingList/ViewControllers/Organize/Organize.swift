@@ -155,7 +155,7 @@ final class Organize: UITableViewController {
     @IBAction private func addWasTapped(_ sender: UIBarButtonItem) {
         present(ManageLists.newListAlertController([]) { list in
             guard let indexPath = self.resultsController.indexPath(forObject: list) else {
-                //assertionFailure()
+                assertionFailure()
                 return
             }
             self.tableView.scrollToRow(at: indexPath, at: .top, animated: true)
