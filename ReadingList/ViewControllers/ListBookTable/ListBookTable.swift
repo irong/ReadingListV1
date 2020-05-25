@@ -348,12 +348,7 @@ extension ListBookTable: HeaderConfigurable {
             preconditionFailure("Unexpected data provider type \(dataSource.dataProvider)")
         }
 
-        if numberOfRows == 0 {
-            header.isHidden = true
-        } else {
-            header.isHidden = false
-            header.configure(list: list, bookCount: numberOfRows, enableSort: !isEditing && !searchController.isActive)
-        }
+        header.configure(list: list, bookCount: numberOfRows, enableSort: !isEditing && !searchController.isActive)
     }
 }
 

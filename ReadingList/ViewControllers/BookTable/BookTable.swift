@@ -663,7 +663,7 @@ private extension String {
 
 extension Book: Sortable {
     var sortIndex: Int32 {
-        get { return sort } //swiftlint:disable:this implicit_getter
+        get { return sort }
         set(newValue) { sort = newValue }
     }
 }
