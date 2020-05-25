@@ -349,9 +349,11 @@ extension ListBookTable: HeaderConfigurable {
         }
 
         if numberOfRows == 0 {
-            assertionFailure("Should not be configuring a header when there are no books.")
+            header.isHidden = true
+        } else {
+            header.isHidden = false
+            header.configure(list: list, bookCount: numberOfRows, enableSort: !isEditing && !searchController.isActive)
         }
-        header.configure(list: list, bookCount: numberOfRows, enableSort: !isEditing && !searchController.isActive)
     }
 }
 
