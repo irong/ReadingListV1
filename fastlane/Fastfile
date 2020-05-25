@@ -13,7 +13,10 @@ platform :ios do
   lane :ci do
     # testing is failing on Xcode 11 with an error about no suitable libswiftUIKit.dylib...
     # test
-    configure_keychain
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "ReadingList.xcodeproj"
+    )
     build_app(workspace: "ReadingList.xcworkspace", scheme: "ReadingList")
   end
 
