@@ -13,6 +13,7 @@ install:
   - brew update && brew install mint
   - pod repo update
 before_script:
+  # Prepare a GitHub login to enable the certificates repository to be cloned
   - echo -e "machine github.com\n  login AndrewBennet\n  password $GITHUB_TOKEN" > ~/.netrc
   - bundle exec fastlane preprocess
 script:

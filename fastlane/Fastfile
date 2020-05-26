@@ -14,21 +14,9 @@ platform :ios do
     # testing is failing on Xcode 11 with an error about no suitable libswiftUIKit.dylib...
     # test
     setup_travis
-    update_code_signing_settings(
-      use_automatic_signing: false,
-      path: "ReadingList.xcodeproj"
-    )
-
-    match(type: "appstore")
     build_app(
         workspace: "ReadingList.xcworkspace",
-        scheme: "ReadingList",
-        export_options: {
-            method: "app-store",
-            provisioningProfiles: { 
-              "com.andrewbennet.books" => "match AppStore com.andrewbennet.books"
-            }
-        }
+        scheme: "ReadingList"
     )
   end
 
