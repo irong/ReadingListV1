@@ -19,7 +19,11 @@ platform :ios do
       path: "ReadingList.xcodeproj"
     )
 
-    match(type: "appstore")    
+    # Log in to GitHub, to give Match access to the certificates repo
+    echo -e "machine github.com\n  login AndrewBennet\n  password $GITHUB_TOKEN" > ~/.netrc
+    match(
+        type: "appstore",
+    )
     build_app(workspace: "ReadingList.xcworkspace", scheme: "ReadingList")
   end
 
