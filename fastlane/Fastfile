@@ -20,7 +20,16 @@ platform :ios do
     )
 
     match(type: "appstore")
-    build_app(workspace: "ReadingList.xcworkspace", scheme: "ReadingList")
+    build_app(
+        workspace: "ReadingList.xcworkspace",
+        scheme: "ReadingList",
+        export_options: {
+            method: "app-store",
+            provisioningProfiles: { 
+              "com.andrewbennet.books" => "match AppStore com.andrewbennet.books"
+            }
+        }
+    )
   end
 
   lane :test do
