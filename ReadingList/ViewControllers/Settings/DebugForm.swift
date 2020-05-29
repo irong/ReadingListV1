@@ -3,7 +3,6 @@
 import Foundation
 import Eureka
 import SVProgressHUD
-import Crashlytics
 
 final class DebugForm: FormViewController {
 
@@ -44,7 +43,7 @@ final class DebugForm: FormViewController {
                     cell.textLabel?.textColor = .red
                 }
                 $0.onCellSelection { _, _ in
-                    Crashlytics.sharedInstance().crash()
+                    fatalError("Test Crash")
                 }
             }
 

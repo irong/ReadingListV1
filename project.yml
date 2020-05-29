@@ -10,9 +10,6 @@ packages:
   SwiftyJSON:
     url: https://github.com/SwiftyJSON/SwiftyJSON
     minorVersion: 5.0.0
-  Promises:
-    url: https://github.com/google/promises
-    minorVersion: 1.2.0
   Cosmos:
     url: https://github.com/evgenyneu/Cosmos
     minorVersion: 20.0.0
@@ -43,7 +40,6 @@ targets:
       - sdk: StoreKit.framework
       - target: ReadingList_Foundation
       - package: SwiftyJSON
-      - package: Promises
       - package: Cosmos
       - package: SwiftyStoreKit
       - package: Eureka
@@ -57,10 +53,10 @@ targets:
     postBuildScripts:
       - name: "[CP] Embed Pods Frameworks"
         script:
-      - name: Run Fabric Script
+      - name: Run Crashlytics Script
         inputFiles: [$(BUILT_PRODUCTS_DIR)/$(INFOPLIST_PATH)]
         script: |
-                "${PODS_ROOT}/Fabric/run"
+                "${PODS_ROOT}/FirebaseCrashlytics/run"
     settings:
       base:
         CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED: YES

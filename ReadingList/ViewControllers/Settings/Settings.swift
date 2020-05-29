@@ -1,7 +1,7 @@
 import UIKit
 import MessageUI
 import ReadingList_Foundation
-import Crashlytics
+import FirebaseCrashlytics
 
 final class Settings: UITableViewController {
 
@@ -45,7 +45,7 @@ final class Settings: UITableViewController {
             Note: you are only seeing this because you are running a beta version of this app.
             """, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Crash", style: .destructive) { _ in
-            Crashlytics.sharedInstance().crash()
+            fatalError("Test Crash")
         })
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         present(alert, animated: true)

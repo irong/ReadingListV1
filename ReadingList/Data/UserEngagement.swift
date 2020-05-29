@@ -20,11 +20,6 @@ class UserEngagement {
         if FirebaseApp.app() == nil {
             FirebaseApp.configure()
         }
-        if sendCrashReports {
-            #if RELEASE
-            Fabric.with([Crashlytics.self])
-            #endif
-        }
     }
 
     static func onReviewTrigger() {
@@ -102,7 +97,7 @@ class UserEngagement {
 
     static func logError(_ error: Error) {
         guard sendCrashReports else { return }
-        Crashlytics.sharedInstance().recordError(error)
+        Crashlytics.crashlytics().record(error: error)
     }
 
     private static func shouldTryRequestReview() -> Bool {
