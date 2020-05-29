@@ -3,6 +3,11 @@ import CoreData
 import os.log
 
 public extension NSManagedObject {
+    /// Can be useful when requiring a sort keyPath which points to a property which is the same for all objects.
+    @objc var constantEmptyString: String {
+        return ""
+    }
+
     func delete() {
         guard let context = managedObjectContext else {
             assertionFailure("Attempted to delete a book which was not in a context"); return
@@ -163,10 +168,6 @@ public extension NSDiffableDataSourceSnapshot where ItemIdentifierType == NSMana
         for section in sections {
             let mappedSection = mappingSections(section.name)
             guard let objects = section.objects else { preconditionFailure() }
-            // Do not add section identifiers if there are no objects. We only really expect this to be the case if there is
-            // only ever one section due to the absence of a section keypath. Otherwise, the controller's sections property
-            // skips empty sections.
-            guard !objects.isEmpty else { continue }
             appendSections([mappedSection])
             appendItems(objects.map { ($0 as! NSManagedObject).objectID }.filter { !$0.isTemporaryID }, toSection: mappedSection)
         }

@@ -99,9 +99,11 @@ final class ListBookTable: UITableViewController {
         let fetchRequest = NSManagedObject.fetchRequest(Book.self, batch: 50)
         fetchRequest.predicate = defaultPredicate
         fetchRequest.sortDescriptors = list.order.sortDescriptors
+        // Use a constant property as the sectionNameKeyPath - this will ensure that there are no sections when there are no
+        // results, and thus cause the section headers to be removed when the results count goes to 0.
         let controller = NSFetchedResultsController(fetchRequest: fetchRequest,
                                                     managedObjectContext: PersistentStoreManager.container.viewContext,
-                                                    sectionNameKeyPath: nil, cacheName: nil)
+                                                    sectionNameKeyPath: #keyPath(Book.constantEmptyString), cacheName: nil)
         try! controller.performFetch()
         return controller
     }

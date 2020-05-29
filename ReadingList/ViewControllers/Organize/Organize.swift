@@ -63,7 +63,9 @@ final class Organize: UITableViewController {
         let fetchRequest = NSManagedObject.fetchRequest(List.self, batch: 25)
         fetchRequest.sortDescriptors = sortDescriptors()
 
-        return NSFetchedResultsController<List>(fetchRequest: fetchRequest, managedObjectContext: PersistentStoreManager.container.viewContext, sectionNameKeyPath: nil, cacheName: nil)
+        // Use a constant property as the sectionNameKeyPath - this will ensure that there are no sections when there are no
+        // results, and thus cause the section headers to be removed when the results count goes to 0.
+        return NSFetchedResultsController<List>(fetchRequest: fetchRequest, managedObjectContext: PersistentStoreManager.container.viewContext, sectionNameKeyPath: #keyPath(List.constantEmptyString), cacheName: nil)
     }
 
     private func sortDescriptors() -> [NSSortDescriptor] {
