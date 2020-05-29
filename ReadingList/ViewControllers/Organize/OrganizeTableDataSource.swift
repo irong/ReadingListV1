@@ -21,9 +21,24 @@ extension OrganizeTableViewDataSourceCommon {
             assertionFailure()
             return
         }
+
+        // We need to disable the change detection while we handle the move (since the cells are already in the right location,
+        // because of the move, and we don't want to attempt to re-animate the move). Grab a reference to the results controller
+        // delegate object to hold locally while the delegate is set to nil for the duration of the operation.
+        let delegateReference = resultsController.delegate
+        resultsController.delegate = nil
+
         sortManager.move(objectAt: sourceIndexPath, to: destinationIndexPath)
         try! resultsController.performFetch()
         PersistentStoreManager.container.viewContext.saveAndLogIfErrored()
+
+        // Delay slightly so that the UI update doesn't interfere with the animation of the row reorder completing.
+        // This is quite ugly code, but leads to a less ugly UI.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [unowned self] in
+            self.updateData(animate: false)
+        }
+
+        resultsController.delegate = delegateReference
     }
 }
 
@@ -116,10 +131,7 @@ final class OrganizeTableViewDataSourceLegacy: LegacyEmptyDetectingTableDataSour
     }
 
     func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
-        let delegateReference = resultsController.delegate
-        resultsController.delegate = nil
         moveRow(at: sourceIndexPath, to: destinationIndexPath)
-        resultsController.delegate = delegateReference
     }
 
     func updateData(animate: Bool) {

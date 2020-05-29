@@ -46,17 +46,23 @@ final class Organize: UITableViewController {
             dataSource = OrganizeTableViewDataSourceLegacy(tableView, resultsController: resultsController)
         }
 
-        emptyDataSetManager = OrganizeEmptyDataSetManager(tableView: tableView, navigationBar: navigationController?.navigationBar, navigationItem: navigationItem, searchController: searchController) { [unowned self] isEmpty in
-            self.navigationItem.leftBarButtonItem = isEmpty ? nil : self.editButtonItem
+        emptyDataSetManager = OrganizeEmptyDataSetManager(tableView: tableView, navigationBar: navigationController?.navigationBar, navigationItem: navigationItem, searchController: searchController) { [weak self] _ in
+            self?.configureNavigationBarButtons()
         }
         dataSource.emptyDetectionDelegate = emptyDataSetManager
 
+        // Perform the initial data source load, and then configure the navigation bar buttons, which depend on the empty state of the table
         try! resultsController.performFetch()
         dataSource.updateData(animate: false)
+        configureNavigationBarButtons()
 
         NotificationCenter.default.addObserver(self, selector: #selector(refetch), name: .PersistentStoreBatchOperationOccurred, object: nil)
 
         monitorThemeSetting()
+    }
+
+    private func configureNavigationBarButtons() {
+        navigationItem.leftBarButtonItem = emptyDataSetManager.isShowingEmptyState ? nil : self.editButtonItem
     }
 
     private func buildResultsController() -> NSFetchedResultsController<List> {
@@ -93,7 +99,7 @@ final class Organize: UITableViewController {
     func onSortButtonTap(_ button: UIButton) {
         let alert = UIAlertController.selectOption(ListSortOrder.allCases, title: "Choose Order", selected: UserDefaults.standard[.listSortOrder]) { sortOrder in
             UserDefaults.standard[.listSortOrder] = sortOrder
-            self.resultsController = self.buildResultsController()
+            self.resultsController.fetchRequest.sortDescriptors = self.sortDescriptors()
             try! self.resultsController.performFetch()
             self.dataSource.updateData(animate: true)
         }

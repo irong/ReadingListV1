@@ -72,9 +72,7 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
 
         // Perform the initial data source load, and then configure the navigation bar buttons, which depend on the empty state of the table
         dataSource.updateData(animate: false)
-        if !emptyStateManager.isShowingEmptyState {
-            configureNavigationBarButtons()
-        }
+        configureNavigationBarButtons()
 
         // Watch for batch changes which may occur due to a CSV import or bulk delete
         NotificationCenter.default.addObserver(self, selector: #selector(refetch), name: .PersistentStoreBatchOperationOccurred, object: nil)
