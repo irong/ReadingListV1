@@ -581,14 +581,23 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
             return proposedDestinationIndexPath
         }
 
-        // If we are trying to move a cell into the section below this source cell's section, use the largest row value
+        let proposedRowIndex: Int
         if sourceIndexPath.section < proposedDestinationIndexPath.section {
-            let sourceSectonRowCount = self.tableView(tableView, numberOfRowsInSection: sourceIndexPath.section)
-            return IndexPath(row: sourceSectonRowCount - 1, section: sourceIndexPath.section)
+            // If we are trying to move a cell into the section below this source cell's section, use the largest row value
+            let sourceSectonRowCount = self.dataSource.tableView(tableView, numberOfRowsInSection: sourceIndexPath.section)
+            if sourceSectonRowCount > 0 {
+                proposedRowIndex = sourceSectonRowCount - 1
+            } else {
+                // This shouldn't happen, but be safe in case something changed in the background during the drag. We don't
+                // want to propose a "-1" index, as that will cause the app to crash.
+                proposedRowIndex = 0
+            }
+        } else {
+            // Otherwise we must be trying to move a row into the section above the source section: propose a row index of 0
+            proposedRowIndex = 0
         }
 
-        // Otherwise we must be trying to move a row into the section above the source section: propose a row index of 0
-        return IndexPath(row: 0, section: sourceIndexPath.section)
+        return IndexPath(row: proposedRowIndex, section: sourceIndexPath.section)
     }
 
     private func configurePredicatesAndUpdateData() {
