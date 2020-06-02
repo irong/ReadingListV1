@@ -82,11 +82,12 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
     }
 
     override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+
         // Deselect selected rows, so they don't stay highlighted, but only when in non-split mode
         if let selectedIndexPath = self.tableView.indexPathForSelectedRow, !splitViewController!.detailIsPresented {
             self.tableView.deselectRow(at: selectedIndexPath, animated: animated)
         }
-        super.viewDidAppear(animated)
     }
 
     private func reconfigureNavigationBarAndSectionHeaders() {
