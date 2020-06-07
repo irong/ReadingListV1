@@ -82,6 +82,7 @@ public final class ResultsControllerSnapshotGenerator<Delegate>: ResultsControll
 
     public func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
         guard let itemID = (anObject as? NSManagedObject)?.objectID else { preconditionFailure() }
+        assert(!itemID.isTemporaryID, "An object with temporary ID was reported as changed")
 
         switch type {
         case .insert:

@@ -10,7 +10,7 @@ public extension NSManagedObject {
 
     func delete() {
         guard let context = managedObjectContext else {
-            assertionFailure("Attempted to delete a book which was not in a context"); return
+            assertionFailure("Attempted to delete an object which was not in a context"); return
         }
         context.delete(self)
     }
@@ -46,6 +46,10 @@ public extension NSManagedObject {
             return false
         }
     }
+
+    func inContext(_ context: NSManagedObjectContext) -> Self {
+        return context.object(with: objectID) as! Self
+    }
 }
 
 public extension NSManagedObjectContext {
@@ -55,6 +59,22 @@ public extension NSManagedObjectContext {
     */
     func object(withID id: URL) -> NSManagedObject {
         return object(with: persistentStoreCoordinator!.managedObjectID(forURIRepresentation: id)!)
+    }
+
+    /**
+     Gets the maximum value of the item at the specified keypath.
+     */
+    func getMaximum<Entity, SortValue>(sortValueKeyPath keyPath: KeyPath<Entity, SortValue>) -> SortValue?
+        where SortValue: Comparable, Entity: NSManagedObject {
+        let fetchRequest = NSManagedObject.fetchRequest(Entity.self, limit: 1)
+        fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath, ascending: false)]
+        fetchRequest.returnsObjectsAsFaults = false
+        let result = try! fetch(fetchRequest)
+        if let firstResult = result.first {
+            return firstResult[keyPath: keyPath]
+        } else {
+            return nil
+        }
     }
 }
 
@@ -169,10 +189,10 @@ public extension NSDiffableDataSourceSnapshot where ItemIdentifierType == NSMana
             let mappedSection = mappingSections(section.name)
             guard let objects = section.objects else { preconditionFailure() }
             appendSections([mappedSection])
-            appendItems(objects.map { ($0 as! NSManagedObject).objectID }.filter { !$0.isTemporaryID }, toSection: mappedSection)
+            let objectIds = objects.map { ($0 as! NSManagedObject).objectID }
+            assert(objectIds.filter { $0.isTemporaryID }.isEmpty, "Found objects with temporary IDs during snapshot generation")
+            appendItems(objectIds, toSection: mappedSection)
         }
-
-        os_log(.debug, "Generated snapshot from controller:\n%{public}s", sectionIdentifiers.map { "Section \(String(describing: $0))\n\(itemIdentifiers(inSection: $0).map { String(describing: $0) }.joined(separator: "\n"))" }.joined(separator: "\n------\n"))
     }
 }
 

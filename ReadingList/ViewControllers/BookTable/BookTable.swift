@@ -100,7 +100,7 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
         return readStates.appendingRemaining(BookReadState.allCases).map { readState in
             let fetchRequest = NSManagedObject.fetchRequest(Book.self, batch: 25)
             fetchRequest.predicate = NSPredicate(boolean: false)
-            fetchRequest.sortDescriptors = UserDefaults.standard[UserSettingsCollection.sortSetting(for: readState)].sortDescriptors
+            fetchRequest.sortDescriptors = UserDefaults.standard[UserSettingsCollection.sortSetting(for: readState)].bookSortDescriptors
             let controller = NSFetchedResultsController<Book>(fetchRequest: fetchRequest, managedObjectContext: PersistentStoreManager.container.viewContext,
                                                               sectionNameKeyPath: #keyPath(Book.readState), cacheName: nil)
             return (readState, controller)

@@ -27,12 +27,7 @@ import ReadingList_Foundation
     }
 
     public var supportsListSorting: Bool {
-        switch self {
-        case .listCustom, .title, .author, .startDate, .finishDate, .subtitle, .rating:
-            return true
-        case .custom, .progress:
-            return false
-        }
+        return listItemSortDescriptors != nil
     }
 
     func supports(_ state: BookReadState) -> Bool {
@@ -45,23 +40,56 @@ import ReadingList_Foundation
         }
     }
 
-    var sortDescriptors: [NSSortDescriptor] {
+    var listItemSortDescriptors: [NSSortDescriptor]? {
         switch self {
-        case .title: return [NSSortDescriptor(\Book.title), NSSortDescriptor(\Book.subtitle)]
-        case .subtitle: return [NSSortDescriptor(\Book.hasSubtitle, ascending: false), NSSortDescriptor(\Book.subtitle), NSSortDescriptor(\Book.title)]
-        case .author: return [NSSortDescriptor(\Book.authorSort),
-                              NSSortDescriptor(\Book.title)]
-        case .startDate: return [NSSortDescriptor(\Book.startedReading, ascending: false),
-                                 NSSortDescriptor(\Book.title)]
-        case .finishDate: return [NSSortDescriptor(\Book.finishedReading, ascending: false),
-                                  NSSortDescriptor(\Book.startedReading, ascending: false),
-                                  NSSortDescriptor(\Book.title)]
-        case .custom: return [NSSortDescriptor(\Book.sort),
-                              NSSortDescriptor(\Book.googleBooksId),
-                              NSSortDescriptor(\Book.manualBookId)]
-        case .listCustom: return [NSSortDescriptor(\Book.lists)]
-        case .progress: return [NSSortDescriptor(Book.Key.currentPercentage.rawValue)]
-        case .rating: return [NSSortDescriptor(Book.Key.rating.rawValue, ascending: false)]
+        case .custom, .progress:
+            return nil
+        case .listCustom:
+            return [NSSortDescriptor(\ListItem.sort)]
+        default:
+            return bookSortKeyPaths?.map { $0.withKeyPathPrefix(#keyPath(ListItem.book)).toNSSortDescriptor() }
         }
+    }
+
+    var bookSortDescriptors: [NSSortDescriptor]? {
+        return bookSortKeyPaths?.map { $0.toNSSortDescriptor() }
+    }
+
+    private var bookSortKeyPaths: [SortKeyPath]? {
+        switch self {
+        case .title: return [SortKeyPath(#keyPath(Book.title)), SortKeyPath(#keyPath(Book.subtitle))]
+        case .subtitle: return [SortKeyPath(#keyPath(Book.hasSubtitle), ascending: false), SortKeyPath(#keyPath(Book.subtitle)), SortKeyPath(#keyPath(Book.title))]
+        case .author: return [SortKeyPath(#keyPath(Book.authorSort)),
+                              SortKeyPath(#keyPath(Book.title))]
+        case .startDate: return [SortKeyPath(#keyPath(Book.startedReading), ascending: false),
+                                 SortKeyPath(#keyPath(Book.title))]
+        case .finishDate: return [SortKeyPath(#keyPath(Book.finishedReading), ascending: false),
+                                  SortKeyPath(#keyPath(Book.startedReading), ascending: false),
+                                  SortKeyPath(#keyPath(Book.title))]
+        case .custom: return [SortKeyPath(#keyPath(Book.sort)),
+                              SortKeyPath(#keyPath(Book.googleBooksId)),
+                              SortKeyPath(#keyPath(Book.manualBookId))]
+        case .progress: return [SortKeyPath(Book.Key.currentPercentage.rawValue)]
+        case .rating: return [SortKeyPath(Book.Key.rating.rawValue, ascending: false)]
+        case .listCustom: return nil
+        }
+    }
+}
+
+struct SortKeyPath {
+    init(_ keyPath: String, ascending: Bool = true) {
+        self.keyPath = keyPath
+        self.ascending = ascending
+    }
+
+    let keyPath: String
+    let ascending: Bool
+
+    func toNSSortDescriptor() -> NSSortDescriptor {
+        return NSSortDescriptor(key: keyPath, ascending: ascending)
+    }
+
+    func withKeyPathPrefix(_ prefix: String) -> SortKeyPath {
+        return SortKeyPath("\(prefix).\(self.keyPath)", ascending: self.ascending)
     }
 }

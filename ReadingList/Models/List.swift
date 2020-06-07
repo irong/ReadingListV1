@@ -2,14 +2,19 @@ import Foundation
 import CoreData
 
 @objc(List)
-public class List: NSManagedObject {
-    @NSManaged public var name: String
-    @NSManaged public var books: NSOrderedSet
-    @NSManaged public var order: BookSort
-    @NSManaged public var sort: Int32
+class List: NSManagedObject {
+    @NSManaged var name: String
+    @NSManaged var order: BookSort
+    @NSManaged var sort: Int32
+    @NSManaged private(set) var custom: Bool
 
-    @NSManaged func addBooks(_: NSOrderedSet)
-    @NSManaged func removeBooks(_: NSSet)
+    /** The item which hold a book-index pair for each book in this list */
+    @NSManaged private(set) var items: Set<ListItem>
+
+    /** The ordered array of books within this list. If just a count is required, use items.count instead. */
+    var books: [Book] {
+        items.sorted(byAscending: \.sort).map(\.book)
+    }
 
     convenience init(context: NSManagedObjectContext, name: String) {
         self.init(context: context)
@@ -19,23 +24,50 @@ public class List: NSManagedObject {
         }
     }
 
-    static func names(fromContext context: NSManagedObjectContext) -> [String] {
+    func removeBook(_ book: Book) {
+        for item in items where item.book == book {
+            item.delete()
+        }
+    }
+
+    func removeBooks(_ books: Set<Book>) {
+        for item in items where books.contains(item.book) {
+            item.delete()
+        }
+    }
+
+    func addBooks(_ books: [Book]) {
+        guard let context = managedObjectContext else {
+            preconditionFailure("Attempted to add books to a List which was not in a context")
+        }
+
+        // Grab the largest current sort value (if we have any books) to use in our next ListItem sort index
+        var index: Int32
+        if !items.isEmpty, let maxSort = context.getMaximum(sortValueKeyPath: \ListItem.sort) {
+            index = maxSort + 1
+        } else {
+            index = 0
+        }
+
+        // Create some ordered ListItems mapping to the provided books. Create a set of all the existing books so we can
+        // efficiently check whether any of the books are already in this list, and skip them if so.
+        let existingBooks = Set(self.books)
+        for book in books {
+            guard !existingBooks.contains(book) else { continue }
+            _ = ListItem(context: context, book: book, list: self, sort: index)
+            index += 1
+        }
+    }
+
+    class func names(fromContext context: NSManagedObjectContext) -> [String] {
         let fetchRequest = NSManagedObject.fetchRequest(List.self)
         fetchRequest.sortDescriptors = [NSSortDescriptor(\List.sort), NSSortDescriptor(\List.name)]
         fetchRequest.returnsObjectsAsFaults = false
         return (try! context.fetch(fetchRequest)).map { $0.name }
     }
 
-    static func maxSort(fromContext context: NSManagedObjectContext) -> Int32? {
-        let fetchRequest = NSManagedObject.fetchRequest(List.self, limit: 1)
-        fetchRequest.sortDescriptors = [NSSortDescriptor(\List.sort, ascending: false)]
-        fetchRequest.returnsObjectsAsFaults = false
-        let result = try! context.fetch(fetchRequest)
-        if let firstResult = result.first {
-            return firstResult.sort
-        } else {
-            return nil
-        }
+    class func maxSort(fromContext context: NSManagedObjectContext) -> Int32? {
+        return context.getMaximum(sortValueKeyPath: \List.sort)
     }
 }
 

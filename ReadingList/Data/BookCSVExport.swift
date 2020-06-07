@@ -38,7 +38,12 @@ class BookCSVExport {
         columns.append(contentsOf: lists.map { listName in
             CsvColumn<Book>(header: listName) { book in
                 guard let list = book.lists.first(where: { $0.name == listName }) else { return nil }
-                return String(describing: list.books.index(of: book) + 1) // we use 1-based indexes
+                if let listIndex = book.listItems.first(where: { $0.list == list })?.sort {
+                    return String(describing: listIndex + 1) // we use 1-based indexes
+                } else {
+                    assertionFailure("Unexpected missing list index")
+                    return nil
+                }
             }
         })
 

@@ -124,7 +124,7 @@ class BookCSVParserDelegate: CSVParserDelegate {
             let orderedBooks = listMapping.value.sorted { $0.1 < $1.1 }
                 .map { context.object(with: $0.bookID) as! Book }
                 .filter { !list.books.contains($0) }
-            list.addBooks(NSOrderedSet(array: orderedBooks))
+            list.addBooks(orderedBooks)
         }
     }
 

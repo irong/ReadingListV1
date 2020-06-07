@@ -5,53 +5,45 @@ import ReadingList_Foundation
 
 protocol ListBookDataSource: class, UITableViewEmptyDetectingDataSource {
     func updateData(animate: Bool)
-    func getBook(at indexPath: IndexPath) -> Book
+    var controller: NSFetchedResultsController<ListItem> { get set }
     var list: List { get }
     var searchController: UISearchController { get }
-    var dataProvider: ListBookDataProvider { get }
+    var sortManager: SortManager<ListItem> { get }
+}
+
+extension ListItem: Sortable {
+    var sortIndex: Int32 {
+        get { sort }
+        set { sort = newValue }
+    }
 }
 
 extension ListBookDataSource {
+    func getBook(at indexPath: IndexPath) -> Book {
+        return controller.object(at: indexPath).book
+    }
+
     func canMoveRow() -> Bool {
+        guard list.order == .listCustom else { return false }
         guard !searchController.hasActiveSearchTerms else { return false }
-        // Lists with a custom ordering use a Set data provider
-        guard let setDataProvider = dataProvider as? ListBookSetDataProvider else { return false }
-        return setDataProvider.books.count > 1
+        return list.items.count > 1
     }
 
     func moveRow(at sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
+        guard list.order == .listCustom else { return }
         guard !searchController.hasActiveSearchTerms else { return }
         guard sourceIndexPath != destinationIndexPath else { return }
-        guard let setDataProvider = dataProvider as? ListBookSetDataProvider else { return }
 
-        // Disable change notification updates. Since we could be running this code in either of a diffable or legacy data source,
-        // with corresponding diffable or legacy data provider, we need to do some verbose type checks. It isn't trivial to expose
-        // a generic property which works in all cases.
-        if #available(iOS 13.0, *), let diffableSetDataProvider = setDataProvider as? DiffableListBookSetDataProvider {
-            diffableSetDataProvider.dataSource = nil
-        } else if let legacySetDataProvider = setDataProvider as? LegacyListBookSetDataProvider {
-            legacySetDataProvider.dataSource = nil
-        } else {
-            preconditionFailure()
-        }
+        // Disable change notification updates
+        let controllerDelegate = controller.delegate
+        controller.delegate = nil
 
-        var books = list.books.map { $0 as! Book }
-        let movedBook = books.remove(at: sourceIndexPath.row)
-        books.insert(movedBook, at: destinationIndexPath.row)
-        list.books = NSOrderedSet(array: books)
+        sortManager.move(objectAt: sourceIndexPath, to: destinationIndexPath)
         list.managedObjectContext!.saveAndLogIfErrored()
+        try! controller.performFetch()
 
-        // Reneable change notification updates. Since we could be running this code in either of a diffable or legacy data source,
-        // with corresponding diffable or legacy data provider, we need to do some verbose type checks. It isn't trivial to expose
-        // a generic property which works in all cases.
-        if #available(iOS 13.0, *), let diffableSetDataProvider = setDataProvider as? DiffableListBookSetDataProvider,
-            let diffableDataSource = self as? ListBookDiffableDataSource {
-            diffableSetDataProvider.dataSource = diffableDataSource
-        } else if let legacySetDataProvider = setDataProvider as? LegacyListBookSetDataProvider, let legacyDataSource = self as? ListBookLegacyDataSource {
-            legacySetDataProvider.dataSource = legacyDataSource
-        } else {
-            preconditionFailure()
-        }
+        // Reneable change notification updates.
+        controller.delegate = controllerDelegate
         UserEngagement.logEvent(.reorderList)
 
         // Delay slightly so that the UI update doesn't interfere with the animation of the row reorder completing.
@@ -64,44 +56,51 @@ extension ListBookDataSource {
 
 @available(iOS 13.0, *)
 final class ListBookDiffableDataSource: EmptyDetectingTableDiffableDataSource<String, NSManagedObjectID>, ResultsControllerSnapshotGeneratorDelegate, ListBookDataSource {
-    typealias SectionType = String
 
-    var diffableDataProvider: DiffableListBookDataProvider {
-        get {
-            wrappedDataProvider.wrappedValue
-        }
+    typealias SectionType = String
+    var controller: NSFetchedResultsController<ListItem> {
+        get { wrappedController.wrappedValue }
         set {
-            wrappedDataProvider.wrappedValue = newValue
-            wrappedDataProvider.wrappedValue.dataSource = self
+            // Remove the old controller's delegate (just in case we have a memory leak and it isn't deallocated)
+            // and assign the new value's delegate.
+            wrappedController.wrappedValue.delegate = nil
+            wrappedController.wrappedValue = newValue
+            newValue.delegate = self.changeMediator.controllerDelegate
         }
     }
-    private let wrappedDataProvider: Wrapped<DiffableListBookDataProvider>
-
-    var dataProvider: ListBookDataProvider { diffableDataProvider }
+    private let wrappedController: Wrapped<NSFetchedResultsController<ListItem>>
+    var changeMediator: ResultsControllerSnapshotGenerator<ListBookDiffableDataSource>!
     let list: List
     let searchController: UISearchController
     let onContentChanged: () -> Void
-    var controllerDataProvider: ListBookControllerDataProvider? { dataProvider as? ListBookControllerDataProvider }
-    var setDataProvider: ListBookSetDataProvider? { dataProvider as? ListBookSetDataProvider }
+    let sortManager: SortManager<ListItem>
 
-    init(_ tableView: UITableView, list: List, dataProvider: DiffableListBookDataProvider, searchController: UISearchController, onContentChanged: @escaping () -> Void) {
-        // This wrapping business gets around the inabiliy to refer to self in the closure passed to super.init.
-        // We need to refer to the data provider which self will have at the time the closure is run. To achieve this,
-        // create a simple wrapping object: this reference stays the same, but _its_ reference can change later on.
-        let wrappedDataProvider = Wrapped(dataProvider)
-        self.wrappedDataProvider = wrappedDataProvider
-
+    init(_ tableView: UITableView, list: List, controller: NSFetchedResultsController<ListItem>, searchController: UISearchController, onContentChanged: @escaping () -> Void) {
         self.searchController = searchController
         self.list = list
         self.onContentChanged = onContentChanged
+
+        // This wrapping business gets around the inabiliy to refer to self in the closure passed to super.init.
+        // We need to refer to the data provider which self will have at the time the closure is run. To achieve this,
+        // create a simple wrapping object: this reference stays the same, but _its_ reference can change later on.
+        let wrappedController = Wrapped(controller)
+        self.wrappedController = wrappedController
+
+        self.sortManager = SortManager<ListItem>(tableView) {
+            wrappedController.wrappedValue.object(at: $0)
+        }
         super.init(tableView: tableView) { _, indexPath, _ in
             let cell = tableView.dequeue(BookTableViewCell.self, for: indexPath)
-            let book = wrappedDataProvider.wrappedValue.getBook(at: indexPath)
+            let book = wrappedController.wrappedValue.object(at: indexPath).book
             cell.configureFrom(book, includeReadDates: false)
             return cell
         }
 
-        self.diffableDataProvider.dataSource = self
+        self.changeMediator = ResultsControllerSnapshotGenerator<ListBookDiffableDataSource> { [unowned self] in
+            self.snapshot()
+        }
+        self.changeMediator.delegate = self
+        self.controller.delegate = self.changeMediator.controllerDelegate
     }
 
     override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
@@ -116,12 +115,8 @@ final class ListBookDiffableDataSource: EmptyDetectingTableDiffableDataSource<St
         moveRow(at: sourceIndexPath, to: destinationIndexPath)
     }
 
-    func getBook(at indexPath: IndexPath) -> Book {
-        return dataProvider.getBook(at: indexPath)
-    }
-
     func updateData(animate: Bool) {
-        apply(diffableDataProvider.snapshot(), animatingDifferences: animate)
+        apply(controller.snapshot(), animatingDifferences: animate)
         onContentChanged()
     }
 
@@ -133,38 +128,39 @@ final class ListBookDiffableDataSource: EmptyDetectingTableDiffableDataSource<St
 
 @available(iOS, obsoleted: 13.0)
 final class ListBookLegacyDataSource: LegacyEmptyDetectingTableDataSource, NSFetchedResultsControllerDelegate, ListBookDataSource {
-    typealias DataProvider = LegacyListBookDataProvider
-    var legacyDataProvider: LegacyListBookDataProvider {
-        didSet {
-            legacyDataProvider.dataSource = self
-            configureChangeMonitoring()
+    private var wrappedController: Wrapped<NSFetchedResultsController<ListItem>>
+    var controller: NSFetchedResultsController<ListItem> {
+        get { wrappedController.wrappedValue }
+        set {
+            // Remove the old controller's delegate (just in case we have a memory leak and it isn't deallocated)
+            // and assign the new value's delegate.
+            wrappedController.wrappedValue.delegate = nil
+            wrappedController.wrappedValue = newValue
+            newValue.delegate = self
         }
     }
-    var dataProvider: ListBookDataProvider { legacyDataProvider }
     let list: List
     let onContentChanged: () -> Void
     let searchController: UISearchController
+    let sortManager: SortManager<ListItem>
 
-    init(_ tableView: UITableView, list: List, dataProvider: LegacyListBookDataProvider, searchController: UISearchController, onContentChanged: @escaping () -> Void) {
+    init(_ tableView: UITableView, list: List, controller: NSFetchedResultsController<ListItem>, searchController: UISearchController, onContentChanged: @escaping () -> Void) {
         self.list = list
-        self.legacyDataProvider = dataProvider
+        let wrappedController = Wrapped(controller)
+        self.wrappedController = wrappedController
         self.searchController = searchController
         self.onContentChanged = onContentChanged
+        self.sortManager = SortManager<ListItem>(tableView) {
+            wrappedController.wrappedValue.object(at: $0)
+        }
         super.init(tableView)
 
-        self.legacyDataProvider.dataSource = self
-        configureChangeMonitoring()
-    }
-
-    private func configureChangeMonitoring() {
-        if let controllerProvider = dataProvider as? LegacyListBookControllerDataProvider {
-            controllerProvider.controller.delegate = self
-        }
+        controller.delegate = self
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeue(BookTableViewCell.self, for: indexPath)
-        let book = dataProvider.getBook(at: indexPath)
+        let book = getBook(at: indexPath)
         cell.initialise(withTheme: UserDefaults.standard[.theme])
         cell.configureFrom(book, includeReadDates: false)
         return cell
@@ -174,16 +170,12 @@ final class ListBookLegacyDataSource: LegacyEmptyDetectingTableDataSource, NSFet
         return true
     }
 
-    func getBook(at indexPath: IndexPath) -> Book {
-        return dataProvider.getBook(at: indexPath)
-    }
-
     override func sectionCount(in tableView: UITableView) -> Int {
-        return legacyDataProvider.sectionCount()
+        return controller.sections!.count
     }
 
     override func rowCount(in tableView: UITableView, forSection section: Int) -> Int {
-        return legacyDataProvider.rowCount(in: section)
+        return controller.sections![section].numberOfObjects
     }
 
     func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {

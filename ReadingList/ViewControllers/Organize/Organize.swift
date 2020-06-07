@@ -13,7 +13,7 @@ extension List: Sortable {
 extension UITableViewCell {
     func configure(from list: List) {
         textLabel!.text = list.name
-        detailTextLabel!.text = "\(list.books.count) book\(list.books.count == 1 ? "" : "s")"
+        detailTextLabel!.text = "\(list.items.count) book\(list.items.count == 1 ? "" : "s")"
         if #available(iOS 13.0, *) { } else {
             defaultInitialise(withTheme: UserDefaults.standard[.theme])
         }
@@ -201,7 +201,7 @@ final class Organize: UITableViewController {
             // If the search bar is visible on this view, then it should be visible on the presented view too to
             // prevent an animation issue from occuring (https://stackoverflow.com/a/55043782/5513562) on iOS <13.
             if #available(iOS 13.0, *) { /* issue is fixed */ } else {
-                listBookTable.showSearchBarOnAppearance = !searchController.isActive && searchController.searchBar.frame.height > 0 && !list.books.isEmpty
+                listBookTable.showSearchBarOnAppearance = !searchController.isActive && searchController.searchBar.frame.height > 0 && !list.items.isEmpty
             }
         }
     }

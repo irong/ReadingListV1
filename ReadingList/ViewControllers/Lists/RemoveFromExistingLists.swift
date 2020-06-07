@@ -10,7 +10,7 @@ final class RemoveFromExistingLists: UITableViewController {
         super.viewDidLoad()
 
         let fetchRequest = NSManagedObject.fetchRequest(List.self, batch: 40)
-        fetchRequest.predicate = NSPredicate(format: "%@ IN books", book)
+        fetchRequest.predicate = NSPredicate(format: "%@ IN \(#keyPath(List.items)).\(#keyPath(ListItem.book))", book)
         fetchRequest.sortDescriptors = [NSSortDescriptor(\List.sort), NSSortDescriptor(\List.name)]
         resultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: PersistentStoreManager.container.viewContext, sectionNameKeyPath: nil, cacheName: nil)
         resultsController.delegate = self
@@ -40,14 +40,14 @@ final class RemoveFromExistingLists: UITableViewController {
 
         let list = resultsController.object(at: indexPath)
         cell.textLabel!.text = list.name
-        cell.detailTextLabel!.text = "\(list.books.count) book\(list.books.count == 1 ? "" : "s")"
+        cell.detailTextLabel!.text = "\(list.items.count) book\(list.items.count == 1 ? "" : "s")"
         return cell
     }
 
     override func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath) -> [UITableViewRowAction]? {
         return [UITableViewRowAction(style: .destructive, title: "Remove", color: .red) { _, indexPath in
             let list = self.resultsController.object(at: indexPath)
-            list.removeBooks(NSSet(object: self.book!))
+            list.removeBook(self.book)
             list.managedObjectContext!.saveAndLogIfErrored()
             UserEngagement.logEvent(.removeBookFromList)
         }]

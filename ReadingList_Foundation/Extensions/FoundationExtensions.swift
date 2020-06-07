@@ -315,3 +315,13 @@ public extension NSOrderedSet {
         return count == 0 //swiftlint:disable:this empty_count
     }
 }
+
+public extension Sequence {
+    func sorted<T>(byAscending sortableProperty: KeyPath<Element, T>) -> [Self.Element] where T: Comparable {
+        return sorted { $0[keyPath: sortableProperty] < $1[keyPath: sortableProperty] }
+    }
+
+    func map<T>(_ keyPath: KeyPath<Element, T>) -> [T] {
+        return map { $0[keyPath: keyPath] }
+    }
+}

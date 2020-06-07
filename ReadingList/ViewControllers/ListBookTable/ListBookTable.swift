@@ -29,7 +29,11 @@ final class ListBookTable: UITableViewController {
     }
 
     private var defaultPredicate: NSPredicate {
-        return NSPredicate(format: "%@ IN %K", list, #keyPath(Book.lists))
+        return NSPredicate.and([
+            NSPredicate(format: "%@ = %K", list, #keyPath(ListItem.list)),
+            // Filter out any orphaned ListItem objects
+            NSPredicate(format: "%K != nil", #keyPath(ListItem.book))
+        ])
     }
 
     override func viewDidLoad() {
@@ -49,10 +53,11 @@ final class ListBookTable: UITableViewController {
         navigationItem.searchController = searchController
 
         if #available(iOS 13.0, *) {
-            dataSource = ListBookDiffableDataSource(tableView, list: list, dataProvider: buildDiffableDataProvider(), searchController: searchController, onContentChanged: reloadHeaders)
+            dataSource = ListBookDiffableDataSource(tableView, list: list, controller: buildResultsController(), searchController: searchController, onContentChanged: reloadHeaders)
         } else {
-            dataSource = ListBookLegacyDataSource(tableView, list: list, dataProvider: buildLegacyDataProvider(), searchController: searchController, onContentChanged: reloadHeaders)
+            dataSource = ListBookLegacyDataSource(tableView, list: list, controller: buildResultsController(), searchController: searchController, onContentChanged: reloadHeaders)
         }
+        try! dataSource.controller.performFetch()
 
         // Configure the empty state manager to detect when the table becomes empty
         emptyStateManager = ListBookTableEmptyDataSetManager(tableView: tableView, navigationBar: navigationController?.navigationBar, navigationItem: navigationItem, searchController: searchController, list: list)
@@ -65,47 +70,15 @@ final class ListBookTable: UITableViewController {
         monitorThemeSetting()
     }
 
-    private func rebuildDataProvider() {
-        if #available(iOS 13.0, *), let diffableDataSource = dataSource as? ListBookDiffableDataSource {
-            diffableDataSource.diffableDataProvider = buildDiffableDataProvider()
-        } else if let legacyDataSource = dataSource as? ListBookLegacyDataSource {
-            legacyDataSource.legacyDataProvider = buildLegacyDataProvider()
-        } else {
-            preconditionFailure()
-        }
-    }
-
-    @available(iOS 13.0, *)
-    private func buildDiffableDataProvider() -> DiffableListBookDataProvider {
-        if list.order == .listCustom {
-            // We cannot use a fetched results controller when ordering by the underlying ordered predicate order.
-            // Instead, we just use the ordered set as our source.
-            return DiffableListBookSetDataProvider(list)
-        } else {
-            return DiffableListBookControllerDataProvider(buildResultsController())
-        }
-    }
-
-    @available(iOS, obsoleted: 13.0)
-    private func buildLegacyDataProvider() -> LegacyListBookDataProvider {
-        if list.order == .listCustom {
-            return LegacyListBookSetDataProvider(list)
-        } else {
-            return LegacyListBookControllerDataProvider(buildResultsController())
-        }
-    }
-
-    private func buildResultsController() -> NSFetchedResultsController<Book> {
-        let fetchRequest = NSManagedObject.fetchRequest(Book.self, batch: 50)
+    private func buildResultsController() -> NSFetchedResultsController<ListItem> {
+        let fetchRequest = NSManagedObject.fetchRequest(ListItem.self, batch: 50)
         fetchRequest.predicate = defaultPredicate
-        fetchRequest.sortDescriptors = list.order.sortDescriptors
+        fetchRequest.sortDescriptors = list.order.listItemSortDescriptors
         // Use a constant property as the sectionNameKeyPath - this will ensure that there are no sections when there are no
         // results, and thus cause the section headers to be removed when the results count goes to 0.
-        let controller = NSFetchedResultsController(fetchRequest: fetchRequest,
-                                                    managedObjectContext: PersistentStoreManager.container.viewContext,
-                                                    sectionNameKeyPath: #keyPath(Book.constantEmptyString), cacheName: nil)
-        try! controller.performFetch()
-        return controller
+        return NSFetchedResultsController(fetchRequest: fetchRequest,
+                                          managedObjectContext: PersistentStoreManager.container.viewContext,
+                                          sectionNameKeyPath: #keyPath(Book.constantEmptyString), cacheName: nil)
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -180,7 +153,9 @@ final class ListBookTable: UITableViewController {
         guard section == 0 && tableView.numberOfRows(inSection: 0) > 0 else { return nil }
         let header = tableView.dequeue(BookTableHeader.self)
         header.presenter = self
-        header.onSortChanged = sortOrderChanged
+        header.onSortChanged = { [weak self] in
+            self?.sortOrderChanged()
+        }
         configureHeader(header, at: section)
         return header
     }
@@ -216,7 +191,10 @@ final class ListBookTable: UITableViewController {
             assertionFailure()
             searchController.isActive = false
         }
-        rebuildDataProvider()
+        // Results controller delegates don't seem to play nicely with changing sort descriptors. So instead, we rebuild the whole
+        // result controller, not forgetting to pass the new one to the data source.
+        self.dataSource.controller = buildResultsController()
+        try! dataSource.controller.performFetch()
         dataSource.updateData(animate: true)
 
         // Put the top row at the "middle", so that the top row is not right up at the top of the table
@@ -238,6 +216,11 @@ final class ListBookTable: UITableViewController {
         cachedListNames = List.names(fromContext: PersistentStoreManager.container.viewContext)
     }
 
+    @objc private func refetch() {
+        try! dataSource.controller.performFetch()
+        dataSource.updateData(animate: false)
+    }
+
     private func ignoringSaveNotifications(_ block: () -> Void) {
         ignoreNotifications = true
         block()
@@ -254,35 +237,7 @@ final class ListBookTable: UITableViewController {
 
     override func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath) -> [UITableViewRowAction]? {
         return [UITableViewRowAction(style: .destructive, title: "Remove") { _, indexPath in
-            let bookToRemove = self.dataSource.getBook(at: indexPath)
-
-            // This does the actual removal
-            self.list.removeBooks(NSSet(object: bookToRemove))
-
-            // We don't have "nice" automatic handling of book removal from a list when using the legacy set based data provider.
-            // We can detect that case, though, and handle the row removal ourselves.
-            if let legacyDataSource = self.dataSource as? ListBookLegacyDataSource, let dataProvider = legacyDataSource.dataProvider as? LegacyListBookSetDataProvider {
-                // Remove the dataSource reference from the dataProvider, so it cannot request a reload of the table
-                dataProvider.dataSource = nil
-                self.list.managedObjectContext!.saveAndLogIfErrored()
-
-                // Perform the table update
-                if self.list.books.isEmpty {
-                    tableView.deleteSections(IndexSet(arrayLiteral: 0), with: .automatic)
-                    self.emptyStateManager.reloadEmptyStateView()
-                } else {
-                    tableView.deleteRows(at: [indexPath], with: .automatic)
-                }
-
-                // Reactivate change detection
-                dataProvider.dataSource = legacyDataSource
-
-                // Reload the headers to refresh the book count
-                self.reloadHeaders()
-            } else {
-                self.list.managedObjectContext!.saveAndLogIfErrored()
-            }
-
+            self.dataSource.controller.object(at: indexPath).deleteAndSave()
             UserEngagement.logEvent(.removeBookFromList)
         }]
     }
@@ -310,29 +265,18 @@ extension ListBookTable: UISearchResultsUpdating {
         if searchTerms.isEmptyOrWhitespace || searchTerms.trimming().count < 2 {
             return nil
         } else {
-            return NSPredicate.wordsWithinFields(searchTerms, fieldNames: #keyPath(Book.title), #keyPath(Book.authorSort), "ANY \(#keyPath(Book.subjects)).name")
+            return NSPredicate.wordsWithinFields(searchTerms, fieldNames: #keyPath(ListItem.book.title), #keyPath(ListItem.book.authorSort), "ANY \(#keyPath(ListItem.book.subjects)).name")
         }
     }
 
     func updateSearchResults(for searchController: UISearchController) {
         let searchPredicate = getSearchPredicate()
-
-        if let controllerDataProvider = dataSource.dataProvider as? ListBookControllerDataProvider {
-            if let searchPredicate = searchPredicate {
-                controllerDataProvider.controller.fetchRequest.predicate = NSPredicate.and([defaultPredicate, searchPredicate])
-            } else {
-                controllerDataProvider.controller.fetchRequest.predicate = defaultPredicate
-            }
-            try! controllerDataProvider.controller.performFetch()
-        } else if var setDataProvider = dataSource.dataProvider as? ListBookSetDataProvider {
-            if let searchPredicate = searchPredicate {
-                setDataProvider.filterPredicate = searchPredicate
-            } else {
-                setDataProvider.filterPredicate = NSPredicate(boolean: true)
-            }
+        if let searchPredicate = searchPredicate {
+            dataSource.controller.fetchRequest.predicate = NSPredicate.and([defaultPredicate, searchPredicate])
         } else {
-            preconditionFailure("Unexpected data provider type: \(dataSource.dataProvider)")
+            dataSource.controller.fetchRequest.predicate = defaultPredicate
         }
+        try! dataSource.controller.performFetch()
 
         dataSource.updateData(animate: true)
     }
@@ -341,15 +285,7 @@ extension ListBookTable: UISearchResultsUpdating {
 extension ListBookTable: HeaderConfigurable {
     func configureHeader(_ header: UITableViewHeaderFooterView, at index: Int) {
         guard let header = header as? BookTableHeader else { preconditionFailure() }
-        let numberOfRows: Int
-        if let controllerDataProvider = dataSource.dataProvider as? ListBookControllerDataProvider {
-            numberOfRows = controllerDataProvider.controller.sections![0].numberOfObjects
-        } else if let setDataProvider = dataSource.dataProvider as? ListBookSetDataProvider {
-            numberOfRows = setDataProvider.books.count
-        } else {
-            preconditionFailure("Unexpected data provider type \(dataSource.dataProvider)")
-        }
-
+        let numberOfRows = dataSource.controller.sections![0].numberOfObjects
         header.configure(list: list, bookCount: numberOfRows, enableSort: !isEditing && !searchController.isActive)
     }
 }
@@ -362,7 +298,7 @@ extension ListBookTable: UITextFieldDelegate {
     func textFieldDidEndEditing(_ textField: UITextField) {
         textField.text = listNameFieldDefaultText
         // If we renamed the list, refresh the empty data set - if present
-        if list.books.isEmpty {
+        if list.items.isEmpty {
             tableView.reloadData()
         }
     }

@@ -47,7 +47,7 @@ final class AddToExistingLists: UITableViewController {
 
         let list = resultsController.object(at: IndexPath(row: indexPath.row, section: 0))
         cell.textLabel!.text = list.name
-        cell.detailTextLabel!.text = "\(list.books.count) book\(list.books.count == 1 ? "" : "s")"
+        cell.detailTextLabel!.text = "\(list.items.count) book\(list.items.count == 1 ? "" : "s")"
 
         if books.count > 1 {
             let overlapCount = getBookListOverlap(list)
@@ -79,10 +79,11 @@ final class AddToExistingLists: UITableViewController {
     @IBAction private func doneButtonTapped(_ sender: UIBarButtonItem) {
         guard let selectedRows = tableView.indexPathsForSelectedRows else { return }
         let lists = selectedRows.map { self.resultsController.object(at: $0) }
-        let bookSet = NSOrderedSet(set: self.books)
-        PersistentStoreManager.container.viewContext.performAndSave {
+        let childContext = PersistentStoreManager.container.viewContext.childContext()
+        childContext.performAndSave {
+            let booksInChildContext = self.books.map { $0.inContext(childContext) }
             for list in lists {
-                list.addBooks(bookSet)
+                list.inContext(childContext).addBooks(booksInChildContext)
             }
         }
         self.navigationController?.dismiss(animated: true, completion: self.onComplete)
@@ -90,9 +91,6 @@ final class AddToExistingLists: UITableViewController {
     }
 
     private func getBookListOverlap(_ list: List) -> Int {
-        let listBooks = list.books.set
-        let overlapSet = (books as NSSet).mutableCopy() as! NSMutableSet
-        overlapSet.intersect(listBooks)
-        return overlapSet.count
+        return books.intersection(list.books).count
     }
 }

@@ -9,7 +9,7 @@ final class ReviewBulkBooks: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        assert(!books.isEmpty)
+        assert(!books.isEmpty, "ReviewBulkBooks loaded without any assigned books")
         tableView.register(BookTableViewCell.self)
 
         navigationItem.title = "Review \(books.count) \("Book".pluralising(books.count))"

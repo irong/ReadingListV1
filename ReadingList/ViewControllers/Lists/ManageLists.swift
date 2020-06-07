@@ -95,9 +95,7 @@ final class ManageLists: UITableViewController {
             guard let listName = listName else { preconditionFailure() }
             let childContext = PersistentStoreManager.container.viewContext.childContext()
             let createdList = List(context: childContext, name: listName)
-            // Map the books to a set of books on this child context
-            createdList.books = NSOrderedSet(array: books.map { childContext.object(with: $0.objectID) })
-            childContext.obtainPermanentIDsAndLogIfErrored(for: [createdList])
+            createdList.addBooks(books.map { $0.inContext(childContext) })
             childContext.saveAndLogIfErrored()
             onComplete?(createdList)
         }

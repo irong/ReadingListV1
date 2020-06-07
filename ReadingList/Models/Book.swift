@@ -32,8 +32,12 @@ class Book: NSManagedObject {
     @NSManaged var coverImage: Data?
     @NSManaged var notes: String?
     @NSManaged var subjects: Set<Subject>
-    @NSManaged private(set) var lists: Set<List>
     @NSManaged private(set) var addedWhen: Date?
+
+    @NSManaged private(set) var listItems: Set<ListItem>
+    var lists: [List] {
+        listItems.map(\.list)
+    }
 
     override func awakeFromInsert() {
         super.awakeFromInsert()

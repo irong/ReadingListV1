@@ -110,7 +110,7 @@ final class DataVC: UITableViewController {
             NSSortDescriptor(\Book.sort),
             NSSortDescriptor(\Book.startedReading),
             NSSortDescriptor(\Book.finishedReading)]
-        exportAll.relationshipKeyPathsForPrefetching = [#keyPath(Book.subjects), #keyPath(Book.authors), #keyPath(Book.lists)]
+        exportAll.relationshipKeyPathsForPrefetching = [#keyPath(Book.subjects), #keyPath(Book.authors), #keyPath(Book.listItems)]
         exportAll.returnsObjectsAsFaults = false
         exportAll.fetchBatchSize = 50
 
