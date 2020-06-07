@@ -7,19 +7,18 @@ class BookMapping_16_17: NSEntityMigrationPolicy { //swiftlint:disable:this type
     @objc func destinationListItems(forSourceList list: NSManagedObject, manager: NSMigrationManager) -> [NSManagedObject] {
         guard let books = list.value(forKey: "books") else { return [] }
         guard let booksSet = books as? NSOrderedSet else { preconditionFailure("Object at key 'books' was not an NSOrderedSet") }
-        guard let migratedList = manager.destinationInstances(forEntityMappingName: "ListToList", sourceInstances: [list]).first else {
-            preconditionFailure("No migrated List object returned from ListToList entity mapping")
-        }
+        let sourceBooks = booksSet.array.map { $0 as! NSManagedObject }
+        
+        // I am pretty sure that this returns the instances in the same order they were provided. It doesn't document it as such,
+        // but if it didn't then we'd be losing ordering every time we do a mirgation, since the default mapping model uses
+        // this for ordered relationships.
+        let migratedBooks = manager.destinationInstances(forEntityMappingName: "BookToBook", sourceInstances: sourceBooks)
 
-        // Ensure that we preserve the order of the books by looping through the IDs of the books in the order
-        // that they appear in the set.
-        let orderedBookIds = booksSet.array.map { $0 as! NSManagedObject }.map(\.objectID)
-        return orderedBookIds.enumerated().map { index, bookId in
-            // Since Books have been migrated prior to this List migration, we can just ask for the desination book with the given ID
-            let book = manager.destinationContext.object(with: bookId)
+        let migratedList = manager.destinationInstances(forEntityMappingName: "ListToList", sourceInstances: [list]).first!
+        return migratedBooks.enumerated().map { index, migratedBook in
             let listBook = NSEntityDescription.insertNewObject(forEntityName: "ListItem", into: manager.destinationContext)
             listBook.setValue(index, forKey: "sort")
-            listBook.setValue(book, forKey: "book")
+            listBook.setValue(migratedBook, forKey: "book")
             listBook.setValue(migratedList, forKey: "list")
             return listBook
         }
