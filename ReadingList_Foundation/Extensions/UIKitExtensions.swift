@@ -96,7 +96,7 @@ public extension UIContextualAction {
 public extension UISearchController {
     convenience init(filterPlaceholderText: String) {
         self.init(searchResultsController: nil)
-        dimsBackgroundDuringPresentation = false
+        obscuresBackgroundDuringPresentation = false
         searchBar.returnKeyType = .done
         searchBar.placeholder = filterPlaceholderText
         searchBar.searchBarStyle = .default
