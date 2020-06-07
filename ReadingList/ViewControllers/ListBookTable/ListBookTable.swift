@@ -65,7 +65,7 @@ final class ListBookTable: UITableViewController {
         dataSource.updateData(animate: false)
 
         NotificationCenter.default.addObserver(self, selector: #selector(objectContextChanged(_:)),
-                                               name: .NSManagedObjectContextDidSave,
+                                               name: .NSManagedObjectContextObjectsDidChange,
                                                object: PersistentStoreManager.container.viewContext)
         monitorThemeSetting()
     }
@@ -214,11 +214,6 @@ final class ListBookTable: UITableViewController {
 
         // Repopulate the list names cache
         cachedListNames = List.names(fromContext: PersistentStoreManager.container.viewContext)
-    }
-
-    @objc private func refetch() {
-        try! dataSource.controller.performFetch()
-        dataSource.updateData(animate: false)
     }
 
     private func ignoringSaveNotifications(_ block: () -> Void) {

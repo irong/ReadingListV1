@@ -191,7 +191,7 @@ final class BookDetails: UIViewController, UIScrollViewDelegate { //swiftlint:di
         }
 
         // Watch for changes in the managed object context
-        NotificationCenter.default.addObserver(self, selector: #selector(saveOccurred(_:)), name: .NSManagedObjectContextDidSave, object: PersistentStoreManager.container.viewContext)
+        NotificationCenter.default.addObserver(self, selector: #selector(saveOccurred(_:)), name: .NSManagedObjectContextObjectsDidChange, object: PersistentStoreManager.container.viewContext)
 
         monitorThemeSetting()
     }

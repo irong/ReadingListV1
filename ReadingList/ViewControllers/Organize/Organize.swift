@@ -56,8 +56,6 @@ final class Organize: UITableViewController {
         dataSource.updateData(animate: false)
         configureNavigationBarButtons()
 
-        NotificationCenter.default.addObserver(self, selector: #selector(refetch), name: .PersistentStoreBatchOperationOccurred, object: nil)
-
         monitorThemeSetting()
     }
 
@@ -89,11 +87,6 @@ final class Organize: UITableViewController {
         super.setEditing(editing, animated: animated)
         searchController.searchBar.isEnabled = !editing
         reloadHeaders()
-    }
-
-    @objc func refetch() {
-        try! resultsController.performFetch()
-        dataSource.updateData(animate: true)
     }
 
     func onSortButtonTap(_ button: UIButton) {

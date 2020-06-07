@@ -26,7 +26,6 @@ class Debug {
             loadData(downloadImages: CommandLine.arguments.contains(screenshotsCommand)) {
                 if CommandLine.arguments.contains("--UITests_DeleteLists") {
                     PersistentStoreManager.delete(type: List.self)
-                    NotificationCenter.default.post(name: .PersistentStoreBatchOperationOccurred, object: nil)
                 }
             }
         }

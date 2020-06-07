@@ -74,9 +74,6 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
         dataSource.updateData(animate: false)
         configureNavigationBarButtons()
 
-        // Watch for batch changes which may occur due to a CSV import or bulk delete
-        NotificationCenter.default.addObserver(self, selector: #selector(refetch), name: .PersistentStoreBatchOperationOccurred, object: nil)
-
         monitorThemeSetting()
         super.viewDidLoad()
     }
@@ -196,11 +193,6 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
 
         navigationItem.leftBarButtonItem = leftButton
         navigationItem.rightBarButtonItem = rightButton
-    }
-
-    @objc private func refetch() {
-        try! dataSource.performFetch()
-        dataSource.updateData(animate: false)
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
