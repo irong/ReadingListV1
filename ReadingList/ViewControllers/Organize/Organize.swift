@@ -22,7 +22,6 @@ extension UITableViewCell {
 
 final class Organize: UITableViewController {
 
-    var resultsController: NSFetchedResultsController<List>!
     var searchController: UISearchController!
     var dataSource: OrganizeTableViewDataSourceCommon!
     var emptyDataSetManager: OrganizeEmptyDataSetManager!
@@ -38,12 +37,10 @@ final class Organize: UITableViewController {
         searchController.delegate = self
         navigationItem.searchController = searchController
 
-        resultsController = buildResultsController()
-
         if #available(iOS 13.0, *) {
-            dataSource = OrganizeTableViewDataSource(tableView: tableView, resultsController: resultsController)
+            dataSource = OrganizeTableViewDataSource(tableView: tableView, resultsController: buildResultsController())
         } else {
-            dataSource = OrganizeTableViewDataSourceLegacy(tableView, resultsController: resultsController)
+            dataSource = OrganizeTableViewDataSourceLegacy(tableView, resultsController: buildResultsController())
         }
 
         emptyDataSetManager = OrganizeEmptyDataSetManager(tableView: tableView, navigationBar: navigationController?.navigationBar, navigationItem: navigationItem, searchController: searchController) { [weak self] _ in
@@ -52,7 +49,7 @@ final class Organize: UITableViewController {
         dataSource.emptyDetectionDelegate = emptyDataSetManager
 
         // Perform the initial data source load, and then configure the navigation bar buttons, which depend on the empty state of the table
-        try! resultsController.performFetch()
+        try! dataSource.resultsController.performFetch()
         dataSource.updateData(animate: false)
         configureNavigationBarButtons()
 
@@ -66,10 +63,12 @@ final class Organize: UITableViewController {
     private func buildResultsController() -> NSFetchedResultsController<List> {
         let fetchRequest = NSManagedObject.fetchRequest(List.self, batch: 25)
         fetchRequest.sortDescriptors = sortDescriptors()
+        fetchRequest.relationshipKeyPathsForPrefetching = [#keyPath(List.items)]
 
         // Use a constant property as the sectionNameKeyPath - this will ensure that there are no sections when there are no
         // results, and thus cause the section headers to be removed when the results count goes to 0.
-        return NSFetchedResultsController<List>(fetchRequest: fetchRequest, managedObjectContext: PersistentStoreManager.container.viewContext, sectionNameKeyPath: #keyPath(List.constantEmptyString), cacheName: nil)
+        return NSFetchedResultsController<List>(fetchRequest: fetchRequest, managedObjectContext: PersistentStoreManager.container.viewContext,
+                                                sectionNameKeyPath: #keyPath(List.constantEmptyString), cacheName: nil)
     }
 
     private func sortDescriptors() -> [NSSortDescriptor] {
@@ -90,10 +89,11 @@ final class Organize: UITableViewController {
     }
 
     func onSortButtonTap(_ button: UIButton) {
-        let alert = UIAlertController.selectOption(ListSortOrder.allCases, title: "Choose Order", selected: UserDefaults.standard[.listSortOrder]) { sortOrder in
+        let alert = UIAlertController.selectOption(ListSortOrder.allCases, title: "Choose Order", selected: UserDefaults.standard[.listSortOrder]) { [weak self] sortOrder in
+            guard let `self` = self else { return }
             UserDefaults.standard[.listSortOrder] = sortOrder
-            self.resultsController.fetchRequest.sortDescriptors = self.sortDescriptors()
-            try! self.resultsController.performFetch()
+            self.dataSource.resultsController.fetchRequest.sortDescriptors = self.sortDescriptors()
+            try! self.dataSource.resultsController.performFetch()
             self.dataSource.updateData(animate: true)
         }
         if let popover = alert.popoverPresentationController {
@@ -112,7 +112,9 @@ final class Organize: UITableViewController {
         guard !emptyDataSetManager.isShowingEmptyState else { return nil }
         let header = tableView.dequeue(BookTableHeader.self)
         configureHeader(header, at: section)
-        header.onSortButtonTap = self.onSortButtonTap
+        header.onSortButtonTap = { [weak self] button in
+            self?.onSortButtonTap(button)
+        }
         return header
     }
 
@@ -145,7 +147,7 @@ final class Organize: UITableViewController {
             },
             UIContextualAction(style: .normal, title: "Rename") { _, _, callback in
                 self.setEditing(false, animated: true)
-                let list = self.resultsController.object(at: indexPath)
+                let list = self.dataSource.resultsController.object(at: indexPath)
                 self.renameList(list) { didRename in
                     callback(didRename)
                 }
@@ -155,7 +157,7 @@ final class Organize: UITableViewController {
 
     @IBAction private func addWasTapped(_ sender: UIBarButtonItem) {
         present(ManageLists.newListAlertController([]) { list in
-            guard let indexPath = self.resultsController.indexPath(forObject: list) else {
+            guard let indexPath = self.dataSource.resultsController.indexPath(forObject: list) else {
                 assertionFailure()
                 return
             }
@@ -167,7 +169,7 @@ final class Organize: UITableViewController {
         let confirmDelete = UIAlertController(title: "Confirm delete", message: nil, preferredStyle: .actionSheet)
 
         confirmDelete.addAction(UIAlertAction(title: "Delete", style: .destructive) { _ in
-            self.resultsController.object(at: indexPath).deleteAndSave()
+            self.dataSource.resultsController.object(at: indexPath).deleteAndSave()
             UserEngagement.logEvent(.deleteList)
             self.setEditing(false, animated: true)
             didDelete?(true)
@@ -184,9 +186,9 @@ final class Organize: UITableViewController {
         if let listBookTable = segue.destination as? ListBookTable {
             let list: List
             if let index = sender as? IndexPath {
-                list = resultsController.object(at: index)
+                list = dataSource.resultsController.object(at: index)
             } else if let cell = sender as? UITableViewCell, let index = tableView.indexPath(for: cell) {
-                list = resultsController.object(at: index)
+                list = dataSource.resultsController.object(at: index)
             } else { preconditionFailure() }
 
             listBookTable.list = list
@@ -211,7 +213,7 @@ final class Organize: UITableViewController {
         return UIContextMenuConfiguration(identifier: indexPath as NSIndexPath, previewProvider: nil) { _ in
             UIMenu(title: "", children: [
                 UIAction(title: "Rename", image: UIImage(systemName: "pencil")) { _ in
-                    let list = self.resultsController.object(at: indexPath)
+                    let list = self.dataSource.resultsController.object(at: indexPath)
                     self.renameList(list)
                 },
                 UIAction(title: "Delete", image: UIImage(systemName: "trash.fill"), attributes: .destructive) { _ in
@@ -264,9 +266,9 @@ extension Organize: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
         let searchTextPredicate = self.predicate(forSearchText: searchController.searchBar.text)
 
-        if resultsController.fetchRequest.predicate != searchTextPredicate {
-            resultsController.fetchRequest.predicate = searchTextPredicate
-            try! resultsController.performFetch()
+        if dataSource.resultsController.fetchRequest.predicate != searchTextPredicate {
+            dataSource.resultsController.fetchRequest.predicate = searchTextPredicate
+            try! dataSource.resultsController.performFetch()
         }
         dataSource.updateData(animate: true)
     }

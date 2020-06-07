@@ -74,6 +74,8 @@ final class ListBookTable: UITableViewController {
         let fetchRequest = NSManagedObject.fetchRequest(ListItem.self, batch: 50)
         fetchRequest.predicate = defaultPredicate
         fetchRequest.sortDescriptors = list.order.listItemSortDescriptors
+        fetchRequest.relationshipKeyPathsForPrefetching = [#keyPath(ListItem.book)]
+
         // Use a constant property as the sectionNameKeyPath - this will ensure that there are no sections when there are no
         // results, and thus cause the section headers to be removed when the results count goes to 0.
         return NSFetchedResultsController(fetchRequest: fetchRequest,
