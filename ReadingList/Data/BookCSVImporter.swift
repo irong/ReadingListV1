@@ -35,6 +35,139 @@ struct BookCSVImportResults {
     let duplicate: Int
 }
 
+enum ImportCsvFormat {
+    case native
+    case goodreads
+}
+
+protocol CsvRow {
+    var title: String { get }
+    var authors: [Author] { get }
+    var subtitle: String? { get }
+    var description: String? { get }
+    var started: Date? { get }
+    var finished: Date? { get }
+    var googleBooksId: String? { get }
+    var isbn13: ISBN13? { get }
+    var language: String? { get }
+    var notes: String? { get }
+    var currentPage: Int32? { get }
+    var currentPercentage: Int32? { get }
+    var pageCount: Int32? { get }
+    var publicationDate: Date? { get }
+    var publisher: String? { get }
+    var rating: Int16? { get }
+    var subjects: [String] { get }
+}
+
+class CsvRow {
+    static let requiredHeaders = ["Title", "Authors"]
+    init?(_ values: [String: String]) {
+        guard let title = values["Title"], let authors = values["Authors"] else { return nil }
+        self.values = values
+        self.title = title
+        self.authors = authors.components(separatedBy: ";").compactMap {
+            guard let authorString = $0.trimming().nilIfWhitespace() else { return nil }
+            if let firstCommaPos = authorString.range(of: ","), let lastName = authorString[..<firstCommaPos.lowerBound].trimming().nilIfWhitespace() {
+                return Author(lastName: lastName, firstNames: authorString[firstCommaPos.upperBound...].trimming().nilIfWhitespace())
+            } else {
+                return Author(lastName: authorString, firstNames: nil)
+            }
+        }
+        guard !self.authors.isEmpty else { return nil }
+    }
+    
+    var values: [String: String]
+    var title: String
+    var authors: [Author]
+    var subtitle: String? { values["Subtitle"] }
+    var description: String? { values["Description"] }
+    var started: Date? { Date(values["Started Reading"], format: "yyyy-MM-dd") }
+    var finished: Date? { Date(values["Finished Reading"], format: "yyyy-MM-dd") }
+    var googleBooksId: String? { values["Google Books ID"] }
+    var isbn13: ISBN13? { ISBN13(values["ISBN-13"]) }
+    var language: String? { values["Language Code"] }
+    var notes: String? { values["Notes"] }
+    var currentPage: Int32? { Int32(values["Current Page"]) }
+    var currentPercentage: Int32? { Int32(values["Current Percentage"]) }
+    var pageCount: Int32? { Int32(values["Page Count"]) }
+    var publicationDate: Date? { Date(values["Publication Date"], format: "yyyy-MM-dd") }
+    var publisher: String? { values["Publisher"] }
+    var rating: Int16? {
+        guard let ratingString = values["Rating"], let ratingValue = Double(ratingString) else { return nil }
+        return Int16(floor(ratingValue * 2))
+    }
+    var subjects: [String] { values["Subjects"]?.components(separatedBy: ";").compactMap { $0.trimming().nilIfWhitespace() } ?? [] }
+}
+
+class CsvGoodReadsRow: CsvRow {
+    static let requiredHeaders = ["Title", "Author l-f"]
+    
+    override init?(_ values: [String : String]) {
+        guard let title = values["Title"], let author = values["Author l-f"] else { return nil }
+        self.title = title
+        let firstAuthor: Author
+        if let firstCommaPos = author.range(of: ","), let lastName = author[..<firstCommaPos.lowerBound].trimming().nilIfWhitespace() {
+            firstAuthor = Author(lastName: lastName, firstNames: author[firstCommaPos.upperBound...].trimming().nilIfWhitespace())
+        } else {
+            firstAuthor = Author(lastName: author, firstNames: nil)
+        }
+
+        var additionalAuthors = [Author]()
+        if let additionalAuthorsCell = values["Additional Authors"] {
+            for additionalAuthor in additionalAuthorsCell.components(separatedBy: ",") {
+                guard let trimmedAuthor = additionalAuthor.trimming().nilIfWhitespace() else { continue }
+                if let range = trimmedAuthor.range(of: " ", options: .backwards),
+                    let lastName = trimmedAuthor[range.upperBound...].trimming().nilIfWhitespace() {
+                    additionalAuthors.append(Author(lastName: lastName, firstNames: trimmedAuthor[..<range.upperBound].trimming().nilIfWhitespace()))
+                } else {
+                    additionalAuthors.append(Author(lastName: trimmedAuthor, firstNames: nil))
+                }
+            }
+        }
+        self.authors = [firstAuthor] + additionalAuthors
+        self.values = values
+    }
+    var bookshelves: [String] {
+        values["Bookshelves"]?.split(separator: ",").compactMap { $0.trimming().nilIfWhitespace() } ?? []
+    }
+    
+    override var subtitle: String? { nil }
+    override var started: Date? {
+        guard bookshelves.contains("read") || bookshelves.contains("currently-reading") else { return nil }
+        if let dateString = values["Date Read"] ?? values["Date Added"] {
+            return Date(dateString, format: "yyyy/MM/dd")
+        } else {
+             return Date()
+        }
+    }
+    override var finished: Date? {
+        guard bookshelves.contains("read") else { return nil }
+        if let dateString = values["Date Read"] ?? values["Date Added"] {
+            return Date(dateString, format: "yyyy/MM/dd")
+        } else {
+            return Date()
+        }
+    }
+    override var googleBooksId: String? { nil }
+    override var isbn13: ISBN13? {
+        // The GoodReads export seems to present ISBN's like: ="9781231231231"
+        ISBN13(values["ISBN13"]?.trimmingCharacters(in: CharacterSet(charactersIn: "\"=")))
+    }
+    override var language: String? { nil }
+    override var notes: String? { values["My Review"] }
+    override var currentPage: Int32? { nil }
+    override var currentPercentage: Int32? { nil }
+    override var pageCount: Int32? { Int32(values["Number of Pages"]) }
+    override var publicationDate: Date? { nil }
+    override var publisher: String? { values["Publisher"] }
+    override var rating: Int16? {
+        guard let ratingString = values["My Rating"], let ratingValue = Double(ratingString) else { return nil }
+        return Int16(floor(ratingValue * 2))
+    }
+    override var subjects: [String] { [] }
+}
+
 class BookCSVParserDelegate: CSVParserDelegate {
     private let context: NSManagedObjectContext
     private let includeImages: Bool
@@ -42,44 +175,13 @@ class BookCSVParserDelegate: CSVParserDelegate {
     private var coverDownloadPromises = [Promise<Void>]()
     private var listMappings = [String: [(bookID: NSManagedObjectID, index: Int)]]()
     private var listNames = [String]()
-    private var fieldToColumnNative: [String: String] = [
-        "authors": "Authors",
-        "bookDescription": "Description",
-        "finished": "Finished Reading",
-        "googleBooksId": "Google Books ID",
-        "isbn13": "ISBN-13",
-        "language": "Language Code",
-        "notes": "Notes",
-        "page": "Current Page",
-        "pageCount": "Page Count",
-        "percentage": "Current Percentage",
-        "publicationDate": "Publication Date",
-        "publisher": "Publisher",
-        "rating": "Rating",
-        "started": "Started Reading",
-        "subjects": "Subjects",
-        "title": "Title"
-    ]
 
-    private var fieldToColumnGoodReads: [String: String] = [
-        "authors": "Author l-f",
-        "bookDescription": "Description",
-        "finished": "Date Read",
-        "isbn13": "ISBN13",
-        "notes": "My Review",
-        "pageCount": "Number of Pages",
-        "publicationDate": "Year Published",
-        "publisher": "Publisher",
-        "rating": "My Rating",
-        "started": "Date Added",
-        "title": "Title",
-        "manualId": "Book Id"
-    ]
-
+    let importFormat: ImportCsvFormat
     var onCompletion: ((Result<BookCSVImportResults, CSVImportError>) -> Void)?
 
-    init(context: NSManagedObjectContext, includeImages: Bool = true) {
+    init(context: NSManagedObjectContext, importFormat: ImportCsvFormat, includeImages: Bool = true) {
         self.context = context
+        self.importFormat = importFormat
         self.includeImages = includeImages
 
         cachedSorts = BookReadState.allCases.reduce(into: [BookReadState: BookSortIndexManager]()) { result, readState in
@@ -89,55 +191,58 @@ class BookCSVParserDelegate: CSVParserDelegate {
     }
 
     func headersRead(_ headers: [String]) -> Bool {
-        if !(headers.contains(fieldToColumnNative.title) || headers.contains(fieldToColumnGoodReads.title)) ||
-            !(headers.contains(fieldToColumnNative.authors) || headers.contains(fieldToColumnGoodReads.authors)
-            ) {
+        let requiredHeaders: [String]
+        switch importFormat {
+        case .goodreads:
+            requiredHeaders = CsvGoodReadsRow.requiredHeaders
+        case .native:
+            requiredHeaders = CsvRow.requiredHeaders
+        }
+        
+        if !headers.containsAll(requiredHeaders) {
             return false
         }
-        listNames = headers.filter { !BookCSVExport.headers.contains($0) }
+        
+        if importFormat == .native {
+            listNames = headers.filter { !BookCSVExport.headers.contains($0) }
+        }
         return true
     }
 
-    private func createBook(_ values: [String: String], fieldToColumn: [String: String]) -> Book? {
-        guard let title = values[fieldToColumn.title] else { return nil }
-        guard let authors = values[fieldToColumn.authors] else { return nil }
+    private func createBook(_ values: CsvRow) -> Book? {
         let book = Book(context: self.context)
-        book.title = title
-        book.subtitle = values["Subtitle"]
-        book.authors = createAuthors(authors)
-        book.googleBooksId = values[fieldToColumn.googleBooksId]
-        book.isbn13 = ISBN13(values[fieldToColumn.isbn13])?.int
+        book.title = values.title
+        book.subtitle = values.subtitle
+        book.authors = values.authors
+        book.googleBooksId = values.googleBooksId
+        book.isbn13 = values.isbn13?.int
         let manualId = values[fieldToColumn.manualId]
         book.manualBookId = book.googleBooksId == nil ? (manualId == nil ? UUID().uuidString : manualId) : nil
-        book.pageCount = Int32(values[fieldToColumn.pageCount])
-        if let page = Int32(values[fieldToColumn.page]) {
+        book.pageCount = values.pageCount
+        if let page = values.currentPage {
             book.setProgress(.page(page))
-        } else if let percentage = Int32(values[fieldToColumn.percentage]) {
+        } else if let percentage = values.currentPercentage {
             book.setProgress(.percentage(percentage))
         }
-        book.notes = values[fieldToColumn.notes]?.replacingOccurrences(of: "\r\n", with: "\n")
-        book.publicationDate = Date(iso: values[fieldToColumn.publicationDate])
-        book.publisher = values[fieldToColumn.publisher]
-        book.bookDescription = values[fieldToColumn.bookDescription]?.replacingOccurrences(of: "\r\n", with: "\n")
-        if let started = Date(iso: values[fieldToColumn.started]) {
-            if let finished = Date(iso: values[fieldToColumn.finished]) {
+        book.notes = values.notes?.replacingOccurrences(of: "\r\n", with: "\n")
+        book.publicationDate = values.publicationDate
+        book.publisher = values.publisher
+        book.bookDescription = values.description?.replacingOccurrences(of: "\r\n", with: "\n")
+        if let started = values.started {
+            if let finished = values.finished {
                 book.setFinished(started: started, finished: finished)
             } else {
-                let isGoodReads = fieldToColumn == fieldToColumnGoodReads
-                if !isGoodReads || (isGoodReads && values["Bookshelves"].contains("currently-reading")) {
-                    book.setReading(started: started)
-                }
+                book.setReading(started: started)
             }
         } else {
             book.setToRead()
         }
 
-        book.subjects = Set(createSubjects(values[fieldToColumn.subjects]))
-        book.rating = Int16(values[fieldToColumn.rating])
-        if ![1, 2, 3, 4, 5].contains(book.rating) {
-            book.rating = ""
+        book.subjects = Set(createSubjects(values.subjects))
+        book.rating = values.rating
+        if let language = values.language {
+            book.language = LanguageIso639_1(rawValue: language)
         }
-        book.language = LanguageIso639_1(rawValue: values[fieldToColumn.language] ?? "")
         return book
     }
 
@@ -152,11 +257,9 @@ class BookCSVParserDelegate: CSVParserDelegate {
         }
     }
 
-    private func createSubjects(_ subjects: String?) -> [Subject] {
-        guard let subjects = subjects else { return [] }
-        return subjects.components(separatedBy: ";").compactMap {
-            guard let subjectString = $0.trimming().nilIfWhitespace() else { return nil }
-            return Subject.getOrCreate(inContext: context, withName: subjectString)
+    private func createSubjects(_ subjects: [String]) -> [Subject] {
+        return subjects.map {
+            Subject.getOrCreate(inContext: context, withName: $0)
         }
     }
 

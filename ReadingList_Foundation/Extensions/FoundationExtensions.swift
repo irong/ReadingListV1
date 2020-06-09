@@ -191,6 +191,10 @@ public extension Array where Element: Equatable {
     func subtracting(_ array: [Element]) -> [Element] {
         self.filter { !array.contains($0) }
     }
+    
+    func containsAll(_ items: [Element]) -> Bool {
+        return items.allSatisfy { self.contains($0) }
+    }
 }
 
 public extension Date {
@@ -199,6 +203,15 @@ public extension Date {
         dateStringFormatter.dateFormat = "yyyy-MM-dd"
         dateStringFormatter.locale = Locale(identifier: "en_US_POSIX")
         guard let iso = iso, let date = dateStringFormatter.date(from: iso) else { return nil }
+        self.init(timeInterval: 0, since: date)
+    }
+    
+    init?(_ dateString: String?, format: String) {
+        guard let dateString = dateString else { return nil }
+        let dateStringFormatter = DateFormatter()
+        dateStringFormatter.dateFormat = format
+        dateStringFormatter.locale = Locale(identifier: "en_US_POSIX")
+        guard let date = dateStringFormatter.date(from: dateString) else { return nil }
         self.init(timeInterval: 0, since: date)
     }
 
