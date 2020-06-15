@@ -109,7 +109,7 @@ final class ListBookTable: UITableViewController {
         textField.textAlignment = .center
         textField.font = UIFont.systemFont(ofSize: 17.0, weight: .semibold)
         if #available(iOS 13.0, *) { } else {
-            let theme = UserDefaults.standard[.theme]
+            let theme = GeneralSettings.theme
             textField.textColor = theme.titleTextColor
             textField.keyboardAppearance = theme.keyboardAppearance
         }

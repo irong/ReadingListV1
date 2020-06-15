@@ -46,6 +46,11 @@ public extension String {
     func attributedWithFont(_ font: UIFont) -> NSAttributedString {
         return NSAttributedString(self, font: font)
     }
+
+    func startIndex(ofFirstSubstring substring: String) -> Int? {
+        guard let substringRange = range(of: substring) else { return nil }
+        return distance(from: startIndex, to: substringRange.lowerBound)
+    }
 }
 
 public extension Int16 {

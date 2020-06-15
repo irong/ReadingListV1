@@ -12,7 +12,10 @@ final class About: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
         if #available(iOS 13.0, *) { } else {
-            cell.defaultInitialise(withTheme: UserDefaults.standard[.theme])
+            cell.defaultInitialise(withTheme: GeneralSettings.theme)
+        }
+        if ChangeListProvider().thisVersionChangeList() == nil {
+            cell.isHidden = true
         }
         return cell
     }
@@ -22,7 +25,7 @@ final class About: UITableViewController {
         guard let textLabel = footer.textLabel else { assertionFailure("Missing text label"); return }
         textLabel.textAlignment = .center
         textLabel.font = .systemFont(ofSize: 11.0)
-        textLabel.text = "v\(BuildInfo.appVersion) (\(BuildInfo.appBuildNumber))"
+        textLabel.text = "v\(BuildInfo.thisBuild.version) (\(BuildInfo.thisBuild.buildNumber))"
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -32,6 +35,10 @@ final class About: UITableViewController {
         case 1: share(indexPath)
         case 2: contact(indexPath)
         case 3: presentThemedSafariViewController(URL(string: "https://github.com/AndrewBennet/readinglist")!)
+        case 5:
+            if let changeList = ChangeListProvider().thisVersionChangeList() {
+                present(changeList, animated: true)
+            }
         default: return
         }
         tableView.deselectRow(at: indexPath, animated: true)
@@ -77,7 +84,7 @@ final class About: UITableViewController {
 
 
         Extra Info:
-        App Version: \(BuildInfo.appConfiguration.fullDescription)
+        App Version: \(BuildInfo.thisBuild.fullDescription)
         iOS Version: \(UIDevice.current.systemVersion)
         Device: \(UIDevice.current.modelName)
         """

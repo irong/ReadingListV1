@@ -1,5 +1,6 @@
 import Foundation
 import CoreData
+import ReadingList_Foundation
 
 @objc(List)
 class List: NSManagedObject {
@@ -71,9 +72,12 @@ class List: NSManagedObject {
     }
 }
 
-enum ListSortOrder: Int, CustomStringConvertible, CaseIterable, UserSettingType {
+enum ListSortOrder: Int, CustomStringConvertible, CaseIterable, Codable {
     case custom = 0
     case alphabetical = 1
+
+    @UserDefaultsBacked(key: "listSortOrder", defaultValue: .custom)
+    static var selectedSort: ListSortOrder
 
     var description: String {
         switch self {

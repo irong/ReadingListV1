@@ -97,7 +97,7 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
         return readStates.appendingRemaining(BookReadState.allCases).map { readState in
             let fetchRequest = NSManagedObject.fetchRequest(Book.self, batch: 25)
             fetchRequest.predicate = NSPredicate(boolean: false)
-            fetchRequest.sortDescriptors = UserDefaults.standard[UserSettingsCollection.sortSetting(for: readState)].bookSortDescriptors
+            fetchRequest.sortDescriptors = BookSort.byReadState[readState]!.bookSortDescriptors
             let controller = NSFetchedResultsController<Book>(fetchRequest: fetchRequest, managedObjectContext: PersistentStoreManager.container.viewContext,
                                                               sectionNameKeyPath: #keyPath(Book.readState), cacheName: nil)
             return (readState, controller)
@@ -256,7 +256,7 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
             ]
 
             // If book ordering can be edited, then add actions to move this book to the top or bottom.
-            if UserDefaults.standard[.sortSetting(for: book.readState)] == .custom {
+            if BookSort.byReadState[book.readState] == .custom {
                 let minSort = Book.minSort(with: book.readState, from: PersistentStoreManager.container.viewContext)
                 let maxSort = Book.maxSort(with: book.readState, from: PersistentStoreManager.container.viewContext)
                 var moveUpOrDownActions = [UIMenuElement]()

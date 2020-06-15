@@ -15,7 +15,7 @@ extension UITableViewCell {
         textLabel!.text = list.name
         detailTextLabel!.text = "\(list.items.count) book\(list.items.count == 1 ? "" : "s")"
         if #available(iOS 13.0, *) { } else {
-            defaultInitialise(withTheme: UserDefaults.standard[.theme])
+            defaultInitialise(withTheme: GeneralSettings.theme)
         }
     }
 }
@@ -73,7 +73,7 @@ final class Organize: UITableViewController {
 
     private func sortDescriptors() -> [NSSortDescriptor] {
         var sortDescriptors = [NSSortDescriptor(\List.name)]
-        switch UserDefaults.standard[.listSortOrder] {
+        switch ListSortOrder.selectedSort {
         case .custom:
             sortDescriptors.insert(NSSortDescriptor(\List.sort), at: 0)
         case .alphabetical:
@@ -89,9 +89,9 @@ final class Organize: UITableViewController {
     }
 
     func onSortButtonTap(_ button: UIButton) {
-        let alert = UIAlertController.selectOption(ListSortOrder.allCases, title: "Choose Order", selected: UserDefaults.standard[.listSortOrder]) { [weak self] sortOrder in
+        let alert = UIAlertController.selectOption(ListSortOrder.allCases, title: "Choose Order", selected: ListSortOrder.selectedSort) { [weak self] sortOrder in
             guard let `self` = self else { return }
-            UserDefaults.standard[.listSortOrder] = sortOrder
+            ListSortOrder.selectedSort = sortOrder
             self.dataSource.resultsController.fetchRequest.sortDescriptors = self.sortDescriptors()
             try! self.dataSource.resultsController.performFetch()
             self.dataSource.updateData(animate: true)
@@ -120,7 +120,7 @@ final class Organize: UITableViewController {
 
     private func renameList(_ list: List, completion: ((Bool) -> Void)? = nil) {
         let existingListNames = List.names(fromContext: PersistentStoreManager.container.viewContext)
-        let renameListAlert = TextBoxAlert(title: "Rename List", message: "Choose a new name for this list", initialValue: list.name, placeholder: "New list name", keyboardAppearance: UserDefaults.standard[.theme].keyboardAppearance, textValidator: { listName in
+        let renameListAlert = TextBoxAlert(title: "Rename List", message: "Choose a new name for this list", initialValue: list.name, placeholder: "New list name", keyboardAppearance: GeneralSettings.theme.keyboardAppearance, textValidator: { listName in
                 guard let listName = listName, !listName.isEmptyOrWhitespace else { return false }
                 return listName == list.name || !existingListNames.contains(listName)
             }, onCancel: {

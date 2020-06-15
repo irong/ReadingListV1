@@ -17,7 +17,7 @@ final class EditBookMetadata: FormViewController {
         // We want to prepopulate the last selected language only if we are adding a new manual book: we don't want to
         // automatically alter the metadata of a Google Search result, or set the language of a book being edited which
         // happens to not have a language set.
-        return UserDefaults.standard[.prepopulateLastLanguageSelection] && isAddingNewBook && book.googleBooksId == nil
+        return GeneralSettings.prepopulateLastLanguageSelection && isAddingNewBook && book.googleBooksId == nil
     }
 
     convenience init(bookToEditID: NSManagedObjectID) {
@@ -71,7 +71,7 @@ final class EditBookMetadata: FormViewController {
 
         // Prepopulate last selected language, if appropriate to do so. Do this before the configuration of the form so that the form is accurate
         if shouldPrepopulateLastLanguageSelection {
-            book.language = UserDefaults.standard[.lastSelectedLanguage]
+            book.language = LightweightDataStore.lastSelectedLanguage
         }
 
         // General approach regarding capturing references to `self`:
@@ -161,7 +161,7 @@ final class EditBookMetadata: FormViewController {
                     if #available(iOS 13.0, *) {
                         cell.textLabel!.textColor = .label
                     } else {
-                        cell.textLabel!.textColor = UserDefaults.standard[.theme].titleTextColor
+                        cell.textLabel!.textColor = GeneralSettings.theme.titleTextColor
                     }
                     cell.accessoryType = .disclosureIndicator
                     cell.detailTextLabel?.text = self.book.subjects.map { $0.name }.sorted().joined(separator: ", ")
@@ -357,7 +357,7 @@ final class EditBookMetadata: FormViewController {
         guard book.isValidForUpdate() else { return }
 
         if book.changedValues().keys.contains(Book.Key.languageCode.rawValue) {
-            UserDefaults.standard[.lastSelectedLanguage] = book.language
+            LightweightDataStore.lastSelectedLanguage = book.language
         }
         editBookContext.saveIfChanged()
         dismiss(animated: true) {

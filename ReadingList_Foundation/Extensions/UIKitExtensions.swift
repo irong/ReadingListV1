@@ -282,6 +282,19 @@ public extension UIImage {
             return nil
         }
     }
+
+    /**
+     If running iOS 13 or higher, returns the UIImage with the provided system name, at large scale and the provided weight. If iOS 12 or lower, or
+     the image name provided does not correspond to a system image, returns nil.
+     */
+    convenience init?(largeSystemImageNamed name: String, pointSize: CGFloat) {
+        if #available(iOS 13.0, *) {
+            let config = UIImage.SymbolConfiguration(pointSize: 30, weight: .regular, scale: .large)
+            self.init(systemName: name, withConfiguration: config)
+        } else {
+            return nil
+        }
+    }
 }
 
 public extension NSAttributedString {

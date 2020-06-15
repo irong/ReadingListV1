@@ -23,7 +23,7 @@ class BookTableViewCell: UITableViewCell {
     override func awakeFromNib() {
         super.awakeFromNib()
         if #available(iOS 13.0, *) { } else {
-            initialise(withTheme: UserDefaults.standard[.theme])
+            initialise(withTheme: GeneralSettings.theme)
         }
         resetUI()
     }
@@ -65,7 +65,7 @@ class BookTableViewCell: UITableViewCell {
         }
 
         #if DEBUG
-            if UserDefaults.standard[.showSortNumber] {
+            if Debug.showSortNumber {
                 titleLabel.text = "(\(book.sort)) \(book.title)"
             }
         #endif

@@ -25,6 +25,9 @@ packages:
   ImageRow:
     url: https://github.com/funkenstrahlen/ImageRow
     branch: master
+  WhatsNewKit:
+    url: https://github.com/SvenTiigi/WhatsNewKit
+    minorVersion: 1.3.3
 
 targets:
   ReadingList:
@@ -44,6 +47,7 @@ targets:
       - package: SwiftyStoreKit
       - package: Eureka
       - package: ImageRow
+      - package: WhatsNewKit
     preBuildScripts:
       - name: SwiftLint
         script: |

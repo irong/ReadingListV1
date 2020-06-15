@@ -186,7 +186,7 @@ final class BookDetails: UIViewController, UIScrollViewDelegate { //swiftlint:di
         bookNotes.font = UIFont.gillSans(forTextStyle: .subheadline)
 
         // A setting allows the full book description label to be shown on load
-        if UserDefaults.standard[.showExpandedDescription] {
+        if GeneralSettings.showExpandedDescription {
             bookDescription.numberOfLines = 0
         }
 
@@ -199,7 +199,7 @@ final class BookDetails: UIViewController, UIScrollViewDelegate { //swiftlint:di
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
 
-        if UserDefaults.standard[.showExpandedDescription] {
+        if GeneralSettings.showExpandedDescription {
             bookDescription.numberOfLines = 0
         } else if traitCollection.horizontalSizeClass == .regular && traitCollection.verticalSizeClass == .regular {
             // In "regular" size classed devices, the description text can be less truncated

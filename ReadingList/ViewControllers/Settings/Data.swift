@@ -27,7 +27,7 @@ final class DataVC: UITableViewController {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
         if #available(iOS 13.0, *) { return cell }
         // Cannot use the default initialise since it turns the button text a plain colour
-        let theme = UserDefaults.standard[.theme]
+        let theme = GeneralSettings.theme
         cell.backgroundColor = theme.cellBackgroundColor
         cell.setSelectedBackgroundColor(theme.selectedCellBackgroundColor)
         return cell

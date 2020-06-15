@@ -1,0 +1,113 @@
+import Foundation
+import CoreSpotlight
+import os.log
+import ReadingList_Foundation
+
+struct UpgradeAction {
+    let id: Int
+    let action: () -> Void
+}
+
+class UpgradeManager {
+    let actions = [
+        // Previous versions of the app stored the persistent store in a non-default location.
+        // This file move was previously attempted every launch; the vast majority of users
+        // will already have their store in the new location.
+        UpgradeAction(id: 3) {
+            PersistentStoreManager.moveStoreFromLegacyLocationIfNecessary()
+        },
+
+        // 1.13.0 changed the storage mechanism of some UserDefaults values, from raw values of RawRepresentable, to Encoded data.
+        UpgradeAction(id: 4) {
+            func migrateSetting<T>(ofType type: T.Type, withKey key: String) where T: RawRepresentable, T: Codable {
+                guard let rawValue = UserDefaults.standard.object(forKey: key) as? T.RawValue else {
+                    return
+                }
+                guard let storedValue = T(rawValue: rawValue) else {
+                    assertionFailure("Unexpectedly retreieved a value \(rawValue) which could not be converted to \(type.self)")
+                    return
+                }
+
+                let data = try! JSONEncoder().encode([storedValue])
+                UserDefaults.standard.setValue(data, forKey: key)
+            }
+
+            migrateSetting(ofType: ProgressType.self, withKey: "defaultProgressType")
+            migrateSetting(ofType: LanguageIso639_1.self, withKey: "searchLanguageRestriction")
+            migrateSetting(ofType: Theme.self, withKey: "theme")
+            migrateSetting(ofType: ListSortOrder.self, withKey: "listSortOrder")
+
+            // The book sort order settings we are changing a bit more...
+            var sortOrders = [BookReadState: BookSort]()
+            func copySort(fromKey key: String, for readState: BookReadState, defaultValue: BookSort) {
+                if let sortValue = UserDefaults.standard.object(forKey: key) as? Int16 {
+                    sortOrders[readState] = BookSort(rawValue: sortValue)!
+                } else {
+                    sortOrders[readState] = defaultValue
+                }
+            }
+            copySort(fromKey: "toReadSortOrder", for: .toRead, defaultValue: .custom)
+            copySort(fromKey: "readingSortOrder", for: .reading, defaultValue: .startDate)
+            copySort(fromKey: "finishedSortOrder", for: .finished, defaultValue: .finishDate)
+            let data = try! JSONEncoder().encode([sortOrders])
+            UserDefaults.standard.setValue(data, forKey: "bookSortOrdersByReadState")
+        },
+
+        UpgradeAction(id: 5) {
+            guard AppLaunchHistory.appOpenedCount > 0 else { return }
+            // Spoof a previously last-launched version of 1.12, upon upgrade to 1.13. This version is only used
+            // in tracking what features to show upon upgrade, and 1.13 was the first version to introduce in-app
+            // change lists, so we shouldn't get any erroneous behaviour by this little lie.
+            AppLaunchHistory.lastLaunchedVersion = Version(major: 1, minor: 12, patch: 0)
+        }
+    ]
+
+    /**
+     Performs any necessary upgrade actions required, prior to the initialisation of the persistent store.
+    */
+    func performNecessaryUpgradeActions() {
+        // Work out what our threshold should be when considering which upgrade actions to apply
+        let threshold: Int?
+        if let lastAppliedUpgradeAction = AppLaunchHistory.lastAppliedUpgradeAction {
+            threshold = lastAppliedUpgradeAction
+        } else {
+            let startupCount = AppLaunchHistory.appOpenedCount
+            if startupCount > 0 {
+                os_log("No record of applying actions, but startup count is %d: will run upgrade actions anyway.", startupCount)
+                // Use 0 as the threshold when applying upgrade actions when we don't know what version we came from.
+                // This will apply them all.
+                threshold = 0
+            } else {
+                threshold = nil
+            }
+        }
+
+        // If we have a threshold, apply the relevant actions.
+        if let threshold = threshold {
+            applyActions(threshold: threshold)
+        } else {
+            os_log("First launch: no upgrade actions to run.")
+        }
+
+        // Now that we have applied any necessary actions, update the storage of the most recent started version
+        AppLaunchHistory.lastAppliedUpgradeAction = actions.last!.id
+    }
+
+    private func applyActions(threshold: Int) {
+        // We can exit early if the threshold is same version as the last upgrade action id
+        if threshold == actions.last?.id {
+            os_log("No upgrade actions to apply")
+            return
+        }
+
+        // Look for relevant actions to apply; run each in order that match
+        let relevantActions = actions.filter { $0.id > threshold }
+        relevantActions.forEach { action in
+            os_log("Running upgrade action with id %d", action.id)
+            action.action()
+        }
+        if !relevantActions.isEmpty {
+            os_log("All %d upgrade actions completed", relevantActions.count)
+        }
+    }
+}

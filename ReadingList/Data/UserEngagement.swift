@@ -1,36 +1,39 @@
 import Foundation
 import StoreKit
 import Firebase
+import FirebaseCrashlytics
+import ReadingList_Foundation
 
 class UserEngagement {
 
-    // Note: TestFlight users are automatically enrolled in analytics and crash reporting. This should be reflected
-    // on the corresponding Settings page.
-    static var sendAnalytics: Bool {
-        return BuildInfo.appConfiguration == .testFlight || UserDefaults.standard[.sendAnalytics]
-    }
+    @UserDefaultsBacked(key: "sendAnalytics", defaultValue: true)
+    static var sendAnalytics: Bool
 
-    static var sendCrashReports: Bool {
-        return BuildInfo.appConfiguration == .testFlight || UserDefaults.standard[.sendCrashReports]
-    }
+    @UserDefaultsBacked(key: "sendCrashReports", defaultValue: true)
+    static var sendCrashReports: Bool
 
     static func initialiseUserAnalytics() {
-        guard sendAnalytics || sendCrashReports else { return }
+        guard BuildInfo.thisBuild.type == .testFlight || sendAnalytics || sendCrashReports else { return }
         // We need to configure the firebase app in order to send crash reports
         if FirebaseApp.app() == nil {
             FirebaseApp.configure()
         }
     }
 
+    @UserDefaultsBacked(key: "userEngagementCount", defaultValue: 0)
+    static var userEngagementCount: Int
+
+    private static func shouldTryRequestReview() -> Bool {
+        let appStartCountMinRequirement = 3
+        let userEngagementModulo = 10
+        return AppLaunchHistory.appOpenedCount >= appStartCountMinRequirement && userEngagementCount % userEngagementModulo == 0
+    }
+
     static func onReviewTrigger() {
-        UserDefaults.standard[.userEngagementCount] += 1
+        userEngagementCount += 1
         if shouldTryRequestReview() {
             SKStoreReviewController.requestReview()
         }
-    }
-
-    static func onAppOpen() {
-        UserDefaults.standard[.appStartupCount] += 1
     }
 
     enum Event: String {
@@ -89,24 +92,18 @@ class UserEngagement {
     }
 
     static func logEvent(_ event: Event) {
-        guard sendAnalytics else { return }
+        // Note: TestFlight users are automatically enrolled in analytics reporting. This should be reflected
+        // on the corresponding Settings page.
+        guard BuildInfo.thisBuild.type == .testFlight || sendAnalytics else { return }
         #if RELEASE
         Analytics.logEvent(event.rawValue, parameters: nil)
         #endif
     }
 
     static func logError(_ error: Error) {
-        guard sendCrashReports else { return }
+        // Note: TestFlight users are automatically enrolled in crash reporting. This should be reflected
+        // on the corresponding Settings page.
+        guard BuildInfo.thisBuild.type == .testFlight || sendCrashReports else { return }
         Crashlytics.crashlytics().record(error: error)
-    }
-
-    private static func shouldTryRequestReview() -> Bool {
-        let appStartCountMinRequirement = 3
-        let userEngagementModulo = 10
-
-        let appStartCount = UserDefaults.standard[.appStartupCount]
-        let userEngagementCount = UserDefaults.standard[.userEngagementCount]
-
-        return appStartCount >= appStartCountMinRequirement && userEngagementCount % userEngagementModulo == 0
     }
 }

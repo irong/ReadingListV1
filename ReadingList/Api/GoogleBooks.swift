@@ -11,7 +11,7 @@ class GoogleBooks {
      */
     static func search(_ text: String) -> Promise<[SearchResult]> {
         os_log("Searching for Google Books with query", type: .debug)
-        let languageRestriction = UserDefaults.standard[.searchLanguageRestriction]
+        let languageRestriction = GeneralSettings.searchLanguageRestriction
         guard let url = GoogleBooksRequest.searchText(text, languageRestriction).url else {
             return Promise<[SearchResult]>(GoogleError.invalidUrl)
         }
