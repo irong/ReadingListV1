@@ -23,7 +23,7 @@ packages:
     url: https://github.com/xmartlabs/Eureka
     minorVersion: 5.2.1
   ImageRow:
-    url: https://github.com/funkenstrahlen/ImageRow
+    url: https://github.com/EurekaCommunity/ImageRow
     branch: master
   WhatsNewKit:
     url: https://github.com/SvenTiigi/WhatsNewKit
