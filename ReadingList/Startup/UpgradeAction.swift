@@ -17,26 +17,8 @@ class UpgradeManager {
             PersistentStoreManager.moveStoreFromLegacyLocationIfNecessary()
         },
 
-        // 1.13.0 changed the storage mechanism of some UserDefaults values, from raw values of RawRepresentable, to Encoded data.
+        // 1.13.0 changed the storage mechanism of some UserDefaults values
         UpgradeAction(id: 4) {
-            func migrateSetting<T>(ofType type: T.Type, withKey key: String) where T: RawRepresentable, T: Codable {
-                guard let rawValue = UserDefaults.standard.object(forKey: key) as? T.RawValue else {
-                    return
-                }
-                guard let storedValue = T(rawValue: rawValue) else {
-                    assertionFailure("Unexpectedly retreieved a value \(rawValue) which could not be converted to \(type.self)")
-                    return
-                }
-
-                let data = try! JSONEncoder().encode([storedValue])
-                UserDefaults.standard.setValue(data, forKey: key)
-            }
-
-            migrateSetting(ofType: ProgressType.self, withKey: "defaultProgressType")
-            migrateSetting(ofType: LanguageIso639_1.self, withKey: "searchLanguageRestriction")
-            migrateSetting(ofType: Theme.self, withKey: "theme")
-            migrateSetting(ofType: ListSortOrder.self, withKey: "listSortOrder")
-
             // The book sort order settings we are changing a bit more...
             var sortOrders = [BookReadState: BookSort]()
             func copySort(fromKey key: String, for readState: BookReadState, defaultValue: BookSort) {
@@ -49,7 +31,7 @@ class UpgradeManager {
             copySort(fromKey: "toReadSortOrder", for: .toRead, defaultValue: .custom)
             copySort(fromKey: "readingSortOrder", for: .reading, defaultValue: .startDate)
             copySort(fromKey: "finishedSortOrder", for: .finished, defaultValue: .finishDate)
-            let data = try! JSONEncoder().encode([sortOrders])
+            let data = try! JSONEncoder().encode(sortOrders)
             UserDefaults.standard.setValue(data, forKey: "bookSortOrdersByReadState")
         },
 

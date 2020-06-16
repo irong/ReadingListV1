@@ -13,7 +13,7 @@ import ReadingList_Foundation
     case progress = 8
     case rating = 9
 
-    @UserDefaultsBacked(key: "bookSortOrdersByReadState", defaultValue: [.toRead: .custom, .reading: .startDate, .finished: .finishDate])
+    @UserDefaultsBacked(dataKey: "bookSortOrdersByReadState", defaultValue: [.toRead: .custom, .reading: .startDate, .finished: .finishDate])
     static var byReadState: [BookReadState: BookSort]
 
     public var description: String {

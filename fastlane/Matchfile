@@ -1,4 +1,4 @@
-git_url("git@github.com:AndrewBennet/certificates.git")
+git_url("https://github.com/AndrewBennet/certificates")
 
 storage_mode("git")
 

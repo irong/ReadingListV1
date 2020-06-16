@@ -34,7 +34,7 @@ struct FirstOpenScreenProvider {
                 image: UIImage(largeSystemImageNamed: "lock.open", pointSize: 40)
             )
         ])
-        
+
         var config = WhatsNewViewController.Configuration()
         config.itemsView.imageSize = .original
         if let startIndex = title.startIndex(ofFirstSubstring: readingList) {
@@ -46,7 +46,7 @@ struct FirstOpenScreenProvider {
             title: "Learn more",
             action: .website(url: "https://readinglist.app/about")
         )
-        
+
         return WhatsNewViewController(whatsNew: whatsNew, configuration: config)
     }
 }

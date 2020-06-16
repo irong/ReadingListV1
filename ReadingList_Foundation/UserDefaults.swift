@@ -1,48 +1,132 @@
 import Foundation
 
-@propertyWrapper public struct UserDefaultsBacked<Value: Codable> {
-    let key: String
-    let defaultValue: Value
+struct UserDefaultsBackingConvertor<NonOptionalExposed, Stored> {
+    let toStorage: (NonOptionalExposed) -> Stored
+    let toExposed: (Stored) -> NonOptionalExposed
 
-    public init(key: String, defaultValue: Value) {
-        self.key = key
-        self.defaultValue = defaultValue
+    static func notConverted<NonOptionalExposed>() -> UserDefaultsBackingConvertor<NonOptionalExposed, NonOptionalExposed> {
+        return UserDefaultsBackingConvertor<NonOptionalExposed, NonOptionalExposed>(
+            toStorage: { $0 },
+            toExposed: { $0 }
+        )
     }
 
-    public var wrappedValue: Value {
+    static func rawRepresentable<NonOptionalExposed, Stored>() -> UserDefaultsBackingConvertor<NonOptionalExposed, Stored>
+        where NonOptionalExposed: RawRepresentable, NonOptionalExposed.RawValue == Stored {
+            return UserDefaultsBackingConvertor<NonOptionalExposed, Stored>(
+                toStorage: { $0.rawValue },
+                toExposed: { NonOptionalExposed(rawValue: $0)! }
+            )
+    }
+
+    static func codable<NonOptionalExposed>() -> UserDefaultsBackingConvertor<NonOptionalExposed, Data> where NonOptionalExposed: Codable {
+        return UserDefaultsBackingConvertor<NonOptionalExposed, Data>(
+            toStorage: { try! JSONEncoder().encode($0) },
+            toExposed: { try! JSONDecoder().decode(NonOptionalExposed.self, from: $0) }
+        )
+    }
+}
+
+@propertyWrapper public struct UserDefaultsBacked<Exposed, NonOptionalExposed, Stored> {
+    let key: String
+    let defaultValue: Exposed
+    let valueConvertor: UserDefaultsBackingConvertor<NonOptionalExposed, Stored>
+
+    fileprivate init(key: String, defaultValue: Exposed, valueConvertor: UserDefaultsBackingConvertor<NonOptionalExposed, Stored>) {
+        self.key = key
+        self.defaultValue = defaultValue
+        self.valueConvertor = valueConvertor
+    }
+
+    public var wrappedValue: Exposed {
         get {
-            guard let storedValue = UserDefaults.standard.value(forKey: key) else { return defaultValue }
-            if let typedValue = storedValue as? Value {
-                return typedValue
+            // Get the object stored for the given key, and cast it to the Stored type. If the object is present but
+            // not castable, this is a fatal error.
+            guard let typelessStored = UserDefaults.standard.value(forKey: key) else { return defaultValue }
+            guard let stored = typelessStored as? Stored else {
+                fatalError("Value stored at key \(key) was not of type \(String(describing: Stored.self))")
             }
-            if let data = storedValue as? Data {
-                // For iOS 12 compatibility, decode into arrays containing one item
-                return try! JSONDecoder().decode([Value].self, from: data).first!
-            }
-            assertionFailure("Unexpected UserDefaults stored value")
-            return defaultValue
+
+            let nonOptionalExposed = valueConvertor.toExposed(stored)
+            return nonOptionalExposed as! Exposed
         }
         set {
             if let optional = newValue as? AnyOptional, optional.isNil {
                 UserDefaults.standard.removeObject(forKey: key)
-            } else if newValue is UserDefaultsPrimitive {
-                UserDefaults.standard.setValue(newValue, forKey: key)
-            } else {
-                // For iOS 12 compatibility, encode arrays containing one items
-                let encoded = try! JSONEncoder().encode([newValue])
-                UserDefaults.standard.setValue(encoded, forKey: key)
+                return
             }
+            let nonOptionalNewValue = newValue as! NonOptionalExposed
+            let valueToStore = valueConvertor.toStorage(nonOptionalNewValue)
+            UserDefaults.standard.setValue(valueToStore, forKey: key)
         }
     }
 }
 
-public extension UserDefaultsBacked where Value: ExpressibleByNilLiteral {
+public extension UserDefaultsBacked where Exposed == NonOptionalExposed,
+                                            NonOptionalExposed == Stored,
+                                            Stored: UserDefaultsPrimitive {
+
+    init(key: String, defaultValue: Exposed) {
+        self.init(key: key, defaultValue: defaultValue, valueConvertor: .notConverted())
+    }
+}
+
+public extension UserDefaultsBacked where Exposed == NonOptionalExposed?,
+    NonOptionalExposed == Stored,
+    Stored: UserDefaultsPrimitive {
+
+    init(key: String) {
+        self.init(key: key, defaultValue: nil, valueConvertor: .notConverted())
+    }
+}
+
+public extension UserDefaultsBacked where Exposed == NonOptionalExposed,
+                                            NonOptionalExposed: RawRepresentable,
+                                            Stored == NonOptionalExposed.RawValue,
+                                            Stored: UserDefaultsPrimitive {
+
+    init(key: String, defaultValue: Exposed) {
+        self.init(key: key, defaultValue: defaultValue, valueConvertor: .rawRepresentable())
+    }
+}
+
+public extension UserDefaultsBacked where Exposed == NonOptionalExposed?,
+                                            NonOptionalExposed: RawRepresentable,
+                                            Stored == NonOptionalExposed.RawValue,
+                                            Stored: UserDefaultsPrimitive {
+
+    init(key: String, defaultValue: Exposed) {
+        self.init(key: key, defaultValue: defaultValue, valueConvertor: .rawRepresentable())
+    }
+
     init(key: String) {
         self.init(key: key, defaultValue: nil)
     }
 }
 
-private protocol UserDefaultsPrimitive {}
+public extension UserDefaultsBacked where Exposed == NonOptionalExposed,
+                                            NonOptionalExposed: Codable,
+                                            Stored == Data {
+
+    init(dataKey key: String, defaultValue: Exposed) {
+        self.init(key: key, defaultValue: defaultValue, valueConvertor: .codable())
+    }
+}
+
+public extension UserDefaultsBacked where Exposed == NonOptionalExposed?,
+                                            NonOptionalExposed: Codable,
+                                            Stored == Data {
+
+    init(dataKey key: String, defaultValue: Exposed) {
+        self.init(key: key, defaultValue: defaultValue, valueConvertor: .codable())
+    }
+
+    init(dataKey key: String) {
+        self.init(dataKey: key, defaultValue: nil)
+    }
+}
+
+public protocol UserDefaultsPrimitive {}
 extension Int: UserDefaultsPrimitive {}
 extension Int16: UserDefaultsPrimitive {}
 extension Int32: UserDefaultsPrimitive {}

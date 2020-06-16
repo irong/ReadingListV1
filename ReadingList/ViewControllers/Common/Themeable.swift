@@ -7,7 +7,7 @@ import ReadingList_Foundation
 import os.log
 
 @available(iOS, obsoleted: 13.0)
-@objc enum Theme: Int, CaseIterable, Codable {
+@objc enum Theme: Int, CaseIterable {
     case normal = 1
     case dark = 2
     case black = 3

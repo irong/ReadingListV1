@@ -72,7 +72,7 @@ class List: NSManagedObject {
     }
 }
 
-enum ListSortOrder: Int, CustomStringConvertible, CaseIterable, Codable {
+enum ListSortOrder: Int, CustomStringConvertible, CaseIterable {
     case custom = 0
     case alphabetical = 1
 
