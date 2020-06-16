@@ -157,8 +157,11 @@ class LaunchManager {
     private func presentIncompatibleDataAlert() {
         #if RELEASE
         // This is a common error during development, but shouldn't occur in production
-        guard UserDefaults.standard[.mostRecentWorkingVersionDescription] != BuildInfo.configuration.fullDescription else {
-            UserEngagement.logError(NSError(code: .invalidMigration, userInfo: ["mostRecentWorkingVersion": UserDefaults.standard[.mostRecentWorkingVersionDescription] ?? "unknown"]))
+        guard AppLaunchHistory.mostRecentWorkingVersionDescription != BuildInfo.configuration.fullDescription else {
+            UserEngagement.logError(
+                NSError(code: .invalidMigration,
+                        userInfo: ["mostRecentWorkingVersion": AppLaunchHistory.mostRecentWorkingVersionDescription ?? "unknown"])
+            )
             preconditionFailure("Migration error thrown for store of same version.")
         }
         #endif
