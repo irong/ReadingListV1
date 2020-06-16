@@ -20,7 +20,7 @@ packages:
     url: https://github.com/httpswift/swifter
     branch: stable 
   Eureka:
-    url: https://github.com/xmartlabs/Eureka
+    url: https://github.com/xmartlabs/Eureka.git
     minorVersion: 5.2.1
   ImageRow:
     url: https://github.com/EurekaCommunity/ImageRow
