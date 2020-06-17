@@ -14,7 +14,7 @@ final class Settings: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        versionLabel.text = "v\(BuildInfo.appConfiguration.versionAndConfiguration)"
+        versionLabel.text = "v\(BuildInfo.thisBuild.versionAndConfiguration)"
         monitorThemeSetting()
 
         #if DEBUG
@@ -37,7 +37,7 @@ final class Settings: UITableViewController {
 
     override func motionEnded(_ motion: UIEvent.EventSubtype, with event: UIEvent?) {
         guard motion == .motionShake else { return }
-        guard BuildInfo.appConfiguration != .appStore else { return }
+        guard BuildInfo.thisBuild.type != .appStore else { return }
         let alert = UIAlertController(title: "Perform Test Crash?", message: """
             For testing purposes, you can trigger a crash. This can be used to verify \
             that the crash reporting tools are working correctly.
@@ -67,7 +67,7 @@ final class Settings: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
         if #available(iOS 13.0, *) { } else {
-            cell.defaultInitialise(withTheme: UserDefaults.standard[.theme])
+            cell.defaultInitialise(withTheme: GeneralSettings.theme)
         }
         if splitViewController?.isSplit == true {
             // In split mode, change the cells a little to look more like the standard iOS settings app

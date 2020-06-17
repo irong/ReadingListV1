@@ -30,7 +30,7 @@ class BookTableHeader: UITableViewHeaderFooterView {
         label.text = labelText
         sortButton.isEnabled = enableSort
         if #available(iOS 13.0, *) { } else {
-            initialise(withTheme: UserDefaults.standard[.theme])
+            initialise(withTheme: GeneralSettings.theme)
         }
     }
 

@@ -57,8 +57,7 @@ enum Orderable {
     func getSort() -> BookSort {
         switch self {
         case let .book(readState):
-            let setting = UserSettingsCollection.sortSetting(for: readState)
-            return UserDefaults.standard[setting]
+            return BookSort.byReadState[readState]!
         case let .list(list):
             return list.order
         }
@@ -67,8 +66,7 @@ enum Orderable {
     func setSort(_ order: BookSort) {
         switch self {
         case let .book(readState):
-            let setting = UserSettingsCollection.sortSetting(for: readState)
-            UserDefaults.standard[setting] = order
+            BookSort.byReadState[readState] = order
         case let .list(list):
             list.order = order
             list.managedObjectContext!.saveAndLogIfErrored()

@@ -75,7 +75,7 @@ final class EditBookReadState: FormViewController {
             <<< SegmentedRow<ProgressType>(progressTypeKey) {
                 $0.title = "Type  "
                 $0.options = [.page, .percentage]
-                $0.value = book.currentPage == nil && book.currentPercentage == nil ? UserDefaults.standard[.defaultProgressType] : book.progressAuthority
+                $0.value = book.currentPage == nil && book.currentPercentage == nil ? GeneralSettings.defaultProgressType : book.progressAuthority
                 $0.onChange { [unowned self] row in
                     guard let type = row.value else { return }
                     self.updateProgressFromForm(type)
@@ -203,7 +203,7 @@ final class EditBookReadState: FormViewController {
         // online search (after tapping the detail button), since we are unable to determine whether the language
         // currently set in the book is equal to what was present in the search result. This is acceptable for now.
         if let language = book.language, book.manualBookId != nil && newBook {
-            UserDefaults.standard[.lastSelectedLanguage] = language
+            LightweightDataStore.lastSelectedLanguage = language
         }
         editContext.saveIfChanged()
 

@@ -9,6 +9,7 @@ class LaunchManager {
 
     var window: UIWindow!
     var storeMigrationFailed = false
+    var isFirstLaunch = false
 
     /**
      Performs any required initialisation immediately post after the app has launched.
@@ -17,6 +18,7 @@ class LaunchManager {
     func initialise(window: UIWindow) {
         self.window = window
 
+        isFirstLaunch = AppLaunchHistory.appOpenedCount == 0
         #if DEBUG
         Debug.initialiseSettings()
         #endif
@@ -26,7 +28,7 @@ class LaunchManager {
     }
 
     func handleApplicationDidBecomeActive() {
-        UserEngagement.onAppOpen()
+        AppLaunchHistory.appOpenedCount += 1
 
         if storeMigrationFailed {
             presentIncompatibleDataAlert()
@@ -125,19 +127,29 @@ class LaunchManager {
         #endif
         window.rootViewController = TabBarController()
 
-        // Initialise app-level theme, and monitor the set theme, if on iOS >13
+        // Initialise app-level theme, and monitor the set theme, if < iOS 13
         if #available(iOS 13.0, *) { } else {
             initialiseTheme()
             NotificationCenter.default.addObserver(self, selector: #selector(self.initialiseTheme), name: .ThemeSettingChanged, object: nil)
         }
 
-        UserDefaults.standard[.mostRecentWorkingVersion] = BuildInfo.appConfiguration.fullDescription
+        if isFirstLaunch {
+            let firstOpenScreen = FirstOpenScreenProvider().build()
+            window.rootViewController!.present(firstOpenScreen, animated: true)
+        } else if let lastLaunchedVersion = AppLaunchHistory.lastLaunchedVersion {
+            if let changeList = ChangeListProvider().changeListController(after: lastLaunchedVersion) {
+                window.rootViewController!.present(changeList, animated: true)
+            }
+        }
+
+        AppLaunchHistory.lastLaunchedVersion = BuildInfo.thisBuild.version
+        AppLaunchHistory.mostRecentWorkingVersionDescription = BuildInfo.thisBuild.fullDescription
     }
 
     @available(iOS, obsoleted: 13.0)
     @objc private func initialiseTheme() {
         if #available(iOS 13.0, *) { return }
-        let theme = UserDefaults.standard[.theme]
+        let theme = GeneralSettings.theme
         theme.configureForms()
         window.tintColor = theme.tint
     }
@@ -145,8 +157,11 @@ class LaunchManager {
     private func presentIncompatibleDataAlert() {
         #if RELEASE
         // This is a common error during development, but shouldn't occur in production
-        guard UserDefaults.standard[.mostRecentWorkingVersion] != BuildInfo.appConfiguration.fullDescription else {
-            UserEngagement.logError(NSError(code: .invalidMigration, userInfo: ["mostRecentWorkingVersion": UserDefaults.standard[.mostRecentWorkingVersion] ?? "unknown"]))
+        guard AppLaunchHistory.mostRecentWorkingVersionDescription != BuildInfo.thisBuild.fullDescription else {
+            UserEngagement.logError(
+                NSError(code: .invalidMigration,
+                        userInfo: ["mostRecentWorkingVersion": AppLaunchHistory.mostRecentWorkingVersionDescription ?? "unknown"])
+            )
             preconditionFailure("Migration error thrown for store of same version.")
         }
         #endif
@@ -154,10 +169,10 @@ class LaunchManager {
         guard window.rootViewController?.presentedViewController == nil else { return }
 
         let compatibilityVersionMessage: String?
-        if let mostRecentWorkingVersion = UserDefaults.standard[.mostRecentWorkingVersion] {
+        if let mostRecentWorkingVersion = AppLaunchHistory.mostRecentWorkingVersionDescription {
             compatibilityVersionMessage = """
             \n\nYou previously had version \(mostRecentWorkingVersion), but now have version \
-            \(BuildInfo.appConfiguration.fullDescription). You will need to install \
+            \(BuildInfo.thisBuild.fullDescription). You will need to install \
             \(mostRecentWorkingVersion) again to be able to access your data.
             """
         } else {

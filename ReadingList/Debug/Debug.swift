@@ -4,13 +4,10 @@ import Foundation
 import CoreData
 import ReadingList_Foundation
 
-extension QuickAction: UserSettingType {}
-
-extension UserSettingsCollection {
-    static let showSortNumber = UserSetting<Bool>("showSortNumber", defaultValue: false)
-}
-
 class Debug {
+
+    @UserDefaultsBacked(key: "showSortNumber", defaultValue: false)
+    static var showSortNumber: Bool
 
     private static let screenshotsCommand = "--UITests_Screenshots"
 

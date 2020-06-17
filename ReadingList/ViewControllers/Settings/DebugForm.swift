@@ -30,9 +30,9 @@ final class DebugForm: FormViewController {
         +++ Section("Debug Controls")
             <<< SwitchRow {
                 $0.title = "Show sort number"
-                $0.value = UserDefaults.standard[.showSortNumber]
+                $0.value = Debug.showSortNumber
                 $0.onChange {
-                    UserDefaults.standard[.showSortNumber] = $0.value ?? false
+                    Debug.showSortNumber = $0.value ?? false
                 }
             }
 
