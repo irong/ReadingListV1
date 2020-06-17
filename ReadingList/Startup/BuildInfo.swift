@@ -74,7 +74,7 @@ struct Version: Equatable, Hashable, Comparable, CustomStringConvertible, Codabl
         if components.count != 3 {
             return nil
         }
-        let integerComponents = components.compactMap { Int($0) }
+        let integerComponents = components.compactMap(Int.init)
         if integerComponents.count != 3 {
             return nil
         }

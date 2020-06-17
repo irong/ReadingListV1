@@ -37,10 +37,10 @@ class UpgradeManager {
 
         UpgradeAction(id: 5) {
             guard AppLaunchHistory.appOpenedCount > 0 else { return }
-            // Spoof a previously last-launched version of 1.12, upon upgrade to 1.13. This version is only used
+            // Spoof a previously last-launched version of 1.0, upon upgrade to 1.13. This version is only used
             // in tracking what features to show upon upgrade, and 1.13 was the first version to introduce in-app
             // change lists, so we shouldn't get any erroneous behaviour by this little lie.
-            AppLaunchHistory.lastLaunchedVersion = Version(major: 1, minor: 12, patch: 0)
+            AppLaunchHistory.lastLaunchedVersion = Version(major: 1, minor: 0, patch: 0)
         }
     ]
 

@@ -4,6 +4,8 @@ import MessageUI
 
 final class About: UITableViewController {
 
+    let thisVersionChangeList = ChangeListProvider().thisVersionChangeList()
+
     override func viewDidLoad() {
         super.viewDidLoad()
         monitorThemeSetting()
@@ -14,7 +16,7 @@ final class About: UITableViewController {
         if #available(iOS 13.0, *) { } else {
             cell.defaultInitialise(withTheme: GeneralSettings.theme)
         }
-        if ChangeListProvider().thisVersionChangeList() == nil {
+        if thisVersionChangeList == nil {
             cell.isHidden = true
         }
         return cell
@@ -36,8 +38,8 @@ final class About: UITableViewController {
         case 2: contact(indexPath)
         case 3: presentThemedSafariViewController(URL(string: "https://github.com/AndrewBennet/readinglist")!)
         case 5:
-            if let changeList = ChangeListProvider().thisVersionChangeList() {
-                present(changeList, animated: true)
+            if let thisVersionChangeList = thisVersionChangeList {
+                present(thisVersionChangeList, animated: true)
             }
         default: return
         }
