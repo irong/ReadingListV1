@@ -14,10 +14,16 @@ class UserEngagement {
 
     static func initialiseUserAnalytics() {
         guard BuildInfo.thisBuild.type == .testFlight || sendAnalytics || sendCrashReports else { return }
-        // We need to configure the firebase app in order to send crash reports
+
         if FirebaseApp.app() == nil {
             FirebaseApp.configure()
         }
+
+        let enableCrashlyticsReporting = BuildInfo.thisBuild.type == .testFlight || sendCrashReports
+        Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(enableCrashlyticsReporting)
+
+        let enableAnalyticsCollection = BuildInfo.thisBuild.type == .testFlight || sendAnalytics
+        Analytics.setAnalyticsCollectionEnabled(enableAnalyticsCollection)
     }
 
     @UserDefaultsBacked(key: "userEngagementCount", defaultValue: 0)
