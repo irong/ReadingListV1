@@ -231,20 +231,26 @@ extension Book {
         }
     }
 
+    func set<T>(_ key: ReferenceWritableKeyPath<Book, T?>, ifNotNil value: T?) {
+        if let value = value {
+            self[keyPath: key] = value
+        }
+    }
+
     // FUTURE: make a convenience init which takes a fetch result?
     func populate(fromFetchResult fetchResult: FetchResult) {
         googleBooksId = fetchResult.id
         title = fetchResult.title
-        subtitle = fetchResult.subtitle
         authors = fetchResult.authors
-        bookDescription = fetchResult.description
-        subjects = Set(fetchResult.subjects.map { Subject.getOrCreate(inContext: self.managedObjectContext!, withName: $0) })
-        coverImage = fetchResult.coverImage
-        pageCount = fetchResult.pageCount
-        publicationDate = fetchResult.publishedDate
-        publisher = fetchResult.publisher
-        isbn13 = fetchResult.isbn13?.int
-        language = fetchResult.language
+        set(\.subtitle, ifNotNil: fetchResult.subtitle)
+        set(\.bookDescription, ifNotNil: fetchResult.description)
+        subjects.formUnion(fetchResult.subjects.map { Subject.getOrCreate(inContext: self.managedObjectContext!, withName: $0) })
+        set(\.coverImage, ifNotNil: fetchResult.coverImage)
+        set(\.pageCount, ifNotNil: fetchResult.pageCount)
+        set(\.publicationDate, ifNotNil: fetchResult.publishedDate)
+        set(\.publisher, ifNotNil: fetchResult.publisher)
+        set(\.isbn13, ifNotNil: fetchResult.isbn13?.int)
+        set(\.language, ifNotNil: fetchResult.language)
     }
 
     static func get(fromContext context: NSManagedObjectContext, googleBooksId: String? = nil, isbn: String? = nil) -> Book? {

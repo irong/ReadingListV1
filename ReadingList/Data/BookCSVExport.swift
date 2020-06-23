@@ -1,40 +1,89 @@
 import Foundation
 import ReadingList_Foundation
 
-class BookCSVExport {
-    static func build(withLists lists: [String]) -> CsvExport<Book> {
-        var columns = [
-            CsvColumn<Book>(header: "ISBN-13") { $0.isbn13?.string },
-            CsvColumn<Book>(header: "Google Books ID") { $0.googleBooksId },
-            CsvColumn<Book>(header: "Title") { $0.title },
-            CsvColumn<Book>(header: "Subtitle") { $0.subtitle },
-            CsvColumn<Book>(header: "Authors") { $0.authors.map { $0.lastNameCommaFirstName }.joined(separator: "; ") },
-            CsvColumn<Book>(header: "Page Count") { $0.pageCount == nil ? nil : String(describing: $0.pageCount!) },
-            CsvColumn<Book>(header: "Publication Date") { $0.publicationDate?.string(withDateFormat: "yyyy-MM-dd") },
-            CsvColumn<Book>(header: "Publisher") { $0.publisher },
-            CsvColumn<Book>(header: "Description") { $0.bookDescription },
-            CsvColumn<Book>(header: "Subjects") { $0.subjects.map { $0.name }.joined(separator: "; ") },
-            CsvColumn<Book>(header: "Language Code") { $0.language?.rawValue },
-            CsvColumn<Book>(header: "Started Reading") { $0.startedReading?.string(withDateFormat: "yyyy-MM-dd") },
-            CsvColumn<Book>(header: "Finished Reading") { $0.finishedReading?.string(withDateFormat: "yyyy-MM-dd") },
-            CsvColumn<Book>(header: "Current Page") {
-                if let currentPage = $0.currentPage, $0.progressAuthority == .page {
-                    return String(describing: currentPage)
-                } else {
-                    return nil
-                }
-            },
-            CsvColumn<Book>(header: "Current Percentage") {
-                if let currentPercentage = $0.currentPercentage, $0.progressAuthority == .percentage {
-                    return String(describing: currentPercentage)
-                } else {
-                    return nil
-                }
-            },
-            CsvColumn<Book>(header: "Rating") { $0.rating == nil ? nil : String(describing: $0.rating!) },
-            CsvColumn<Book>(header: "Notes") { $0.notes }
-        ]
+enum BookCsvColumn: CaseIterable {
+    case isbn13
+    case googleBooksId
+    case title
+    case subtitle
+    case authors
+    case pageCount
+    case publicationDate
+    case publisher
+    case bookDescription
+    case subjects
+    case language
+    case startedReading
+    case finishedReading
+    case currentPage
+    case currentPercentage
+    case rating
+    case notes
+}
 
+extension BookCsvColumn: CsvColumn {
+    static var dateFormat: String { "YYYY-MM-DD" }
+
+    static var export: CsvExport<BookCsvColumn> {
+        CsvExport(columns: BookCsvColumn.allCases)
+    }
+
+    var mandatoryForImport: Bool {
+        return self == .title || self == .authors
+    }
+
+    var header: String {
+        switch self {
+        case .isbn13: return "ISBN-13"
+        case .googleBooksId: return "Google Books ID"
+        case .title: return "Title"
+        case .subtitle: return "Subtitle"
+        case .authors: return "Authors"
+        case .pageCount: return "Page Count"
+        case .publicationDate: return "Publication Date"
+        case .publisher: return "Publisher"
+        case .bookDescription: return "Description"
+        case .subjects: return "Subjects"
+        case .language: return "Language Code"
+        case .startedReading: return "Started Reading"
+        case .finishedReading: return "Finished Reading"
+        case .currentPage: return "Current Page"
+        case .currentPercentage: return "Current Percentage"
+        case .rating: return "Rating"
+        case .notes: return "Notes"
+        }
+    }
+
+    func cellValue(_ book: Book) -> String? { //swiftlint:disable:this cyclomatic_complexity
+        switch self {
+        case .isbn13: return book.isbn13?.string
+        case .googleBooksId: return book.googleBooksId
+        case .title: return book.title
+        case .subtitle: return book.subtitle
+        case .authors: return book.authors.map(\.lastNameCommaFirstName).joined(separator: "; ")
+        case .pageCount: return book.pageCount?.string
+        case .publicationDate: return book.publicationDate?.string(withDateFormat: Self.dateFormat)
+        case .publisher: return book.publisher
+        case .bookDescription: return book.bookDescription
+        case .subjects: return book.subjects.map(\.name).joined(separator: "; ")
+        case .language: return book.language?.rawValue
+        case .startedReading: return book.startedReading?.string(withDateFormat: Self.dateFormat)
+        case .finishedReading: return book.finishedReading?.string(withDateFormat: Self.dateFormat)
+        case .notes: return book.notes
+        case .currentPage:
+            guard let currentPage = book.currentPage, book.progressAuthority == .page else { return nil }
+            return currentPage.string
+        case .currentPercentage:
+            guard let currentPercentage = book.currentPercentage, book.progressAuthority == .percentage else { return nil }
+            return currentPercentage.string
+        case .rating:
+            guard let rating = book.rating, let ratingDouble = Double(exactly: rating) else { return nil }
+            return "\(ratingDouble / 2)"
+        }
+    }
+}
+
+/*
         columns.append(contentsOf: lists.map { listName in
             CsvColumn<Book>(header: listName) { book in
                 guard let list = book.lists.first(where: { $0.name == listName }) else { return nil }
@@ -45,12 +94,4 @@ class BookCSVExport {
                     return nil
                 }
             }
-        })
-
-        return CsvExport<Book>(columns: columns)
-    }
-
-    static var headers: [String] {
-        return build(withLists: []).columns.map { $0.header }
-    }
-}
+        })*/

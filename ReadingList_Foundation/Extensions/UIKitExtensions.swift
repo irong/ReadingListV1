@@ -237,6 +237,12 @@ public extension UILabel {
         self.text = text
     }
 
+    convenience init(_ text: String, with textStyle: UIFont.TextStyle) {
+        self.init()
+        self.font = .preferredFont(forTextStyle: textStyle)
+        self.text = text
+    }
+
     var isTruncated: Bool {
         guard let labelText = text else { return false }
         let labelTextSize = (labelText as NSString).boundingRect(
@@ -430,6 +436,14 @@ public extension UIDevice {
         case "iPad8,1", "iPad8,2", "iPad8,3", "iPad8,4": return "iPad Pro 11 Inch"
         case "iPad8,5", "iPad8,6", "iPad8,7", "iPad8,8": return "iPad Pro 12.9 Inch (3rd Generation)"
         default:                                        return identifier
+        }
+    }
+}
+
+public extension UIAlertController {
+    func addActions<S>(_ actions: S) where S: Sequence, S.Element == UIAlertAction {
+        for action in actions {
+            addAction(action)
         }
     }
 }
