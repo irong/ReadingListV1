@@ -1,5 +1,6 @@
 import Foundation
 import ReadingList_Foundation
+import PersistedPropertyWrapper
 
 @objc public enum BookSort: Int16, CaseIterable, CustomStringConvertible, Codable {
     // The order of this enum determines the order that the settings are shown in menus, via the allCases property
@@ -13,7 +14,7 @@ import ReadingList_Foundation
     case progress = 8
     case rating = 9
 
-    @UserDefaultsBacked(codingKey: "bookSortOrdersByReadState", defaultValue: [.toRead: .custom, .reading: .startDate, .finished: .finishDate])
+    @Persisted(encodedDataKey: "bookSortOrdersByReadState", defaultValue: [.toRead: .custom, .reading: .startDate, .finished: .finishDate])
     static var byReadState: [BookReadState: BookSort]
 
     public var description: String {

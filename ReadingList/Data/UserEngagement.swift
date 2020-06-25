@@ -2,14 +2,15 @@ import Foundation
 import StoreKit
 import Firebase
 import FirebaseCrashlytics
+import PersistedPropertyWrapper
 import ReadingList_Foundation
 
 class UserEngagement {
 
-    @UserDefaultsBacked(key: "sendAnalytics", defaultValue: true)
+    @Persisted("sendAnalytics", defaultValue: true)
     static var sendAnalytics: Bool
 
-    @UserDefaultsBacked(key: "sendCrashReports", defaultValue: true)
+    @Persisted("sendCrashReports", defaultValue: true)
     static var sendCrashReports: Bool
 
     static func initialiseUserAnalytics() {
@@ -26,7 +27,7 @@ class UserEngagement {
         Analytics.setAnalyticsCollectionEnabled(enableAnalyticsCollection)
     }
 
-    @UserDefaultsBacked(key: "userEngagementCount", defaultValue: 0)
+    @Persisted("userEngagementCount", defaultValue: 0)
     static var userEngagementCount: Int
 
     private static func shouldTryRequestReview() -> Bool {

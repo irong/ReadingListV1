@@ -28,6 +28,9 @@ packages:
   WhatsNewKit:
     url: https://github.com/SvenTiigi/WhatsNewKit
     minorVersion: 1.3.4
+  PersistedPropertyWrapper:
+    url: https://github.com/AndrewBennet/PersistedPropertyWrapper.git
+    branch: master
 
 targets:
   ReadingList:
@@ -48,6 +51,7 @@ targets:
       - package: Eureka
       - package: ImageRow
       - package: WhatsNewKit
+      - package: PersistedPropertyWrapper
     preBuildScripts:
       - name: SwiftLint
         script: |
