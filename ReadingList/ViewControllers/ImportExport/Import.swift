@@ -1,5 +1,6 @@
 import Foundation
 import ReadingList_Foundation
+import PersistedPropertyWrapper
 import UIKit
 import SVProgressHUD
 
@@ -9,14 +10,14 @@ final class Import: UITableViewController {
     @IBOutlet private weak var overwriteExistingSwitch: UISwitch!
     @IBOutlet private weak var importFormatDescription: UILabel!
 
-    @UserDefaultsBacked(key: "importFormat", defaultValue: .readingList)
+    @Persisted(encodedDataKey: "importFormat", defaultValue: .readingList)
     private var importFormat: ImportCsvFormat {
         didSet {
             importFormatDescription.text = importFormat.description
         }
     }
 
-    @UserDefaultsBacked(dataKey: "importSettings", defaultValue: ImportSettings())
+    @Persisted(encodedDataKey: "importSettings", defaultValue: .init())
     var importSettings: ImportSettings
 
     override func viewDidLoad() {
