@@ -30,7 +30,7 @@ packages:
     minorVersion: 1.3.4
   PersistedPropertyWrapper:
     url: https://github.com/AndrewBennet/PersistedPropertyWrapper.git
-    branch: master
+    minorVersion: 1.1.0
 
 targets:
   ReadingList:
