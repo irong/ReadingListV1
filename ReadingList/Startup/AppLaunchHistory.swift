@@ -1,19 +1,19 @@
 import Foundation
-import ReadingList_Foundation
+import PersistedPropertyWrapper
 
 struct AppLaunchHistory {
     private init() { }
 
-    @UserDefaultsBacked(dataKey: "lastLaunchedVersion")
+    @Persisted(encodedDataKey: "lastLaunchedVersion")
     static var lastLaunchedVersion: Version?
 
     /// The user facing description of the most recent version (e.g. "1.5" or "1.6.1 beta 3") for which the persistent store has been successfully initialised.
-    @UserDefaultsBacked(key: "mostRecentWorkingVersion")
+    @Persisted("mostRecentWorkingVersion")
     static var mostRecentWorkingVersionDescription: String?
 
-    @UserDefaultsBacked(key: "appStartupCount", defaultValue: 0)
+    @Persisted("appStartupCount", defaultValue: 0)
     static var appOpenedCount: Int
 
-    @UserDefaultsBacked(key: "lastAppliedUpgradeAction")
+    @Persisted("lastAppliedUpgradeAction")
     static var lastAppliedUpgradeAction: Int?
 }

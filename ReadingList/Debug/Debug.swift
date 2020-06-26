@@ -2,11 +2,11 @@
 
 import Foundation
 import CoreData
-import ReadingList_Foundation
+import PersistedPropertyWrapper
 
 class Debug {
 
-    @UserDefaultsBacked(key: "showSortNumber", defaultValue: false)
+    @Persisted("showSortNumber", defaultValue: false)
     static var showSortNumber: Bool
 
     private static let screenshotsCommand = "--UITests_Screenshots"

@@ -1,13 +1,14 @@
 import Foundation
+import PersistedPropertyWrapper
 import ReadingList_Foundation
 
 struct LightweightDataStore {
     private init() {}
 
     /// This is not always true; tip functionality predates this setting...
-    @UserDefaultsBacked(key: "hasEverTipped", defaultValue: false)
+    @Persisted("hasEverTipped", defaultValue: false)
     static var hasEverTipped: Bool
 
-    @UserDefaultsBacked(key: "lastSelectedLanguage")
+    @Persisted("lastSelectedLanguage")
     static var lastSelectedLanguage: LanguageIso639_1?
 }

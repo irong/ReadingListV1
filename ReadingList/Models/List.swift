@@ -1,5 +1,6 @@
 import Foundation
 import CoreData
+import PersistedPropertyWrapper
 import ReadingList_Foundation
 
 @objc(List)
@@ -76,7 +77,7 @@ enum ListSortOrder: Int, CustomStringConvertible, CaseIterable {
     case custom = 0
     case alphabetical = 1
 
-    @UserDefaultsBacked(key: "listSortOrder", defaultValue: .custom)
+    @Persisted("listSortOrder", defaultValue: .custom)
     static var selectedSort: ListSortOrder
 
     var description: String {

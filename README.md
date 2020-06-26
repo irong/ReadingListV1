@@ -4,7 +4,7 @@
 
 [Reading List](https://www.readinglist.app) is a free, open source iOS app for iPhone and iPad. Reading List allows users to track and catalog the books they read.
 
-<img src="https://www.readinglist.app/assets/iPhone%20X-0_ToReadList_framed.png" width="280"></img>
+<img src="./media/iPhone%20X-0_ToReadList_framed.png" width="280"></img>
 
 <a href="https://itunes.apple.com/us/app/reading-list-book-log/id1217139955?mt=8">
   <img src="https://linkmaker.itunes.apple.com/assets/shared/badges/en-us/appstore-lrg.svg" style="height: 60px;"/>
