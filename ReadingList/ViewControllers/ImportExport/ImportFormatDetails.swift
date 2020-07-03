@@ -2,7 +2,7 @@ import Foundation
 import UIKit
 
 class ImportFormatDetails: UITableViewController {
-    private let csvColumns = BookCsvColumn.allCases
+    private let csvColumns = BookCSVColumn.allCases
     private let csvColumnsSectionIndex = 1
 
     override func viewDidLoad() {
@@ -93,7 +93,7 @@ extension ImportFormatDetails: UIPopoverPresentationControllerDelegate {
     }
 }
 
-private extension BookCsvColumn {
+private extension BookCSVColumn {
     var helpText: NSAttributedString? {
         let mainFont = UIFont.preferredFont(forTextStyle: .callout)
         let highlightFont: UIFont
@@ -121,25 +121,32 @@ private extension BookCsvColumn {
                     (depending on whether there is a value for \
 
                     """, font: mainFont)
-                .appending(BookCsvColumn.finishedReading.header, font: highlightFont)
+                .appending(BookCSVColumn.finishedReading.header, font: highlightFont)
                 .appending(". If no value is provided, then the book will be imported as To Read.", font: mainFont)
         case .finishedReading:
             return NSMutableAttributedString("Should be provided in the form: ", font: mainFont)
                 .appending("YYYY-MM-DD", font: highlightFont)
                 .appending(".\n\nIf a value is provided for both ", font: mainFont)
-                .appending(BookCsvColumn.startedReading.header, font: highlightFont)
+                .appending(BookCSVColumn.startedReading.header, font: highlightFont)
                 .appending(" and ", font: mainFont)
-                .appending(BookCsvColumn.finishedReading.header, font: highlightFont)
+                .appending(BookCSVColumn.finishedReading.header, font: highlightFont)
                 .appending("""
                      then the book will be imported as Finished. If no valid is provided, then \
                     the book will be imported as either To Read or Reading, depending on whether \
                     there is a value for \
 
                     """, font: mainFont)
-                .appending(BookCsvColumn.startedReading.header, font: highlightFont)
+                .appending(BookCSVColumn.startedReading.header, font: highlightFont)
                 .appending(").", font: mainFont)
         case .language:
             return NSAttributedString("An ISO 639.1 two-letter language code.", font: mainFont)
+        case .lists:
+            return NSMutableAttributedString("""
+                If provided, should contain all lists which contain this book in a semicolon separated list, with the book position \
+                in the list in brackets after the list name. E.g.:
+
+                """, font: mainFont)
+                .appending("Sci-Fi (19); Recommendations (3)", font: highlightFont)
         default: return nil
         }
     }

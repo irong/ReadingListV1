@@ -31,6 +31,9 @@ packages:
   PersistedPropertyWrapper:
     url: https://github.com/AndrewBennet/PersistedPropertyWrapper.git
     minorVersion: 1.1.0
+  Regex:
+    url: https://github.com/sharplet/Regex.git
+    minorVersion: 2.1.1
 
 targets:
   ReadingList:
@@ -52,6 +55,7 @@ targets:
       - package: ImageRow
       - package: WhatsNewKit
       - package: PersistedPropertyWrapper
+      - package: Regex
     preBuildScripts:
       - name: SwiftLint
         script: |

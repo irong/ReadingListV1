@@ -196,7 +196,7 @@ public extension Array where Element: Equatable {
     func subtracting(_ array: [Element]) -> [Element] {
         self.filter { !array.contains($0) }
     }
-    
+
     func containsAll(_ items: [Element]) -> Bool {
         return items.allSatisfy { self.contains($0) }
     }
@@ -210,7 +210,7 @@ public extension Date {
         guard let iso = iso, let date = dateStringFormatter.date(from: iso) else { return nil }
         self.init(timeInterval: 0, since: date)
     }
-    
+
     init?(_ dateString: String?, format: String) {
         guard let dateString = dateString else { return nil }
         let dateStringFormatter = DateFormatter()
@@ -337,6 +337,10 @@ public extension NSOrderedSet {
 public extension Sequence {
     func sorted<T>(byAscending sortableProperty: KeyPath<Element, T>) -> [Self.Element] where T: Comparable {
         return sorted { $0[keyPath: sortableProperty] < $1[keyPath: sortableProperty] }
+    }
+
+    func sorted<T>(byAscending sortablePropertySelector: (Element) -> T) -> [Self.Element] where T: Comparable {
+        return sorted { sortablePropertySelector($0) < sortablePropertySelector($1) }
     }
 
     func map<T>(_ keyPath: KeyPath<Element, T>) -> [T] {

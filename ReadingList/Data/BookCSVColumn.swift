@@ -1,7 +1,7 @@
 import Foundation
 import ReadingList_Foundation
 
-enum BookCsvColumn: CaseIterable {
+enum BookCSVColumn: CaseIterable {
     case isbn13
     case googleBooksId
     case title
@@ -19,13 +19,14 @@ enum BookCsvColumn: CaseIterable {
     case currentPercentage
     case rating
     case notes
+    case lists
 }
 
-extension BookCsvColumn: CsvColumn {
-    static var dateFormat: String { "YYYY-MM-DD" }
+extension BookCSVColumn: CsvColumn {
+    static var dateFormat: String { "YYYY-MM-dd" }
 
-    static var export: CsvExport<BookCsvColumn> {
-        CsvExport(columns: BookCsvColumn.allCases)
+    static var export: CsvExport<BookCSVColumn> {
+        CsvExport(columns: BookCSVColumn.allCases)
     }
 
     var mandatoryForImport: Bool {
@@ -51,6 +52,7 @@ extension BookCsvColumn: CsvColumn {
         case .currentPercentage: return "Current Percentage"
         case .rating: return "Rating"
         case .notes: return "Notes"
+        case .lists: return "Lists"
         }
     }
 
@@ -79,19 +81,16 @@ extension BookCsvColumn: CsvColumn {
         case .rating:
             guard let rating = book.rating, let ratingDouble = Double(exactly: rating) else { return nil }
             return "\(ratingDouble / 2)"
+        case .lists:
+            // We want to return a cell value like:
+            //      List A (19); List B (3); List C (4)
+            // but each list name could contain a semi colon, or even be equal to the whole string above. To remove abiguity,
+            // we escape the semicolons which appear in the list names to '\;', but in order to do that we also need to escape
+            // the back slash to a double backslash ('\\') first.
+            // Finally, increment the sort value to make them 1-based.
+            return book.listItems.sorted(byAscending: { $0.list.name }).map {
+                "\($0.list.name.replacingOccurrences(of: #"\"#, with: #"\\"#).replacingOccurrences(of: ";", with: #"\;"#)) (\($0.sort + 1))"
+            }.joined(separator: "; ")
         }
     }
 }
-
-/*
-        columns.append(contentsOf: lists.map { listName in
-            CsvColumn<Book>(header: listName) { book in
-                guard let list = book.lists.first(where: { $0.name == listName }) else { return nil }
-                if let listIndex = book.listItems.first(where: { $0.list == list })?.sort {
-                    return String(describing: listIndex + 1) // we use 1-based indexes
-                } else {
-                    assertionFailure("Unexpected missing list index")
-                    return nil
-                }
-            }
-        })*/

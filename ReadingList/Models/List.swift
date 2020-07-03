@@ -71,6 +71,16 @@ class List: NSManagedObject {
     class func maxSort(fromContext context: NSManagedObjectContext) -> Int32? {
         return context.getMaximum(sortValueKeyPath: \List.sort)
     }
+
+    class func getOrCreate(inContext context: NSManagedObjectContext, withName name: String) -> List {
+        let listFetchRequest = NSManagedObject.fetchRequest(List.self, limit: 1)
+        listFetchRequest.predicate = NSPredicate(format: "%K == %@", #keyPath(Subject.name), name)
+        listFetchRequest.returnsObjectsAsFaults = false
+        if let existingList = (try! context.fetch(listFetchRequest)).first {
+            return existingList
+        }
+        return List(context: context, name: name)
+    }
 }
 
 enum ListSortOrder: Int, CustomStringConvertible, CaseIterable {

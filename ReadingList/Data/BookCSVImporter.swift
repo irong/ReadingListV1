@@ -7,7 +7,7 @@ import os.log
 class BookCSVImporter {
     private let parserDelegate: BookCSVParserDelegate //swiftlint:disable:this weak_delegate
 
-    init(format: ImportCsvFormat, settings: ImportSettings) {
+    init(format: ImportCSVFormat, settings: ImportSettings) {
         let backgroundContext = PersistentStoreManager.container.newBackgroundContext()
         backgroundContext.mergePolicy = NSMergePolicy.mergeByPropertyStoreTrump
         parserDelegate = BookCSVParserDelegate(context: backgroundContext, importFormat: format, settings: settings)
@@ -18,7 +18,7 @@ class BookCSVImporter {
         - error: if the CSV import failed irreversibly, this parameter will be non-nil
         - results: otherwise, this summary of the results of the import will be non-nil
     */
-    func startImport(fromFileAt fileLocation: URL, _ completion: @escaping (Result<BookCSVImportResults, CSVImportError>) -> Void) {
+    func startImport(fromFileAt fileLocation: URL, _ completion: @escaping (Result<BookCSVImporter.Results, CSVImportError>) -> Void) {
         os_log("Beginning import from CSV file")
         parserDelegate.onCompletion = completion
 
@@ -26,26 +26,24 @@ class BookCSVImporter {
         parser.delegate = parserDelegate
         parser.begin()
     }
-}
 
-struct BookCSVImportResults {
-    let success: Int
-    let error: Int
-    let duplicate: Int
+    struct Results {
+        let success: Int
+        let error: Int
+        let duplicate: Int
+    }
 }
 
 class BookCSVParserDelegate: CSVParserDelegate {
     private let context: NSManagedObjectContext
-    private let importFormat: ImportCsvFormat
+    private let importFormat: ImportCSVFormat
     private let settings: ImportSettings
     private var cachedSorts: [BookReadState: BookSortIndexManager]
     private var networkOperations = [Promise<Void>]()
-    private var listMappings = [String: [(bookID: NSManagedObjectID, index: Int)]]()
-    private var listNames = [String]()
 
-    var onCompletion: ((Result<BookCSVImportResults, CSVImportError>) -> Void)?
+    var onCompletion: ((Result<BookCSVImporter.Results, CSVImportError>) -> Void)?
 
-    init(context: NSManagedObjectContext, importFormat: ImportCsvFormat, settings: ImportSettings) {
+    init(context: NSManagedObjectContext, importFormat: ImportCSVFormat, settings: ImportSettings) {
         self.context = context
         self.importFormat = importFormat
         self.settings = settings
@@ -57,59 +55,7 @@ class BookCSVParserDelegate: CSVParserDelegate {
     }
 
     func headersRead(_ headers: [String]) -> Bool {
-        let requiredHeaders: [String]
-        switch importFormat {
-        case .goodreads:
-            requiredHeaders = CsvGoodReadsRow.requiredHeaders
-        case .readingList:
-            requiredHeaders = NativeCsvRow.requiredHeaders
-        }
-
-        if !headers.containsAll(requiredHeaders) {
-            return false
-        }
-
-        if importFormat == .readingList {
-            listNames = headers.filter { !BookCsvColumn.allCases.map(\.header).contains($0) }
-        }
-        return true
-    }
-
-    private func populateBook(_ book: Book, withValues values: CsvRow) {
-        book.title = values.title
-        book.authors = values.authors
-
-        book.set(\.subtitle, ifNotNil: values.subtitle)
-        book.set(\.googleBooksId, ifNotNil: values.googleBooksId)
-        book.set(\.isbn13, ifNotNil: values.isbn13?.int)
-        if book.googleBooksId == nil && values.manualBookId == nil {
-            book.manualBookId = values.manualBookId ?? UUID().uuidString
-        }
-        book.set(\.pageCount, ifNotNil: values.pageCount)
-        if let page = values.currentPage {
-            book.setProgress(.page(page))
-        } else if let percentage = values.currentPercentage {
-            book.setProgress(.percentage(percentage))
-        }
-        book.set(\.notes, ifNotNil: values.notes?.replacingOccurrences(of: "\r\n", with: "\n"))
-        book.set(\.publicationDate, ifNotNil: values.publicationDate)
-        book.set(\.publisher, ifNotNil: values.publisher)
-        book.set(\.bookDescription, ifNotNil: values.description?.replacingOccurrences(of: "\r\n", with: "\n"))
-        if let started = values.started {
-            if let finished = values.finished {
-                book.setFinished(started: started, finished: finished)
-            } else {
-                book.setReading(started: started)
-            }
-        }
-
-        book.subjects.formUnion(createSubjects(values.subjects))
-        if let rating = values.rating, let integerRating = Int16(exactly: rating * 2), integerRating > 0 && integerRating <= 10 {
-            book.rating = integerRating
-        }
-        if let language = values.language {
-            book.set(\.language, ifNotNil: LanguageIso639_1(rawValue: language))
-        }
+        return headers.containsAll(importFormat.requiredHeaders)
     }
 
     private func createAuthors(_ authorString: String) -> [Author] {
@@ -129,13 +75,14 @@ class BookCSVParserDelegate: CSVParserDelegate {
         }
     }
 
-    private func populateLists() {
-        for listMapping in listMappings {
-            let list = getOrCreateList(withName: listMapping.key)
-            let orderedBooks = listMapping.value.sorted { $0.1 < $1.1 }
-                .map { context.object(with: $0.bookID) as! Book }
-                .filter { !list.books.contains($0) }
-            list.addBooks(orderedBooks)
+    private func attach(_ listIndexes: [CSVRow.ListIndex], to book: Book) {
+        for listIndex in listIndexes {
+            let list = List.getOrCreate(inContext: context, withName: listIndex.listName)
+            if let existingListItem = Array(book.listItems).first(where: { $0.list == list }) {
+                existingListItem.sort = listIndex.index
+            } else {
+                _ = ListItem(context: context, book: book, list: list, sort: listIndex.index)
+            }
         }
     }
 
@@ -177,16 +124,7 @@ class BookCSVParserDelegate: CSVParserDelegate {
             }
     }
 
-    func getCsvRow(_ values: [String: String]) -> CsvRow? {
-        switch importFormat {
-        case .readingList:
-            return NativeCsvRow(values)
-        case .goodreads:
-            return CsvGoodReadsRow(values)
-        }
-    }
-
-    private func findExistingBook(_ csvRow: CsvRow) -> Book? {
+    private func findExistingBook(_ csvRow: CSVRow) -> Book? {
         if let googleBooksId = csvRow.googleBooksId, let existingBookByGoogleId = Book.get(fromContext: self.context, googleBooksId: googleBooksId) {
             return existingBookByGoogleId
         }
@@ -197,7 +135,7 @@ class BookCSVParserDelegate: CSVParserDelegate {
     }
 
     func lineParseSuccess(_ values: [String: String]) {
-        guard let csvRow = getCsvRow(values) else {
+        guard let csvRow = CSVRow(for: importFormat, row: values) else {
             invalidCount += 1
             os_log("Invalid data: no book created")
             return
@@ -217,26 +155,22 @@ class BookCSVParserDelegate: CSVParserDelegate {
                 guard let sortManager = cachedSorts[book.readState] else { preconditionFailure() }
                 book.sort = sortManager.getAndIncrementSort()
             }
-            populateBook(book, withValues: csvRow)
+            book.populate(fromCsvRow: csvRow)
+            book.subjects.formUnion(createSubjects(csvRow.subjects))
+            attach(csvRow.lists, to: book)
 
             // If the book is not valid, delete it
             let objectIdForLogging = book.objectID.uriRepresentation().absoluteString
-            guard book.isValidForUpdate() else {
+            do {
+                try book.validateForUpdate()
+            } catch {
                 invalidCount += 1
-                os_log("Invalid book: deleting book %{public}s", type: .info, objectIdForLogging)
+                os_log("Invalid book: deleting book %{public}s (%{public}s)", type: .info, objectIdForLogging, error.localizedDescription)
                 book.delete()
                 return
             }
             os_log("Created %{public}s", objectIdForLogging)
             successCount += 1
-
-            // Record the list memberships
-            for listName in listNames {
-                if let listPosition = Int(values[listName]) {
-                    if listMappings[listName] == nil { listMappings[listName] = [] }
-                    listMappings[listName]!.append((book.objectID, listPosition))
-                }
-            }
 
             if let googleBooksId = book.googleBooksId {
                 if settings.downloadCoverImages && book.coverImage == nil {
@@ -286,11 +220,11 @@ class BookCSVParserDelegate: CSVParserDelegate {
             .always(on: .main) {
                 os_log("All %d network operations promises completed", type: .info, self.networkOperations.count)
                 self.context.performAndWait {
-                    self.populateLists()
+                    // FUTURE: Consider tidying up any clashing list indexes
                     os_log("Saving results of CSV import (%d of %d successful)", self.successCount, self.successCount + self.invalidCount + self.duplicateCount)
                     self.context.saveAndLogIfErrored()
                 }
-                let results = BookCSVImportResults(success: self.successCount, error: self.invalidCount, duplicate: self.duplicateCount)
+                let results = BookCSVImporter.Results(success: self.successCount, error: self.invalidCount, duplicate: self.duplicateCount)
                 self.onCompletion?(.success(results))
             }
     }
