@@ -338,17 +338,17 @@ final class EditBookMetadata: FormViewController {
     }
 
     @objc func userDidCancel() {
-        let onlyTrivialChangesOccurred: Bool
+        let noConfirmationNeeded: Bool
         if self.isAddingNewBook {
             let trivialChanges = ["addedWhen", "manualBookId"]
-            onlyTrivialChangesOccurred = book.changedValues()
+            noConfirmationNeeded = book.changedValues()
                 .filter { !trivialChanges.contains($0.key) }
                 .isEmpty
         } else {
-            onlyTrivialChangesOccurred = !book.changedValues().isEmpty
+            noConfirmationNeeded = book.changedValues().isEmpty
         }
 
-        guard onlyTrivialChangesOccurred else {
+        guard noConfirmationNeeded else {
             // Confirm exit dialog
             let confirmExit = UIAlertController(title: "Unsaved changes", message: "Are you sure you want to discard your unsaved changes?", preferredStyle: .actionSheet)
             confirmExit.addAction(UIAlertAction(title: "Discard", style: .destructive) { _ in
