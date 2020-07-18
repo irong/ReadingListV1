@@ -129,6 +129,12 @@ final class EditBookReadState: FormViewController {
                 return
             }
             progressRow.cell.textField.becomeFirstResponder()
+            if let textField = progressRow.cell.textField {
+                textField.selectedTextRange = textField.textRange(
+                    from: textField.beginningOfDocument,
+                    to: textField.endOfDocument
+                )
+            }
         }
     }
 
