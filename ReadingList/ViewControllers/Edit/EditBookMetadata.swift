@@ -340,7 +340,10 @@ final class EditBookMetadata: FormViewController {
     @objc func userDidCancel() {
         let noConfirmationNeeded: Bool
         if self.isAddingNewBook {
-            let trivialChanges = ["addedWhen", "manualBookId"]
+            let trivialChanges = [
+                #keyPath(Book.addedWhen),
+                #keyPath(Book.manualBookId),
+            ]
             noConfirmationNeeded = book.changedValues()
                 .filter { !trivialChanges.contains($0.key) }
                 .isEmpty
