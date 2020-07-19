@@ -122,13 +122,21 @@ final class EditBookReadState: FormViewController {
 
         // If we are editing a book (not adding one), pre-select the current page field
         if self.book.readState == .reading && self.book.changedValues().isEmpty {
-            guard let progressRow = [progressPageKey, progressPercentageKey].map({
-                self.form.rowBy(tag: $0) as! Int32Row
-            }).first(where: { !$0.isHidden }) else {
+            guard
+                let progressRow = [progressPageKey, progressPercentageKey].map({
+                    self.form.rowBy(tag: $0) as! Int32Row
+                }).first(where: { !$0.isHidden }),
+                let textField = progressRow.cell.textField
+            else {
                 assertionFailure("Neither percentage nor page visible")
                 return
             }
-            progressRow.cell.textField.becomeFirstResponder()
+
+            textField.becomeFirstResponder()
+            textField.selectedTextRange = textField.textRange(
+                from: textField.beginningOfDocument,
+                to: textField.endOfDocument
+            )
         }
     }
 
