@@ -21,19 +21,6 @@ struct GoogleBooksApi {
     }
 
     /**
-     Searches on Google Books for the given isbn
-     */
-    static func search(isbn: String) -> Promise<[SearchResult]> {
-        os_log("Searching for Google Books for ISBN", type: .debug)
-        guard let url = GoogleBooksRequest.searchIsbn(isbn).url else {
-            return Promise<[SearchResult]>(GoogleError.invalidUrl)
-        }
-        return URLSession.shared.json(url: url)
-            .then(GoogleBooksParser.assertNoError)
-            .then(GoogleBooksParser.parseSearchResults)
-    }
-
-    /**
      Searches on Google Books for the given ISBN
      */
     func fetch(isbn: String) -> Promise<FetchResult> {

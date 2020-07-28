@@ -109,7 +109,7 @@ class BookCSVParserDelegate: CSVParserDelegate {
     }
 
     private func overwriteMetadata(forBook book: Book, withGoogleID googleID: String) -> Promise<Void> {
-        return GoogleBooks.fetch(googleBooksId: googleID)
+        return googleBooksApi.fetch(googleBooksId: googleID)
             .then { result -> Void in
                 self.context.perform {
                     book.populate(fromFetchResult: result)
@@ -119,10 +119,9 @@ class BookCSVParserDelegate: CSVParserDelegate {
     }
 
     private func lookupGoogleBooksId(forBook book: Book, withIsbn isbn: String) -> Promise<String> {
-        return GoogleBooks.search(isbn: isbn)
-            .validate { $0.count == 1 }
-            .then { data -> String in
-                return data[0].id
+        return googleBooksApi.fetch(isbn: isbn)
+            .then { result -> String in
+                return result.id
             }
     }
 

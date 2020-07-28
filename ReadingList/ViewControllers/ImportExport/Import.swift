@@ -137,7 +137,7 @@ extension CSVImportError {
         case .missingHeaders: return "Missing CSV Columns"
         }
     }
-    
+
     var reason: String {
         switch self {
         case .invalidCsv: return "not valid"
