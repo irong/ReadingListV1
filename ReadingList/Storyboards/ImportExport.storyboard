@@ -542,46 +542,12 @@ Import data from a CSV file, to move books between devices or services.</string>
                             </connections>
                         </barButtonItem>
                     </navigationItem>
+                    <connections>
+                        <outletCollection property="labels" destination="vbb-4G-JHo" collectionClass="NSMutableArray" id="j6f-eI-av0"/>
+                        <outletCollection property="labels" destination="pZs-3b-uNx" collectionClass="NSMutableArray" id="P6a-JV-zyX"/>
+                        <outletCollection property="labels" destination="vbb-4G-JHo" collectionClass="NSMutableArray" id="nVi-Iv-RNU"/>
+                    </connections>
                 </viewController>
-                <view contentMode="scaleToFill" id="Mma-EK-zLh">
-                    <rect key="frame" x="0.0" y="0.0" width="540" height="620"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                    <subviews>
-                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Importing from Reading List" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="aM5-i6-ceL">
-                            <rect key="frame" x="40" y="20" width="460" height="33.5"/>
-                            <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="28"/>
-                            <nil key="textColor"/>
-                            <nil key="highlightedColor"/>
-                        </label>
-                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="RML-9v-oEP">
-                            <rect key="frame" x="60" y="73.5" width="420" height="183"/>
-                            <string key="text">You can import books using the Reading List CSV format. Importing books from a file can help to add historical reading data to the app, and enables you to transfer books between devices.  The Reading List CSV format has columns for all the data captured in within the app. To see a full list of the available columns, and further import requirements and behaviour, tap the button below.</string>
-                            <fontDescription key="fontDescription" name=".AppleSystemUIFont" family=".AppleSystemUIFont" pointSize="17"/>
-                            <nil key="textColor"/>
-                            <nil key="highlightedColor"/>
-                        </label>
-                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="hVR-eg-yHr">
-                            <rect key="frame" x="226" y="276.5" width="88" height="30"/>
-                            <state key="normal" title="See columns"/>
-                        </button>
-                    </subviews>
-                    <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
-                    <constraints>
-                        <constraint firstItem="aM5-i6-ceL" firstAttribute="top" secondItem="Mma-EK-zLh" secondAttribute="top" constant="20" symbolic="YES" id="0Xd-69-8u1"/>
-                        <constraint firstItem="hVR-eg-yHr" firstAttribute="centerX" secondItem="Mma-EK-zLh" secondAttribute="centerX" id="9Dl-lz-iHM"/>
-                        <constraint firstItem="aM5-i6-ceL" firstAttribute="leading" secondItem="Mma-EK-zLh" secondAttribute="leading" constant="40" id="HUH-ro-uij"/>
-                        <constraint firstItem="RML-9v-oEP" firstAttribute="leading" secondItem="Mma-EK-zLh" secondAttribute="leading" constant="20" symbolic="YES" id="XWf-s1-Tb2">
-                            <variation key="widthClass=regular" constant="60"/>
-                        </constraint>
-                        <constraint firstAttribute="trailing" secondItem="aM5-i6-ceL" secondAttribute="trailing" constant="40" id="b3G-uM-63B"/>
-                        <constraint firstAttribute="trailing" secondItem="RML-9v-oEP" secondAttribute="trailing" constant="20" symbolic="YES" id="jBZ-kc-e4S">
-                            <variation key="widthClass=regular" constant="60"/>
-                        </constraint>
-                        <constraint firstItem="hVR-eg-yHr" firstAttribute="top" secondItem="RML-9v-oEP" secondAttribute="bottom" constant="20" id="lmL-0I-p17"/>
-                        <constraint firstItem="RML-9v-oEP" firstAttribute="top" secondItem="aM5-i6-ceL" secondAttribute="bottom" constant="20" id="yb1-x8-D1q"/>
-                    </constraints>
-                    <viewLayoutGuide key="safeArea" id="reO-96-hg3"/>
-                </view>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkU-jr-8vp" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="6593" y="2958"/>

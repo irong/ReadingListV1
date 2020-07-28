@@ -44,7 +44,8 @@ final class LabelPopoverViewController: UIViewController, ThemeableViewControlle
     }
 
     func initialise(withTheme theme: Theme) {
-        view.backgroundColor = theme.viewBackgroundColor
+        popoverPresentationController?.backgroundColor = theme.tableBackgroundColor
+        view.backgroundColor = theme.tableBackgroundColor
         label.textColor = theme.titleTextColor
     }
 }
