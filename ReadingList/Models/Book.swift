@@ -288,6 +288,21 @@ extension Book {
         }
     }
 
+    // FUTURE: make a convenience init which takes a fetch result?
+    func populate(fromFetchResult fetchResult: GoogleBooksApi.FetchResult) {
+        googleBooksId = fetchResult.id
+        title = fetchResult.title
+        subtitle = fetchResult.subtitle
+        authors.append(contentsOf: fetchResult.authors.map { Author(firstNameLastName: $0) })
+        bookDescription = fetchResult.description
+        subjects = Set(fetchResult.subjects.map { Subject.getOrCreate(inContext: self.managedObjectContext!, withName: $0) })
+        coverImage = fetchResult.image
+        pageCount = fetchResult.pageCount?.int32
+        publisher = fetchResult.publisher
+        isbn13 = fetchResult.isbn13?.int
+        language = fetchResult.language
+    }
+
     static func get(fromContext context: NSManagedObjectContext, googleBooksId: String? = nil, isbn: String? = nil) -> Book? {
         // if both are nil, leave early
         guard googleBooksId != nil || isbn != nil else { return nil }

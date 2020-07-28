@@ -16,7 +16,6 @@ final class Attributions: UITableViewController {
         Attribution("Icons8", url: "https://icons8.com", copyright: "Icons8", license: .ccByNd3),
         Attribution("PersistedPropertyWrapper", url: "https://github.com/AndrewBennet/PersistedPropertyWrapper", copyright: "2020 Andrew Bennet", license: .mit),
         Attribution("Promises", url: "https://github.com/google/promises", copyright: "2018 Google Inc", license: .apache2),
-        Attribution("SwiftyJSON", url: "https://github.com/SwiftyJSON/SwiftyJSON", copyright: "2016 Ruoyu Fu", license: .mit),
         Attribution("SwiftyStoreKit", url: "https://github.com/bizz84/SwiftyStoreKit", copyright: "2015-2017 Andrea Bizzotto", license: .mit),
         Attribution("SVProgressHUD", url: "https://github.com/SVProgressHUD/SVProgressHUD", copyright: "2011-2018 Sam Vermette, Tobias Tiemerding and contributors", license: .mit),
         Attribution("WhatsNewKit", url: "https://github.com/SvenTiigi/WhatsNewKit", copyright: "2020 Sven Tiigi", license: .mit)

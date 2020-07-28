@@ -38,6 +38,8 @@ class BookCSVParserDelegate: CSVParserDelegate {
     private let context: NSManagedObjectContext
     private let importFormat: ImportCSVFormat
     private let settings: ImportSettings
+    private let googleBooksApi = GoogleBooksApi()
+
     private var cachedSorts: [BookReadState: BookSortIndexManager]
     private var networkOperations = [Promise<Void>]()
 
@@ -97,7 +99,7 @@ class BookCSVParserDelegate: CSVParserDelegate {
     }
 
     private func populateCover(forBook book: Book, withGoogleID googleID: String) -> Promise<Void> {
-        return GoogleBooks.getCover(googleBooksId: googleID)
+        return googleBooksApi.getCover(googleBooksId: googleID)
             .then { data -> Void in
                 self.context.perform {
                     book.coverImage = data
