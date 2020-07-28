@@ -12,6 +12,16 @@ class Author: NSObject, NSCoding {
         self.firstNames = firstNames
     }
 
+    convenience init(firstNameLastName text: String) {
+        if let range = text.range(of: " ", options: .backwards) {
+            let firstNames = text[..<range.upperBound].trimming()
+            let lastName = text[range.lowerBound...].trimming()
+            self.init(lastName: lastName, firstNames: firstNames)
+        } else {
+            self.init(lastName: text, firstNames: nil)
+        }
+    }
+
     required convenience init?(coder aDecoder: NSCoder) {
         let lastName = aDecoder.decodeObject(forKey: "lastName") as! String
         let firstNames = aDecoder.decodeObject(forKey: "firstNames") as! String?

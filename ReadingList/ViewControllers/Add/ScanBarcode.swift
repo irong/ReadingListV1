@@ -302,19 +302,19 @@ final class ScanBarcode: UIViewController {
         // We're going to be doing a search online, so bring up a spinner
         SVProgressHUD.show(withStatus: "Searching...")
 
-        GoogleBooks.fetch(isbn: isbn)
+        GoogleBooksApi().fetch(isbn: isbn)
             .always(on: .main) { SVProgressHUD.dismiss() }
             .catch(on: .main) { error in
                 self.feedbackGenerator.notificationOccurred(.error)
                 switch error {
-                case GoogleError.noResult: self.handleNoExactMatch(forIsbn: isbn)
+                case GoogleBooksApi.ResponseError.noResult: self.handleNoExactMatch(forIsbn: isbn)
                 default: self.onSearchError(error)
                 }
             }
             .then(on: .main, handleFetchSuccess(_:))
     }
 
-    func handleFetchSuccess(_ fetchResult: FetchResult) {
+    func handleFetchSuccess(_ fetchResult: GoogleBooksApi.FetchResult) {
         if let existingBook = Book.get(fromContext: bulkAddContext ?? PersistentStoreManager.container.viewContext, googleBooksId: fetchResult.id) {
             self.feedbackGenerator.notificationOccurred(.warning)
             self.handleDuplicateBook(existingBook)

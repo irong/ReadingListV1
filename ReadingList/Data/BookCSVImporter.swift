@@ -38,6 +38,8 @@ struct BookCSVImportResults {
 class BookCSVParserDelegate: CSVParserDelegate {
     private let context: NSManagedObjectContext
     private let includeImages: Bool
+    private let googleBooksApi = GoogleBooksApi()
+
     private var cachedSorts: [BookReadState: BookSortIndexManager]
     private var coverDownloadPromises = [Promise<Void>]()
     private var listMappings = [String: [(bookID: NSManagedObjectID, index: Int)]]()
@@ -139,7 +141,7 @@ class BookCSVParserDelegate: CSVParserDelegate {
     }
 
     private func populateCover(forBook book: Book, withGoogleID googleID: String) {
-        coverDownloadPromises.append(GoogleBooks.getCover(googleBooksId: googleID)
+        coverDownloadPromises.append(googleBooksApi.getCover(googleBooksId: googleID)
             .then { data -> Void in
                 self.context.perform {
                     book.coverImage = data

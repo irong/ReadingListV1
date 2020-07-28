@@ -314,7 +314,7 @@ final class EditBookMetadata: FormViewController {
         guard let googleBooksId = book.googleBooksId else { return }
         SVProgressHUD.show(withStatus: "Downloading...")
 
-        GoogleBooks.fetch(googleBooksId: googleBooksId)
+        GoogleBooksApi().fetch(googleBooksId: googleBooksId)
             .always(on: .main) {
                 SVProgressHUD.dismiss()
             }
@@ -324,7 +324,7 @@ final class EditBookMetadata: FormViewController {
             .then(on: .main, updateBookFromGoogle)
     }
 
-    func updateBookFromGoogle(fetchResult: FetchResult) {
+    func updateBookFromGoogle(fetchResult: GoogleBooksApi.FetchResult) {
         book.populate(fromFetchResult: fetchResult)
         editBookContext.saveIfChanged()
         dismiss(animated: true) {

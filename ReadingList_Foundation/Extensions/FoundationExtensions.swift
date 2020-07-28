@@ -105,6 +105,10 @@ public extension Int {
         guard let int32 = int32 else { return nil }
         self.init(int32)
     }
+
+    var int32: Int32 {
+        Int32(self)
+    }
 }
 
 public extension NSSortDescriptor {
@@ -124,6 +128,12 @@ public extension Collection {
 }
 
 public extension URL {
+    func withHttps() -> URL? {
+        guard var urlComponents = URLComponents(url: self, resolvingAgainstBaseURL: false) else { return nil }
+        urlComponents.scheme = "https"
+        return urlComponents.url
+    }
+
     static func temporary(fileWithName fileName: String) -> URL {
         return URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(fileName)
     }
@@ -328,5 +338,17 @@ public extension Sequence {
 
     func map<T>(_ keyPath: KeyPath<Element, T>) -> [T] {
         return map { $0[keyPath: keyPath] }
+    }
+
+    func distinct<T>(by keyPath: KeyPath<Element, T>) -> [Element] where T: Hashable {
+        var newArray = [Element]()
+        var seenItentifiers = Set<T>()
+        for element in self {
+            let identifier = element[keyPath: keyPath]
+            if seenItentifiers.insert(identifier).inserted {
+                newArray.append(element)
+            }
+        }
+        return newArray
     }
 }

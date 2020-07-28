@@ -1,6 +1,5 @@
 import Foundation
 import Promises
-import SwiftyJSON
 
 public extension URLSession {
 
@@ -25,19 +24,4 @@ public extension URLSession {
             }
         }
     }
-
-    func json(url: URL) -> Promise<JSON> {
-        return self.data(url: url)
-            .then { data -> JSON in
-                if let jsonData = try? JSON(data: data) {
-                    return jsonData
-                } else {
-                    throw HTTPError.noJsonData
-                }
-            }
-    }
-}
-
-public enum HTTPError: Error {
-    case noJsonData
 }

@@ -7,9 +7,6 @@ options:
   bundleIdPrefix: com.andrewbennet
 
 packages:
-  SwiftyJSON:
-    url: https://github.com/SwiftyJSON/SwiftyJSON
-    minorVersion: 5.0.0
   Cosmos:
     url: https://github.com/evgenyneu/Cosmos
     minorVersion: 20.0.0
@@ -45,7 +42,6 @@ targets:
     dependencies:
       - sdk: StoreKit.framework
       - target: ReadingList_Foundation
-      - package: SwiftyJSON
       - package: Cosmos
       - package: SwiftyStoreKit
       - package: Eureka
