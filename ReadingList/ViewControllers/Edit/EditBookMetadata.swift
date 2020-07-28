@@ -342,7 +342,7 @@ final class EditBookMetadata: FormViewController {
         if self.isAddingNewBook {
             let trivialChanges = [
                 #keyPath(Book.addedWhen),
-                #keyPath(Book.manualBookId),
+                #keyPath(Book.manualBookId)
             ]
             noConfirmationNeeded = book.changedValues()
                 .filter { !trivialChanges.contains($0.key) }
