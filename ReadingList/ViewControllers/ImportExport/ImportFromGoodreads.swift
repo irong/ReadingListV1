@@ -2,9 +2,7 @@ import Foundation
 import SafariServices
 import UIKit
 
-class ImportFromGoodreads: UIViewController, ThemeableViewController {
-    let goodreadsHelpPage = URL(string: "https://help.goodreads.com/s/article/How-do-I-import-or-export-my-books-1553870934590")!
-
+class ImportFromReadingList: UIViewController, ThemeableViewController {
     @IBOutlet private var labels: [UILabel]!
 
     override func viewDidLoad() {
@@ -16,6 +14,17 @@ class ImportFromGoodreads: UIViewController, ThemeableViewController {
         presentingViewController?.dismiss(animated: true)
     }
 
+    func initialise(withTheme theme: Theme) {
+        for label in labels {
+            label.textColor = GeneralSettings.theme.titleTextColor
+        }
+        view.backgroundColor = GeneralSettings.theme.viewBackgroundColor
+    }
+}
+
+class ImportFromGoodreads: ImportFromReadingList {
+    let goodreadsHelpPage = URL(string: "https://help.goodreads.com/s/article/How-do-I-import-or-export-my-books-1553870934590")!
+
     @IBAction private func moreInfoTapped(_ sender: Any) {
         let safariVC = SFSafariViewController(url: goodreadsHelpPage)
         // iOS 13 and up has its own theming, no need to set the preferred tint colour
@@ -25,12 +34,5 @@ class ImportFromGoodreads: UIViewController, ThemeableViewController {
             }
         }
         present(safariVC, animated: true, completion: nil)
-    }
-
-    func initialise(withTheme theme: Theme) {
-        for label in labels {
-            label.textColor = GeneralSettings.theme.titleTextColor
-        }
-        labels.first?.superview?.backgroundColor = GeneralSettings.theme.viewBackgroundColor
     }
 }

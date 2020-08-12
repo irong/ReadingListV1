@@ -349,7 +349,6 @@ Import data from a CSV file, to move books between devices or services.</string>
                                                 </connections>
                                             </button>
                                         </subviews>
-                                        <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                                         <constraints>
                                             <constraint firstAttribute="trailing" secondItem="PRS-i2-Kid" secondAttribute="trailing" constant="40" id="0Kg-mw-SIH"/>
                                             <constraint firstItem="PRS-i2-Kid" firstAttribute="top" secondItem="zgQ-U0-enc" secondAttribute="top" constant="20" symbolic="YES" id="8w2-z0-gL2"/>
@@ -380,6 +379,7 @@ Import data from a CSV file, to move books between devices or services.</string>
                                 <viewLayoutGuide key="frameLayoutGuide" id="KZq-Ct-kY7"/>
                             </scrollView>
                         </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                         <constraints>
                             <constraint firstAttribute="trailing" secondItem="2bz-e1-hTQ" secondAttribute="trailing" id="0dO-JJ-fSh"/>
                             <constraint firstItem="2bz-e1-hTQ" firstAttribute="top" secondItem="wdC-9w-9En" secondAttribute="top" id="JLi-eU-Y5t"/>
@@ -463,10 +463,10 @@ Import data from a CSV file, to move books between devices or services.</string>
             </objects>
             <point key="canvasLocation" x="5819" y="2958"/>
         </scene>
-        <!--Import From Goodreads-->
+        <!--Import From Reading List-->
         <scene sceneID="uiV-aT-eng">
             <objects>
-                <viewController id="ipV-gl-anq" customClass="ImportFromGoodreads" customModule="ReadingList" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="ipV-gl-anq" customClass="ImportFromReadingList" customModule="ReadingList" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="2IC-9I-a5o">
                         <rect key="frame" x="0.0" y="0.0" width="540" height="620"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -498,7 +498,6 @@ Import data from a CSV file, to move books between devices or services.</string>
                                                 </connections>
                                             </button>
                                         </subviews>
-                                        <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                                         <constraints>
                                             <constraint firstItem="pZs-3b-uNx" firstAttribute="leading" secondItem="utk-xC-3Vh" secondAttribute="leading" constant="20" symbolic="YES" id="10l-rs-bOV">
                                                 <variation key="widthClass=regular" constant="60"/>
@@ -527,6 +526,7 @@ Import data from a CSV file, to move books between devices or services.</string>
                                 <viewLayoutGuide key="frameLayoutGuide" id="CKn-qq-JTW"/>
                             </scrollView>
                         </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                         <constraints>
                             <constraint firstAttribute="trailing" secondItem="pmk-z3-M0G" secondAttribute="trailing" id="BKC-LB-kek"/>
                             <constraint firstItem="pmk-z3-M0G" firstAttribute="leading" secondItem="2IC-9I-a5o" secondAttribute="leading" id="YdY-Le-FKD"/>
@@ -545,7 +545,6 @@ Import data from a CSV file, to move books between devices or services.</string>
                     <connections>
                         <outletCollection property="labels" destination="vbb-4G-JHo" collectionClass="NSMutableArray" id="j6f-eI-av0"/>
                         <outletCollection property="labels" destination="pZs-3b-uNx" collectionClass="NSMutableArray" id="P6a-JV-zyX"/>
-                        <outletCollection property="labels" destination="vbb-4G-JHo" collectionClass="NSMutableArray" id="nVi-Iv-RNU"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkU-jr-8vp" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
