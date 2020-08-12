@@ -237,12 +237,6 @@ public extension UILabel {
         self.text = text
     }
 
-    convenience init(_ text: String, with textStyle: UIFont.TextStyle) {
-        self.init()
-        self.font = .preferredFont(forTextStyle: textStyle)
-        self.text = text
-    }
-
     var isTruncated: Bool {
         guard let labelText = text else { return false }
         let labelTextSize = (labelText as NSString).boundingRect(

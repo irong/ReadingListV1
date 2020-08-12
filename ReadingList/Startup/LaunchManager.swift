@@ -142,8 +142,10 @@ class LaunchManager {
         // Put them on the screen
         settingsSplitVC.showDetailViewController(navigation, sender: self)
 
-        // Trigger the import dialog
-        importVC.confirmImport(fromFile: url)
+        // Trigger the import dialog - wait to ensure the view controller is loaded
+        DispatchQueue.main.async {
+            importVC.confirmImport(fromFile: url)
+        }
         return true
     }
 

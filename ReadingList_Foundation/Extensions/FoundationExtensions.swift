@@ -213,14 +213,6 @@ public extension Array where Element: Equatable {
 }
 
 public extension Date {
-    init?(iso: String?) {
-        let dateStringFormatter = DateFormatter()
-        dateStringFormatter.dateFormat = "yyyy-MM-dd"
-        dateStringFormatter.locale = Locale(identifier: "en_US_POSIX")
-        guard let iso = iso, let date = dateStringFormatter.date(from: iso) else { return nil }
-        self.init(timeInterval: 0, since: date)
-    }
-
     init?(_ dateString: String?, format: String) {
         guard let dateString = dateString else { return nil }
         let dateStringFormatter = DateFormatter()
@@ -228,6 +220,10 @@ public extension Date {
         dateStringFormatter.locale = Locale(identifier: "en_US_POSIX")
         guard let date = dateStringFormatter.date(from: dateString) else { return nil }
         self.init(timeInterval: 0, since: date)
+    }
+
+    init?(iso: String?) {
+        self.init(iso, format: "yyyy-MM-dd")
     }
 
     func string(withDateFormat dateFormat: String) -> String {
