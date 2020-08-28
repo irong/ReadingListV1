@@ -1,11 +1,11 @@
 import Foundation
 
-enum ImportCSVFormat: Int, Codable, CaseIterable {
+enum CSVImportFormat: Int, Codable, CaseIterable {
     case readingList = 0
     case goodreads = 1
 }
 
-extension ImportCSVFormat: CustomStringConvertible {
+extension CSVImportFormat: CustomStringConvertible {
     var description: String {
         switch self {
         case .readingList:
@@ -16,11 +16,11 @@ extension ImportCSVFormat: CustomStringConvertible {
     }
 }
 
-extension ImportCSVFormat {
+extension CSVImportFormat {
     var requiredHeaders: [String] {
         switch self {
         case .readingList:
-            return BookCSVColumn.allCases.filter(\.mandatoryForImport).map(\.header)
+            return BookCSVColumn.allCases.filter(\.isMandatoryForImport).map(\.header)
         case .goodreads:
             return ["Title", "Author l-f"]
         }

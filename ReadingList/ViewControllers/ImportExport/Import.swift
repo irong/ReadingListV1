@@ -12,14 +12,14 @@ final class Import: UITableViewController {
     private let selectFileCellIndex = IndexPath(row: 0, section: 3)
 
     @Persisted("importFormat", defaultValue: .readingList)
-    private var importFormat: ImportCSVFormat {
+    private var importFormat: CSVImportFormat {
         didSet {
             importFormatDescription.text = importFormat.description
         }
     }
 
     @Persisted(encodedDataKey: "importSettings", defaultValue: .init())
-    var importSettings: ImportSettings
+    var importSettings: BookCSVImportSettings
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -45,7 +45,7 @@ final class Import: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if indexPath == IndexPath(row: 0, section: 0) {
             let alert = UIAlertController(title: "Select Import Format", message: nil, preferredStyle: .actionSheet)
-            alert.addActions(ImportCSVFormat.allCases.map { format in
+            alert.addActions(CSVImportFormat.allCases.map { format in
                 UIAlertAction(title: format.description, style: .default) { _ in
                     self.importFormat = format
                 }

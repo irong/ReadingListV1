@@ -251,7 +251,7 @@ extension Book {
         set(\.language, ifNotNil: fetchResult.language)
     }
 
-    func populate(fromCsvRow values: CSVRow) {
+    func populate(fromCsvRow values: BookCSVImportRow) {
         title = values.title
         authors = values.authors
 

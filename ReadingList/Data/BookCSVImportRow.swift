@@ -2,13 +2,8 @@ import Foundation
 import Regex
 import ReadingList_Foundation
 
-struct ImportSettings: Codable {
-    var downloadCoverImages = true
-    var downloadMetadata = false
-    var overwriteExistingBooks = false
-}
-
-struct CSVRow {
+/// Holds data from a CSV row relating to a book, for import.
+struct BookCSVImportRow {
     let title: String
     let authors: [Author]
     let subtitle: String?
@@ -34,9 +29,17 @@ struct CSVRow {
         let index: Int32
     }
 
-    private static let extractListDetail = Regex(#"((.+?) \((\d+)\)(?:;|$))"#)
+    /// Matches the format of a list membership text, e.g.`List Name (123)`, producing the list name and the index as the first and second capture groups respectively.
+    private static let extractListDetail = Regex(#"^(.+) \((\d+)\)$"#)
 
-    init?(for format: ImportCSVFormat, row: [String: String]) {
+    /**
+     * Matches any string, and produces one or two capture groups, equal to the last name and - if present - the first name. The last name is defined as the portion of the string from the start
+     * until the first non-escaped comma. An escaped comma is a comma preceeded by a backslash, unless the backslash is itself escaped (backslashes are escaped by preceeding them
+     * with a backslashe, so commas preceeded by an even number of backslashes are "legit" commas).
+    */
+    private static let extractAuthorNameComponents = Regex(#"^(.*?[^\\](?:\\\\)*)(?:,(.*)|$)$"#)
+
+    init?(for format: CSVImportFormat, row: [String: String]) {
         switch format {
         case .readingList:
             self.init(readingListRow: row)
@@ -52,13 +55,16 @@ struct CSVRow {
 
         guard let title = value(.title), let authors = value(.authors) else { return nil }
         self.title = title
-        self.authors = authors.components(separatedBy: ";").compactMap {
-            guard let authorString = $0.trimming().nilIfWhitespace() else { return nil }
-            if let firstCommaPos = authorString.range(of: ","), let lastName = authorString[..<firstCommaPos.lowerBound].trimming().nilIfWhitespace() {
-                return Author(lastName: lastName, firstNames: authorString[firstCommaPos.upperBound...].trimming().nilIfWhitespace())
-            } else {
-                return Author(lastName: authorString, firstNames: nil)
+        // Don't unescape the escape characters yet; we need them to remain escaped until we unescape the commas
+        self.authors = authors.semicolonSeparatedItems(unescapeEscapedEscapeCharacters: false).compactMap {
+            guard let authorExtractionMatch = BookCSVImportRow.extractAuthorNameComponents.firstMatch(in: $0) else { return nil }
+            guard [1, 2].contains(authorExtractionMatch.captures.count) else {
+                assertionFailure("Unexpected number of captures: \(authorExtractionMatch.captures.count)")
+                return nil
             }
+            guard let lastName = authorExtractionMatch.captures[0]?.nilIfWhitespace()?.unescaping(",") else { return nil }
+            let firstNames = authorExtractionMatch.captures[safe: 1]??.nilIfWhitespace()?.unescaping(",")
+            return Author(lastName: lastName, firstNames: firstNames)
         }
         guard !self.authors.isEmpty else { return nil }
 
@@ -81,23 +87,29 @@ struct CSVRow {
         } else {
             rating = nil
         }
-        subjects = value(.subjects)?.components(separatedBy: ";").compactMap { $0.trimming().nilIfWhitespace() } ?? []
+        if let subjectsText = value(.subjects) {
+            subjects = subjectsText.semicolonSeparatedItems()
+        } else {
+            subjects = []
+        }
         if let listsText = value(.lists) {
-            lists = CSVRow.extractListDetail.allMatches(in: listsText).compactMap { match -> ListIndex? in
-                guard match.captures.count == 3 else {
-                    assertionFailure("Expected 3 capture groups, saw \(match.captures.count)")
+            lists = listsText.semicolonSeparatedItems().compactMap { listItem -> ListIndex? in
+                guard let match = BookCSVImportRow.extractListDetail.firstMatch(in: listItem) else { return nil }
+                guard match.captures.count == 2 else {
+                    assertionFailure("Unexpected number of captures: \(match.captures.count)")
                     return nil
                 }
-                guard let listName = match.captures[1], let listIndex = match.captures[2] else { return nil }
+                guard let listName = match.captures[0]?.trimming().nilIfWhitespace(),
+                    let listIndex = match.captures[1]?.trimming().nilIfWhitespace() else { return nil }
                 guard let integerListIndex = Int32(listIndex) else { return nil }
-                return ListIndex(listName: listName.trimming(), index: integerListIndex)
+                return ListIndex(listName: listName, index: integerListIndex)
             }
         } else {
             lists = []
         }
     }
 
-    init?(goodreadsRow row: [String: String]) {
+    init?(goodreadsRow row: [String: String]) { //swiftlint:disable:this cyclomatic_complexity
         guard let title = row["Title"], let author = row["Author l-f"] else { return nil }
         self.title = title
 
@@ -144,7 +156,7 @@ struct CSVRow {
         }
 
         manualBookId = row["Book Id"]
-        // The GoodReads export seems to present ISBN's like: ="9781231231231"
+        // The GoodReads export seems to present ISBNs like: ="9781231231231"
         isbn13 = ISBN13(row["ISBN13"]?.trimmingCharacters(in: CharacterSet(charactersIn: "\"=")))
 
         notes = row["My Review"]
@@ -166,5 +178,23 @@ struct CSVRow {
         publicationDate = nil
         subjects = []
         lists = []
+    }
+}
+
+extension String {
+    /**
+     * Matches components separated by semicolons, except semi-colons which are escaped (that is, preceeded by a backslash), unless the escape
+     * character itself is part of an escaped backslash (that is, is part of an even number of successive backslashes).
+     * E.g.:
+     * -  `"Part1;Part2"` produces `["Part1", "Part2"]`
+     * -  `"Part1\;Part1.1"` produces `["Part1\;Part1.1"]`
+     * -  `"Part1\\;Part2"` produces `["Part1\\", "Part2"]`
+    */
+    private static let semicolonSeparatedItems = Regex(#"[^;].*?[^\\](?:\\\\)*(?=;|$)"#)
+
+    func semicolonSeparatedItems(unescapeEscapedEscapeCharacters: Bool = true) -> [String] {
+        return Self.semicolonSeparatedItems.allMatches(in: self).compactMap {
+            $0.matchedString.trimming().nilIfWhitespace()?.unescaping(";", unescapeEscapedEscapeCharacters: unescapeEscapedEscapeCharacters)
+        }
     }
 }

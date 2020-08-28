@@ -4,20 +4,21 @@ import Promises
 import ReadingList_Foundation
 import os.log
 
+struct BookCSVImportSettings: Codable {
+    var downloadCoverImages = true
+    var downloadMetadata = false
+    var overwriteExistingBooks = false
+}
+
 class BookCSVImporter {
     private let parserDelegate: BookCSVParserDelegate //swiftlint:disable:this weak_delegate
 
-    init(format: ImportCSVFormat, settings: ImportSettings) {
+    init(format: CSVImportFormat, settings: BookCSVImportSettings) {
         let backgroundContext = PersistentStoreManager.container.newBackgroundContext()
         backgroundContext.mergePolicy = NSMergePolicy.mergeByPropertyStoreTrump
         parserDelegate = BookCSVParserDelegate(context: backgroundContext, importFormat: format, settings: settings)
     }
 
-    /**
-     - Parameter completion: takes the following parameters:
-        - error: if the CSV import failed irreversibly, this parameter will be non-nil
-        - results: otherwise, this summary of the results of the import will be non-nil
-    */
     func startImport(fromFileAt fileLocation: URL, _ completion: @escaping (Result<BookCSVImporter.Results, CSVImportError>) -> Void) {
         os_log("Beginning import from CSV file")
         parserDelegate.onCompletion = completion
@@ -36,8 +37,8 @@ class BookCSVImporter {
 
 class BookCSVParserDelegate: CSVParserDelegate {
     private let context: NSManagedObjectContext
-    private let importFormat: ImportCSVFormat
-    private let settings: ImportSettings
+    private let importFormat: CSVImportFormat
+    private let settings: BookCSVImportSettings
     private let googleBooksApi = GoogleBooksApi()
 
     private var cachedSorts: [BookReadState: BookSortIndexManager]
@@ -45,7 +46,7 @@ class BookCSVParserDelegate: CSVParserDelegate {
 
     var onCompletion: ((Result<BookCSVImporter.Results, CSVImportError>) -> Void)?
 
-    init(context: NSManagedObjectContext, importFormat: ImportCSVFormat, settings: ImportSettings) {
+    init(context: NSManagedObjectContext, importFormat: CSVImportFormat, settings: BookCSVImportSettings) {
         self.context = context
         self.importFormat = importFormat
         self.settings = settings
@@ -77,7 +78,7 @@ class BookCSVParserDelegate: CSVParserDelegate {
         }
     }
 
-    private func attach(_ listIndexes: [CSVRow.ListIndex], to book: Book) {
+    private func attach(_ listIndexes: [BookCSVImportRow.ListIndex], to book: Book) {
         for listIndex in listIndexes {
             let list = List.getOrCreate(inContext: context, withName: listIndex.listName)
             if let existingListItem = Array(book.listItems).first(where: { $0.list == list }) {
@@ -125,7 +126,7 @@ class BookCSVParserDelegate: CSVParserDelegate {
             }
     }
 
-    private func findExistingBook(_ csvRow: CSVRow) -> Book? {
+    private func findExistingBook(_ csvRow: BookCSVImportRow) -> Book? {
         if let googleBooksId = csvRow.googleBooksId, let existingBookByGoogleId = Book.get(fromContext: self.context, googleBooksId: googleBooksId) {
             return existingBookByGoogleId
         }
@@ -136,7 +137,7 @@ class BookCSVParserDelegate: CSVParserDelegate {
     }
 
     func lineParseSuccess(_ values: [String: String]) {
-        guard let csvRow = CSVRow(for: importFormat, row: values) else {
+        guard let csvRow = BookCSVImportRow(for: importFormat, row: values) else {
             invalidCount += 1
             os_log("Invalid data: no book created")
             return
