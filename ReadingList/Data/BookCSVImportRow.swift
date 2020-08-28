@@ -62,8 +62,8 @@ struct BookCSVImportRow {
                 assertionFailure("Unexpected number of captures: \(authorExtractionMatch.captures.count)")
                 return nil
             }
-            guard let lastName = authorExtractionMatch.captures[0]?.nilIfWhitespace()?.unescaping(",") else { return nil }
-            let firstNames = authorExtractionMatch.captures[safe: 1]??.nilIfWhitespace()?.unescaping(",")
+            guard let lastName = authorExtractionMatch.captures[0]?.trimming().nilIfWhitespace()?.unescaping(",") else { return nil }
+            let firstNames = authorExtractionMatch.captures[safe: 1]??.trimming().nilIfWhitespace()?.unescaping(",")
             return Author(lastName: lastName, firstNames: firstNames)
         }
         guard !self.authors.isEmpty else { return nil }

@@ -115,7 +115,7 @@ extension Sequence where Element == String {
      Returns a String which contains the items separated by semicolons, with any semicolons in each item escaped.
      */
     func semicolonSeparated(escapeEscapeCharacterLiterals: Bool = true) -> String {
-        return self.map { $0.escaping(";", escapeEscapeCharacterLiterals: true) }.joined(separator: "; ")
+        return self.map { $0.escaping(";", escapeEscapeCharacterLiterals: escapeEscapeCharacterLiterals) }.joined(separator: "; ")
     }
 }
 
