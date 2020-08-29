@@ -433,3 +433,11 @@ public extension UIDevice {
         }
     }
 }
+
+public extension UIAlertController {
+    func addActions<S>(_ actions: S) where S: Sequence, S.Element == UIAlertAction {
+        for action in actions {
+            addAction(action)
+        }
+    }
+}

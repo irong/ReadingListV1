@@ -7,7 +7,7 @@ final class Settings: UITableViewController {
 
     static let appStoreAddress = "itunes.apple.com/gb/app/reading-list-book-tracker/id1217139955"
     static let feedbackEmailAddress = "feedback@readinglist.app"
-    private let dataIndexPath = IndexPath(row: 2, section: 1)
+    static let importExportIndexPath = IndexPath(row: 2, section: 1)
 
     @IBOutlet private var headerLabels: [UILabel]!
     @IBOutlet private weak var versionLabel: UILabel!
@@ -86,14 +86,6 @@ final class Settings: UITableViewController {
             return
         }
         tableView.deselectRow(at: indexPath, animated: true)
-    }
-
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if let url = sender as? URL, let nav = segue.destination as? UINavigationController, let data = nav.viewControllers.first as? DataVC {
-            // In order to trigger an import from an external source, the presenting segue's sender is the URL of the file.
-            // Set this on the Data vc, which will load the file the first time the VC appears after the import URL is set.
-            data.importUrl = url
-        }
     }
 }
 

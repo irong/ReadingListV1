@@ -30,7 +30,8 @@ class Debug {
 
     static func loadData(downloadImages: Bool, _ completion: (() -> Void)?) {
         let csvPath = Bundle.main.url(forResource: "examplebooks", withExtension: "csv")!
-        BookCSVImporter(includeImages: downloadImages).startImport(fromFileAt: csvPath) { result in
+        let settings = BookCSVImportSettings(downloadCoverImages: downloadImages)
+        BookCSVImporter(format: .readingList, settings: settings).startImport(fromFileAt: csvPath) { result in
             guard case .success = result else { preconditionFailure("Error in CSV file") }
             DispatchQueue.main.async {
                 completion?()

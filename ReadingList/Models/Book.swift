@@ -231,19 +231,60 @@ extension Book {
         }
     }
 
-    // FUTURE: make a convenience init which takes a fetch result?
+    func set<T>(_ key: ReferenceWritableKeyPath<Book, T?>, ifNotNil value: T?) {
+        if let value = value {
+            self[keyPath: key] = value
+        }
+    }
+
     func populate(fromFetchResult fetchResult: GoogleBooksApi.FetchResult) {
         googleBooksId = fetchResult.id
         title = fetchResult.title
-        subtitle = fetchResult.subtitle
         authors.append(contentsOf: fetchResult.authors.map { Author(firstNameLastName: $0) })
-        bookDescription = fetchResult.description
-        subjects = Set(fetchResult.subjects.map { Subject.getOrCreate(inContext: self.managedObjectContext!, withName: $0) })
-        coverImage = fetchResult.image
-        pageCount = fetchResult.pageCount?.int32
-        publisher = fetchResult.publisher
-        isbn13 = fetchResult.isbn13?.int
-        language = fetchResult.language
+        set(\.subtitle, ifNotNil: fetchResult.subtitle)
+        set(\.bookDescription, ifNotNil: fetchResult.description)
+        subjects.formUnion(fetchResult.subjects.map { Subject.getOrCreate(inContext: self.managedObjectContext!, withName: $0) })
+        set(\.coverImage, ifNotNil: fetchResult.image)
+        set(\.pageCount, ifNotNil: fetchResult.pageCount?.int32)
+        set(\.publisher, ifNotNil: fetchResult.publisher)
+        set(\.isbn13, ifNotNil: fetchResult.isbn13?.int)
+        set(\.language, ifNotNil: fetchResult.language)
+    }
+
+    func populate(fromCsvRow values: BookCSVImportRow) {
+        title = values.title
+        authors = values.authors
+
+        set(\.subtitle, ifNotNil: values.subtitle)
+        set(\.googleBooksId, ifNotNil: values.googleBooksId)
+        set(\.isbn13, ifNotNil: values.isbn13?.int)
+        if googleBooksId == nil && values.manualBookId == nil {
+            manualBookId = values.manualBookId ?? UUID().uuidString
+        }
+        set(\.pageCount, ifNotNil: values.pageCount)
+        if let page = values.currentPage {
+            setProgress(.page(page))
+        } else if let percentage = values.currentPercentage {
+            setProgress(.percentage(percentage))
+        }
+        set(\.notes, ifNotNil: values.notes?.replacingOccurrences(of: "\r\n", with: "\n"))
+        set(\.publicationDate, ifNotNil: values.publicationDate)
+        set(\.publisher, ifNotNil: values.publisher)
+        set(\.bookDescription, ifNotNil: values.description?.replacingOccurrences(of: "\r\n", with: "\n"))
+        if let started = values.started {
+            if let finished = values.finished {
+                setFinished(started: started, finished: finished)
+            } else {
+                setReading(started: started)
+            }
+        }
+
+        if let rating = values.rating, let integerRating = Int16(exactly: rating * 2), integerRating > 0 && integerRating <= 10 {
+            self.rating = integerRating
+        }
+        if let language = values.language {
+            set(\.language, ifNotNil: LanguageIso639_1(rawValue: language))
+        }
     }
 
     static func get(fromContext context: NSManagedObjectContext, googleBooksId: String? = nil, isbn: String? = nil) -> Book? {

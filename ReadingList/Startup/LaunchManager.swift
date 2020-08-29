@@ -100,17 +100,52 @@ class LaunchManager {
     */
     @discardableResult func handleOpenUrl(_ url: URL) -> Bool {
         guard url.isFileURL && url.pathExtension == "csv" else { return false }
-        guard let tabBarController = window.rootViewController as? TabBarController else { return false }
+        guard let tabBarController = window.rootViewController as? TabBarController else {
+            assertionFailure()
+            return false
+        }
         UserEngagement.logEvent(.openCsvInApp)
+
+        // First select the correct tab (Settings)
         tabBarController.selectedTab = .settings
+        let settingsSplitVC = tabBarController.selectedSplitViewController!
 
-        let settingsSplitView = tabBarController.selectedSplitViewController!
-        let navController = settingsSplitView.masterNavigationController
-        navController.dismiss(animated: false)
+        // Dismiss any existing navigation stack (implementation depends on whether the views are split or not)
+        if let detailNav = settingsSplitVC.detailNavigationController {
+            detailNav.popToRootViewController(animated: false)
+        } else {
+            settingsSplitVC.masterNavigationController.popToRootViewController(animated: false)
+        }
 
-        // FUTURE: The pop was preventing the segue from occurring. We can end up with a taller
-        // than usual navigation stack. Looking for a way to pop and then push in quick succession.
-        navController.viewControllers.first!.performSegue(withIdentifier: "settingsData", sender: url)
+        // Select the Import Export row to ensure it is highlighted
+        guard let settingsVC = settingsSplitVC.masterNavigationController.viewControllers.first as? Settings else {
+            assertionFailure()
+            return false
+        }
+        settingsVC.tableView.selectRow(at: Settings.importExportIndexPath, animated: false, scrollPosition: .none)
+
+        // Instantiate the destination view controller
+        guard let importVC = UIStoryboard.ImportExport.instantiateViewController(withIdentifier: "Import") as? Import else {
+            assertionFailure()
+            return false
+        }
+
+        // Instantiate the stack of view controllers leading up to the Import view controller
+        guard let navigation = UIStoryboard.ImportExport.instantiateViewController(withIdentifier: "Navigation") as? UINavigationController else {
+            preconditionFailure()
+        }
+        navigation.setViewControllers([
+            UIStoryboard.ImportExport.instantiateViewController(withIdentifier: "ImportExport"),
+            importVC
+        ], animated: false)
+
+        // Put them on the screen
+        settingsSplitVC.showDetailViewController(navigation, sender: self)
+
+        // Trigger the import dialog - wait to ensure the view controller is loaded
+        DispatchQueue.main.async {
+            importVC.confirmImport(fromFile: url)
+        }
         return true
     }
 
