@@ -61,17 +61,6 @@ class BookCSVParserDelegate: CSVParserDelegate {
         return headers.containsAll(importFormat.requiredHeaders)
     }
 
-    private func createAuthors(_ authorString: String) -> [Author] {
-        return authorString.components(separatedBy: ";").compactMap {
-            guard let authorString = $0.trimming().nilIfWhitespace() else { return nil }
-            if let firstCommaPos = authorString.range(of: ","), let lastName = authorString[..<firstCommaPos.lowerBound].trimming().nilIfWhitespace() {
-                return Author(lastName: lastName, firstNames: authorString[firstCommaPos.upperBound...].trimming().nilIfWhitespace())
-            } else {
-                return Author(lastName: authorString, firstNames: nil)
-            }
-        }
-    }
-
     private func createSubjects(_ subjects: [String]) -> [Subject] {
         return subjects.map {
             Subject.getOrCreate(inContext: context, withName: $0)
@@ -87,16 +76,6 @@ class BookCSVParserDelegate: CSVParserDelegate {
                 _ = ListItem(context: context, book: book, list: list, sort: listIndex.index)
             }
         }
-    }
-
-    private func getOrCreateList(withName name: String) -> List {
-        let listFetchRequest = NSManagedObject.fetchRequest(List.self, limit: 1)
-        listFetchRequest.predicate = NSPredicate(format: "%K == %@", #keyPath(List.name), name)
-        listFetchRequest.returnsObjectsAsFaults = false
-        if let existingList = (try! context.fetch(listFetchRequest)).first {
-            return existingList
-        }
-        return List(context: context, name: name)
     }
 
     private func populateCover(forBook book: Book, withGoogleID googleID: String) -> Promise<Void> {

@@ -192,9 +192,9 @@ extension String {
     */
     private static let semicolonSeparatedItems = Regex(#"[^;].*?[^\\](?:\\\\)*(?=;|$)"#)
 
-    func semicolonSeparatedItems(unescapeEscapedEscapeCharacters: Bool = true) -> [String] {
+    func semicolonSeparatedItems(unescapeEscapedEscapeCharacters unescape: Bool = true) -> [String] {
         return Self.semicolonSeparatedItems.allMatches(in: self).compactMap {
-            $0.matchedString.trimming().nilIfWhitespace()?.unescaping(";", unescapeEscapedEscapeCharacters: unescapeEscapedEscapeCharacters)
+            $0.matchedString.trimming().nilIfWhitespace()?.unescaping(";", unescapeEscapedEscapeCharacters: unescape)
         }
     }
 }
