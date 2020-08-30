@@ -240,7 +240,9 @@ extension Book {
     func populate(fromFetchResult fetchResult: GoogleBooksApi.FetchResult) {
         googleBooksId = fetchResult.id
         title = fetchResult.title
-        authors.append(contentsOf: fetchResult.authors.map { Author(firstNameLastName: $0) })
+        if !fetchResult.authors.isEmpty {
+            authors = fetchResult.authors.map(Author.init(firstNameLastName:))
+        }
         set(\.subtitle, ifNotNil: fetchResult.subtitle)
         set(\.bookDescription, ifNotNil: fetchResult.description)
         subjects.formUnion(fetchResult.subjects.map { Subject.getOrCreate(inContext: self.managedObjectContext!, withName: $0) })
