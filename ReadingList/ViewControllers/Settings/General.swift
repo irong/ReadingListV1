@@ -5,6 +5,10 @@ import ReadingList_Foundation
 
 final class General: FormViewController {
     override func viewDidLoad() {
+        if #available(iOS 13.0, *) {
+            initialiseInsetGroupedTable()
+        }
+
         super.viewDidLoad()
 
         form +++ Section(header: "Appearance", footer: "Enable Expanded Descriptions to automatically show each book's full description.")

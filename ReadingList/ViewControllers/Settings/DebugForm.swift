@@ -11,6 +11,10 @@ final class DebugForm: FormViewController {
     }
 
     override func viewDidLoad() {
+        if #available(iOS 13.0, *) {
+            initialiseInsetGroupedTable()
+        }
+
         super.viewDidLoad()
 
         navigationItem.title = "Debug"

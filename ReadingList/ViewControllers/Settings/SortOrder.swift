@@ -4,6 +4,10 @@ import Eureka
 final class SortOrder: FormViewController {
 
     override func viewDidLoad() {
+        if #available(iOS 13.0, *) {
+            initialiseInsetGroupedTable()
+        }
+
         super.viewDidLoad()
 
         form +++ Section(header: "Sort Options", footer: """
