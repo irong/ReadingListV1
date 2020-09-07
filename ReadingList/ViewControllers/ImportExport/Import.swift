@@ -48,8 +48,10 @@ final class Import: UITableViewController {
 
         // Cover and metadata download isn't supported when importing from Goodreads; ensure the UI reflects this by disabling the settings.
         downloadMetadataSwitch.isOn = importSettings.downloadMetadata
+        downloadMetadataSwitch.isEnabled = importFormat != .goodreads
         downloadMetadataLabel.isEnabled = importFormat != .goodreads
         downloadCoversSwitch.isOn = importSettings.downloadCoverImages
+        downloadCoversSwitch.isEnabled = importFormat != .goodreads
         downloadCoversLabel.isEnabled = importFormat != .goodreads
     }
 
