@@ -9,10 +9,10 @@ options:
 packages:
   Cosmos:
     url: https://github.com/evgenyneu/Cosmos
-    minorVersion: 20.0.0
+    minorVersion: 22.1.0
   SwiftyStoreKit:
     url: https://github.com/bizz84/SwiftyStoreKit
-    minorVersion: 0.15.0
+    minorVersion: 0.16.0
   Swifter:
     url: https://github.com/httpswift/swifter
     branch: stable 
@@ -24,7 +24,7 @@ packages:
     branch: master
   WhatsNewKit:
     url: https://github.com/SvenTiigi/WhatsNewKit
-    minorVersion: 1.3.4
+    minorVersion: 1.3.5
   PersistedPropertyWrapper:
     url: https://github.com/AndrewBennet/PersistedPropertyWrapper.git
     minorVersion: 1.1.0
