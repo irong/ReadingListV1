@@ -161,7 +161,7 @@ Import data from a CSV file, to move books between devices or services.</string>
                                 </cells>
                             </tableViewSection>
                             <tableViewSection headerTitle="Download:" id="rcy-ut-OON">
-                                <string key="footerTitle">For rows which include a Google Books ID, missing metadata or book covers can optionally be searched for and downloaded from the Internet during import.</string>
+                                <string key="footerTitle">For rows which include a Google Books ID, missing metadata or book covers can optionally be downloaded from the Internet during import from a Reading List format file.</string>
                                 <cells>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="none" indentationWidth="10" id="ORt-WG-d8v">
                                         <rect key="frame" x="20" y="218" width="794" height="43.5"/>
@@ -286,7 +286,9 @@ Import data from a CSV file, to move books between devices or services.</string>
                     </tableView>
                     <navigationItem key="navigationItem" id="xw7-it-Z2C"/>
                     <connections>
+                        <outlet property="downloadCoversLabel" destination="1Do-ll-y3g" id="utV-f7-YDM"/>
                         <outlet property="downloadCoversSwitch" destination="8rQ-bI-gv7" id="REE-uN-NQ6"/>
+                        <outlet property="downloadMetadataLabel" destination="wEv-10-uTh" id="FxQ-7a-s5C"/>
                         <outlet property="downloadMetadataSwitch" destination="kWf-ob-sGk" id="3Ol-eW-4pI"/>
                         <outlet property="importFormatDescription" destination="2lx-7R-9nv" id="Udv-LR-lPW"/>
                         <outlet property="overwriteExistingSwitch" destination="x0W-Sn-kDf" id="w1Y-2J-AvJ"/>
@@ -335,14 +337,14 @@ Import data from a CSV file, to move books between devices or services.</string>
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="vX4-WI-FxR">
-                                                <rect key="frame" x="60" y="73.5" width="420" height="243.5"/>
-                                                <string key="text">To import your books from Goodreads, you need to generate a Goodreads CSV export.  In Goodreads, navigate to My Books, then click on Import and Export under Tools on the left. Then click on the Export Library button at the top of the screen. This file can then be used to import into Reading List.  Note that the Goodreads export does not include reading start dates. Any finished books will be imported with both the Start and Finish dates set to the Goodreads "Date Read".</string>
+                                                <rect key="frame" x="60" y="73.5" width="420" height="304.5"/>
+                                                <mutableString key="text">To import your books from Goodreads, you need to generate a Goodreads CSV export.  In Goodreads, navigate to My Books, then click on Import and Export under Tools on the left. Then click on the Export Library button at the top of the screen. This file can then be used to import into Reading List.  The Goodreads export does not include reading start dates. Any finished books will be imported with both the Start and Finish dates set to the Goodreads "Date Read".   Unfortunately, book covers are not able to be downloaded during import from Goodreads.</mutableString>
                                                 <fontDescription key="fontDescription" name=".AppleSystemUIFont" family=".AppleSystemUIFont" pointSize="17"/>
                                                 <nil key="textColor"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="hPY-mo-VqA">
-                                                <rect key="frame" x="237.5" y="337" width="65" height="30"/>
+                                                <rect key="frame" x="237.5" y="398" width="65" height="30"/>
                                                 <state key="normal" title="More info"/>
                                                 <connections>
                                                     <action selector="moreInfoTapped:" destination="JoS-YO-jgj" eventType="touchUpInside" id="ixp-jI-sBQ"/>
@@ -485,7 +487,7 @@ Import data from a CSV file, to move books between devices or services.</string>
                                             </label>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="pZs-3b-uNx">
                                                 <rect key="frame" x="60" y="73.5" width="420" height="183"/>
-                                                <string key="text">You can import books using the Reading List CSV format. Importing books from a file can help to add historical reading data to the app, and enables you to transfer books between devices.  The Reading List CSV format has columns for all the data captured in within the app. To see a full list of the available columns, and further import requirements and behaviour, tap the button below.</string>
+                                                <mutableString key="text">You can import books using the Reading List CSV format. Importing books from a file can help to add historical reading data to the app, and enables you to transfer books between devices.  The Reading List CSV format has columns for all the data captured in within the app. To see a full list of the available columns, and further import requirements and behaviour, tap the button below.</mutableString>
                                                 <fontDescription key="fontDescription" name=".AppleSystemUIFont" family=".AppleSystemUIFont" pointSize="17"/>
                                                 <nil key="textColor"/>
                                                 <nil key="highlightedColor"/>

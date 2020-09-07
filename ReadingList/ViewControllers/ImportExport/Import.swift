@@ -6,15 +6,29 @@ import SVProgressHUD
 
 final class Import: UITableViewController {
     @IBOutlet private weak var downloadMetadataSwitch: UISwitch!
+    @IBOutlet private weak var downloadMetadataLabel: UILabel!
     @IBOutlet private weak var downloadCoversSwitch: UISwitch!
+    @IBOutlet private weak var downloadCoversLabel: UILabel!
     @IBOutlet private weak var overwriteExistingSwitch: UISwitch!
     @IBOutlet private weak var importFormatDescription: UILabel!
     private let selectFileCellIndex = IndexPath(row: 0, section: 3)
 
+    /** We modify settings when switching to Goodreads, so we should be able to undo the changes if the user then switches back. */
+    var importSettingsPreGoodreads: BookCSVImportSettings?
+
     @Persisted("importFormat", defaultValue: .readingList)
     private var importFormat: CSVImportFormat {
         didSet {
-            importFormatDescription.text = importFormat.description
+            if importFormat == .goodreads {
+                importSettingsPreGoodreads = importSettings
+                importSettings.downloadMetadata = false
+                importSettings.downloadCoverImages = false
+            } else if let previousSettngs = importSettingsPreGoodreads {
+                importSettings.downloadMetadata = previousSettngs.downloadMetadata
+                importSettings.downloadCoverImages = previousSettngs.downloadCoverImages
+            }
+
+            refreshUI()
         }
     }
 
@@ -25,10 +39,18 @@ final class Import: UITableViewController {
         super.viewDidLoad()
         monitorThemeSetting()
         navigationItem.title = "Import From CSV"
-        downloadMetadataSwitch.isOn = importSettings.downloadMetadata
-        downloadCoversSwitch.isOn = importSettings.downloadCoverImages
-        overwriteExistingSwitch.isOn = importSettings.overwriteExistingBooks
+        refreshUI()
+    }
+
+    private func refreshUI() {
         importFormatDescription.text = importFormat.description
+        overwriteExistingSwitch.isOn = importSettings.overwriteExistingBooks
+
+        // Cover and metadata download isn't supported when importing from Goodreads; ensure the UI reflects this by disabling the settings.
+        downloadMetadataSwitch.isOn = importSettings.downloadMetadata
+        downloadMetadataLabel.isEnabled = importFormat != .goodreads
+        downloadCoversSwitch.isOn = importSettings.downloadCoverImages
+        downloadCoversLabel.isEnabled = importFormat != .goodreads
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
