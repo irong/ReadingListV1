@@ -47,17 +47,6 @@ final class EditBookMetadata: FormViewController {
         self.isInNavigationFlow = true
     }
 
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        // Workaround bug https://stackoverflow.com/a/47839657/5513562
-        if #available(iOS 11.2, *) {
-            if #available(iOS 11.3, *) { /* Bug resolved in iOS 11.3 */ } else {
-                navigationController!.navigationBar.tintAdjustmentMode = .normal
-                navigationController!.navigationBar.tintAdjustmentMode = .automatic
-            }
-        }
-    }
-
     override func viewDidLoad() { //swiftlint:disable:this cyclomatic_complexity
         super.viewDidLoad()
 
