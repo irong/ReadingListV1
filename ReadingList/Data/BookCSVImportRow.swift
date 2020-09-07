@@ -29,8 +29,8 @@ struct BookCSVImportRow {
         let index: Int32
     }
 
-    /// Matches the format of a list membership text, e.g.`List Name (123)`, producing the list name and the index as the first and second capture groups respectively.
-    private static let extractListDetail = Regex(#"^(.+) \((\d+)\)$"#)
+    /// Matches the format of a list membership text, e.g.`List Name (123)`, or `List Name (#123)`, producing the list name and the index as the first and second capture groups respectively.
+    private static let extractListDetail = Regex(#"^(.+) \(#?(\d+)\)$"#)
 
     /**
      * Matches any string, and produces one or two capture groups, equal to the last name and - if present - the first name. The last name is defined as the portion of the string from the start
@@ -93,17 +93,7 @@ struct BookCSVImportRow {
             subjects = []
         }
         if let listsText = value(.lists) {
-            lists = listsText.semicolonSeparatedItems().compactMap { listItem -> ListIndex? in
-                guard let match = BookCSVImportRow.extractListDetail.firstMatch(in: listItem) else { return nil }
-                guard match.captures.count == 2 else {
-                    assertionFailure("Unexpected number of captures: \(match.captures.count)")
-                    return nil
-                }
-                guard let listName = match.captures[0]?.trimming().nilIfWhitespace(),
-                    let listIndex = match.captures[1]?.trimming().nilIfWhitespace() else { return nil }
-                guard let integerListIndex = Int32(listIndex) else { return nil }
-                return ListIndex(listName: listName, index: integerListIndex)
-            }
+            lists = listsText.semicolonSeparatedItems().compactMap(Self.listIndex(from:))
         } else {
             lists = []
         }
@@ -177,7 +167,23 @@ struct BookCSVImportRow {
         currentPercentage = nil
         publicationDate = nil
         subjects = []
-        lists = []
+        if let bookshelvesWithPositions = row["Bookshelves with positions"] {
+            lists = bookshelvesWithPositions.components(separatedBy: ",").compactMap(Self.listIndex(from:))
+        } else {
+            lists = []
+        }
+    }
+
+    private static func listIndex(from string: String) -> ListIndex? {
+        guard let match = BookCSVImportRow.extractListDetail.firstMatch(in: string) else { return nil }
+        guard match.captures.count == 2 else {
+            assertionFailure("Unexpected number of captures: \(match.captures.count)")
+            return nil
+        }
+        guard let listName = match.captures[0]?.trimming().nilIfWhitespace(),
+            let listIndex = match.captures[1]?.trimming().nilIfWhitespace() else { return nil }
+        guard let integerListIndex = Int32(listIndex) else { return nil }
+        return ListIndex(listName: listName, index: integerListIndex)
     }
 }
 
