@@ -17,8 +17,8 @@ struct ChangeListProvider {
                 image: UIImage(largeSystemImageNamed: "barcode")
             ),
             WhatsNew.Item(
-                title: "Import from GoodReads",
-                subtitle: "CSV Import can now be performed from a GoodReads file",
+                title: "Import from Goodreads",
+                subtitle: "CSV Import can now be performed from a Goodreads export",
                 image: UIImage(largeSystemImageNamed: "arrow.up.doc.fill")
             )
         ]
