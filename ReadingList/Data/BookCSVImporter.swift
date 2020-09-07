@@ -81,27 +81,20 @@ class BookCSVParserDelegate: CSVParserDelegate {
     private func populateCover(forBook book: Book, withGoogleID googleID: String) -> Promise<Void> {
         return googleBooksApi.getCover(googleBooksId: googleID)
             .then { data -> Void in
-                self.context.perform {
+                self.context.performAndWait {
                     book.coverImage = data
+                    os_log("Book supplemented with cover image for ID %s", type: .info, googleID)
                 }
-                os_log("Book supplemented with cover image for ID %s", type: .info, googleID)
             }
     }
 
     private func overwriteMetadata(forBook book: Book, withGoogleID googleID: String) -> Promise<Void> {
-        return googleBooksApi.fetch(googleBooksId: googleID)
+        return googleBooksApi.fetch(googleBooksId: googleID, fetchCoverImage: false)
             .then { result -> Void in
-                self.context.perform {
+                self.context.performAndWait {
                     book.populate(fromFetchResult: result)
+                    os_log("Book supplemented with metadata for ID %s", type: .info, googleID)
                 }
-                os_log("Book supplemented with metadata for ID %s", type: .info, googleID)
-            }
-    }
-
-    private func lookupGoogleBooksId(forBook book: Book, withIsbn isbn: String) -> Promise<String> {
-        return googleBooksApi.fetch(isbn: isbn)
-            .then { result -> String in
-                return result.id
             }
     }
 
@@ -162,24 +155,6 @@ class BookCSVParserDelegate: CSVParserDelegate {
                     os_log("Supplementing book %{public}s with metadata from google ID %s", type: .info, objectIdForLogging, googleBooksId)
                     networkOperations.append(overwriteMetadata(forBook: book, withGoogleID: googleBooksId))
                 }
-            } else if let isbn = book.isbn13, let isbnString = ISBN13(isbn)?.string {
-                if settings.downloadCoverImages || settings.downloadMetadata {
-                    os_log("Supplementing book %{public}s with Google Books ID from ISBN %s", type: .info, objectIdForLogging, isbnString)
-                    let googleIdLookup = lookupGoogleBooksId(forBook: book, withIsbn: isbnString)
-
-                    if settings.downloadMetadata {
-                        os_log("Supplementing book %{public}s with cover image from google ID", type: .info, objectIdForLogging)
-                        networkOperations.append(googleIdLookup.then {
-                            self.overwriteMetadata(forBook: book, withGoogleID: $0)
-                        })
-                    }
-                    if book.coverImage == nil && settings.downloadCoverImages {
-                        os_log("Supplementing book %{public}s with metadata from google ID", type: .info, objectIdForLogging)
-                        networkOperations.append(googleIdLookup.then {
-                            self.populateCover(forBook: book, withGoogleID: $0)
-                        })
-                    }
-                }
             }
         }
     }
@@ -197,7 +172,7 @@ class BookCSVParserDelegate: CSVParserDelegate {
     }
 
     func completion() {
-        all(networkOperations)
+        any(networkOperations)
             .always(on: .main) {
                 os_log("All %d network operations promises completed", type: .info, self.networkOperations.count)
                 self.context.performAndWait {

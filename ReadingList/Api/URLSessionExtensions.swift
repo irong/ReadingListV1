@@ -1,5 +1,6 @@
 import Foundation
 import Promises
+import os.log
 
 public extension URLSession {
 
@@ -17,6 +18,7 @@ public extension URLSession {
         return Promise<Data> { fulfill, reject in
             self.startedDataTask(with: url) { data, _, error in
                 if let error = error {
+                    os_log("Data request for URL %{public}s completed with error", type: .error, url.absoluteString)
                     reject(error)
                 } else if let data = data {
                     fulfill(data)

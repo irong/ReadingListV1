@@ -26,65 +26,82 @@ struct GoogleBooksApi {
     func fetch(isbn: String) -> Promise<FetchResult> {
         os_log("Searching for Google Book with ISBN %{public}s", type: .debug, isbn)
         guard let url = GoogleBooksRequest.searchIsbn(isbn).url else {
+            os_log("Invalid URL for ISBN search (%{public}s)", type: .error, isbn)
             return Promise<FetchResult>(ResponseError.invalidUrl)
         }
         return URLSession.shared.data(url: url)
             .then(parseSearchResults)
             .then {
                 guard let result = $0.first else { throw ResponseError.noResult }
+                os_log("Resolved ISBN %{public}s to Google Books ID %{public}s", type: .info, isbn, result.id)
                 return self.fetch(searchResult: result)
             }
     }
 
     /**
      Fetches the specified book from Google Books. Performs a supplementary request for the
-     book's cover image data if necessary.
+     book's cover image data if requested.
      */
-    func fetch(googleBooksId: String) -> Promise<FetchResult> {
-        return fetch(googleBooksId: googleBooksId, existingSearchResult: nil)
+    func fetch(googleBooksId: String, fetchCoverImage: Bool = true) -> Promise<FetchResult> {
+        return fetch(googleBooksId: googleBooksId, existingSearchResult: nil, fetchCoverImage: fetchCoverImage)
     }
 
     /**
      Fetches the book identified by a search result from Google Books. If the fetch results are not sufficient
      to create a Book object (sometimes fetch results miss data which is present in a search result), an attempt
      is made to "mix" the data from the search and fetch results. Performs a supplementary request for the
-     book's cover image data if necessary.
+     book's cover image data if requested.
      */
-    func fetch(searchResult: SearchResult) -> Promise<FetchResult> {
-        return fetch(googleBooksId: searchResult.id, existingSearchResult: searchResult)
+    func fetch(searchResult: SearchResult, fetchCoverImage: Bool = true) -> Promise<FetchResult> {
+        return fetch(googleBooksId: searchResult.id, existingSearchResult: searchResult, fetchCoverImage: fetchCoverImage)
     }
 
     /**
      Fetches the specified book from Google Books. If the results are not sufficient to create a Book object,
      and a search result was supplied, an attempt is made to "mix" the data from the search and fetch results.
-     Performs a supplementary request for the book's cover image data if necessary.
+     Performs a supplementary request for the book's cover image data if requested.
      */
-    private func fetch(googleBooksId: String, existingSearchResult: SearchResult?) -> Promise<FetchResult> {
-        os_log("Fetching Google Book with ID %{public}s", type: .debug, googleBooksId)
+    private func fetch(googleBooksId: String, existingSearchResult: SearchResult?, fetchCoverImage: Bool) -> Promise<FetchResult> {
+        os_log("Fetching Google Book with ID %{public}s", type: .info, googleBooksId)
         guard let url = GoogleBooksRequest.fetch(googleBooksId).url else {
             return Promise<FetchResult>(ResponseError.invalidUrl)
         }
         let fetchPromise = URLSession.shared.data(url: url)
-            .then { data -> FetchResult in
-                let result = try self.jsonDecoder.decode(ItemMetadata.self, from: data)
+            .then { data -> ItemMetadata in
+                os_log("Data response for Google Book %{public}s received", type: .info, googleBooksId)
+                return try self.jsonDecoder.decode(ItemMetadata.self, from: data)
+            }
+            .catch {
+                os_log("Error decoding JSON into ItemMetadata for Google Book %{public}s: %{public}s", type: .error, googleBooksId, $0.localizedDescription)
+            }
+            .then { result -> FetchResult in
                 if let searchResult = existingSearchResult {
                     return FetchResult(result, searchResult)
                 } else if let fetchResult = FetchResult(result) {
                     return fetchResult
                 } else {
+                    os_log("Could not build a FetchResult from the ItemMetadata", type: .error)
                     throw ResponseError.invalidResult
                 }
             }
             .recover { error -> FetchResult in
                 if let existingSearchResult = existingSearchResult {
+                    os_log("Falling back to using existing search result for Google Book with ID %{public}s", type: .default, googleBooksId)
                     return FetchResult(existingSearchResult)
                 }
                 throw error
             }
 
-        let coverPromise = fetchPromise.then { self.getCover(googleBooksId: $0.id) }
+        if !fetchCoverImage {
+            return fetchPromise
+        }
+
+        let coverPromise = fetchPromise.then {
+            self.getCover(googleBooksId: $0.id)
+        }
 
         return any(fetchPromise, coverPromise).then { fetch, cover -> FetchResult in
+            os_log("Fetch and Cover request both complete for Google Book %{public}s", type: .info, googleBooksId)
             switch fetch {
             case var .value(fetchResult):
                 if case let .value(coverDataValue) = cover {
@@ -104,6 +121,7 @@ struct GoogleBooksApi {
         guard let url = GoogleBooksRequest.coverImage(googleBooksId, .thumbnail).url else {
             return Promise<Data>(ResponseError.invalidUrl)
         }
+        os_log("Requesting cover image for Google Books ID %{public}s", type: .info)
         return URLSession.shared.data(url: url)
     }
 
@@ -114,8 +132,14 @@ struct GoogleBooksApi {
     }
 
     func parseSearchResults(_ searchResults: Data) throws -> [SearchResult] {
-        let results = try jsonDecoder.decode(SearchResults.self, from: searchResults)
-        return results.items.compactMap(SearchResult.init).distinct(by: \.id)
+        os_log("Parsing data as SearchResult array", type: .info)
+        do {
+            let results = try jsonDecoder.decode(SearchResults.self, from: searchResults)
+            return results.items.compactMap(SearchResult.init).distinct(by: \.id)
+        } catch {
+            os_log("Error parsing search results: %{public}s", type: .error, error.localizedDescription)
+            throw error
+        }
     }
 
     func parseFetchResults(_ fetchResult: Data) throws -> FetchResult? {
