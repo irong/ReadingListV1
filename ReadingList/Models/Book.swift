@@ -260,7 +260,7 @@ extension Book {
         set(\.subtitle, ifNotNil: values.subtitle)
         set(\.googleBooksId, ifNotNil: values.googleBooksId)
         set(\.isbn13, ifNotNil: values.isbn13?.int)
-        if googleBooksId == nil && values.manualBookId == nil {
+        if googleBooksId == nil && manualBookId == nil {
             manualBookId = values.manualBookId ?? UUID().uuidString
         }
         set(\.pageCount, ifNotNil: values.pageCount)
