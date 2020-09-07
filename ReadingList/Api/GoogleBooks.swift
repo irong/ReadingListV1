@@ -135,7 +135,7 @@ struct GoogleBooksApi {
         os_log("Parsing data as SearchResult array", type: .info)
         do {
             let results = try jsonDecoder.decode(SearchResults.self, from: searchResults)
-            return results.items.compactMap(SearchResult.init).distinct(by: \.id)
+            return results.items?.compactMap(SearchResult.init).distinct(by: \.id) ?? []
         } catch {
             os_log("Error parsing search results: %{public}s", type: .error, error.localizedDescription)
             throw error
@@ -300,7 +300,7 @@ struct GoogleBooksApi {
      The metadata returned for a collection of items when searching on Google Books.
      */
     fileprivate struct SearchResults: Decodable {
-        let items: [ItemMetadata]
+        let items: [ItemMetadata]?
     }
 
     /**

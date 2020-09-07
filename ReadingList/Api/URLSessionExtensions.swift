@@ -16,6 +16,7 @@ public extension URLSession {
 
     func data(url: URL) -> Promise<Data> {
         return Promise<Data> { fulfill, reject in
+            os_log("Requesting %{public}s", type: .info, url.absoluteString)
             self.startedDataTask(with: url) { data, _, error in
                 if let error = error {
                     os_log("Data request for URL %{public}s completed with error", type: .error, url.absoluteString)
