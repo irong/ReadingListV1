@@ -12,6 +12,7 @@ final class EditBookMetadata: FormViewController {
     private var book: Book!
     private var isAddingNewBook: Bool!
     var isInNavigationFlow = false
+    let googleBooksApi = GoogleBooksApi()
 
     private var shouldPrepopulateLastLanguageSelection: Bool {
         // We want to prepopulate the last selected language only if we are adding a new manual book: we don't want to
@@ -45,10 +46,6 @@ final class EditBookMetadata: FormViewController {
         // within a navigation flow. Remember this, so we don't set the left bar button to be a Cancel button
         self.isInNavigationFlow = true
     }
-
-    let isbnRowKey = "isbn"
-    let deleteRowKey = "delete"
-    let updateFromGoogleRowKey = "updateFromGoogle"
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -180,7 +177,7 @@ final class EditBookMetadata: FormViewController {
                     self.book.coverImage = cell.value?.jpegData(compressionQuality: 0.7)
                 }
             }
-            <<< Int64Row(isbnRowKey) {
+            <<< Int64Row {
                 $0.title = "ISBN-13"
                 $0.value = book.isbn13
                 $0.formatter = nil
@@ -210,15 +207,15 @@ final class EditBookMetadata: FormViewController {
 
             // Update and delete buttons
             +++ Section()
-            <<< ButtonRow(updateFromGoogleRowKey) {
+            <<< ButtonRow {
                 $0.title = "Update from Google Books"
-                $0.hidden = Condition(booleanLiteral: isAddingNewBook || self.book.googleBooksId == nil)
+                $0.hidden = Condition(booleanLiteral: isAddingNewBook || book.isbn13 == nil)
                 $0.onCellSelection { [weak self] cell, row in
                     guard let `self` = self else { return }
                     self.updateFromGooglePressed(cell: cell, row: row)
                 }
             }
-            <<< ButtonRow(deleteRowKey) {
+            <<< ButtonRow {
                 $0.title = "Delete"
                 $0.cellSetup { cell, _ in
                     cell.tintColor = .systemRed
@@ -302,19 +299,46 @@ final class EditBookMetadata: FormViewController {
 
         self.present(confirmDeleteAlert, animated: true, completion: nil)
     }
+    
+    private func confirmUpdateAlert(updateHandler: ((UIAlertAction) -> Void)?) -> UIAlertController {
+        let areYouSure = UIAlertController(title: "Confirm Update", message: "Updating from Google Books will overwrite any book metadata changes you have made manually. Are you sure you wish to proceed?", preferredStyle: .alert)
+        areYouSure.addAction(UIAlertAction(title: "Update", style: .default, handler: updateHandler))
+        areYouSure.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        return areYouSure
+    }
 
     func updateFromGooglePressed(cell: ButtonCellOf<String>, row: _ButtonRowOf<String>) {
-        let areYouSure = UIAlertController(title: "Confirm Update", message: "Updating from Google Books will overwrite any book metadata changes you have made manually. Are you sure you wish to proceed?", preferredStyle: .alert)
-        areYouSure.addAction(UIAlertAction(title: "Update", style: .default, handler: updateBookFromGoogleHandler))
-        areYouSure.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-        present(areYouSure, animated: true)
+        if self.book.googleBooksId != nil {
+            present(confirmUpdateAlert(updateHandler: updateBookFromGoogleHandler(_:)), animated: true)
+        } else if let isbn = book.isbn13 {
+            SVProgressHUD.show(withStatus: "Searching...")
+
+            googleBooksApi.fetch(isbn: isbn.string)
+                .always(on: .main) {
+                    SVProgressHUD.dismiss()
+                }
+                .catch(on: .main) {
+                    switch $0 {
+                    case GoogleBooksApi.ResponseError.noResult:
+                        SVProgressHUD.showInfo(withStatus: "No results found online")
+                    default:
+                        SVProgressHUD.showError(withStatus: "An error occurred searching online")
+                    }
+                }
+                .then(on: .main) { [weak self] fetchResult in
+                    guard let `self` = self else { return }
+                    self.present(self.confirmUpdateAlert { _ in
+                        self.updateBookFromGoogle(fetchResult: fetchResult)
+                    }, animated: true)
+                }
+        }
     }
 
     func updateBookFromGoogleHandler(_: UIAlertAction) {
         guard let googleBooksId = book.googleBooksId else { return }
         SVProgressHUD.show(withStatus: "Downloading...")
 
-        GoogleBooksApi().fetch(googleBooksId: googleBooksId)
+        googleBooksApi.fetch(googleBooksId: googleBooksId)
             .always(on: .main) {
                 SVProgressHUD.dismiss()
             }
