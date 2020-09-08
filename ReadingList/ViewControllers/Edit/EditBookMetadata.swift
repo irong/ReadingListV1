@@ -288,7 +288,7 @@ final class EditBookMetadata: FormViewController {
 
         self.present(confirmDeleteAlert, animated: true, completion: nil)
     }
-    
+
     private func confirmUpdateAlert(updateHandler: ((UIAlertAction) -> Void)?) -> UIAlertController {
         let areYouSure = UIAlertController(title: "Confirm Update", message: "Updating from Google Books will overwrite any book metadata changes you have made manually. Are you sure you wish to proceed?", preferredStyle: .alert)
         areYouSure.addAction(UIAlertAction(title: "Update", style: .default, handler: updateHandler))
