@@ -143,7 +143,7 @@ class LaunchManager {
         settingsSplitVC.showDetailViewController(navigation, sender: self)
 
         // Trigger the import dialog - wait to ensure the view controller is loaded
-        DispatchQueue.main.async {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             importVC.confirmImport(fromFile: url)
         }
         return true
