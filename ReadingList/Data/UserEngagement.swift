@@ -50,9 +50,11 @@ class UserEngagement {
         case scanBarcodeBulk = "Scan_Barcode_Bulk"
         case searchOnlineMultiple = "Search_Online_Multiple"
         case addManualBook = "Add_Manual_Book"
+        case searchForExistingBookByIsbn = "Search_For_Existing_Book_By_ISBN"
 
         // Data
         case csvImport = "CSV_Import"
+        case csvGoodReadsImport = "CSV_Import_Goodreads"
         case csvExport = "CSV_Export"
         case deleteAllData = "Delete_All_Data"
 
@@ -66,6 +68,7 @@ class UserEngagement {
         case deleteBook = "Delete_Book"
         case bulkDeleteBook = "Bulk_Delete_Book"
         case editBook = "Edit_Book"
+        case updateBookFromGoogle = "Update_Book_From_Google"
         case editReadState = "Edit_Read_State"
         case changeSortOrder = "Change_Sort"
         case moveBookToTop = "Move_Book_To_Top"
@@ -92,6 +95,8 @@ class UserEngagement {
         case enableCrashReports = "Enable_Crash_Reports"
         case changeTheme = "Change_Theme"
         case changeSearchOnlineLanguage = "Change_Search_Online_Language"
+        case changeCsvImportFormat = "Change_CSV_Import_Format"
+        case changeCsvImportSettings = "Change_CSV_Import_Settings"
 
         // Other
         case viewOnAmazon = "View_On_Amazon"

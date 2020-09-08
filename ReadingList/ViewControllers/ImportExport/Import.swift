@@ -71,6 +71,9 @@ final class Import: UITableViewController {
             let alert = UIAlertController(title: "Select Import Format", message: nil, preferredStyle: .actionSheet)
             alert.addActions(CSVImportFormat.allCases.map { format in
                 UIAlertAction(title: format.description, style: .default) { _ in
+                    if self.importFormat != format {
+                        UserEngagement.logEvent(.changeCsvImportFormat)
+                    }
                     self.importFormat = format
                 }
             })
@@ -93,14 +96,17 @@ final class Import: UITableViewController {
     }
 
     @IBAction private func downloadMetadataChanged(_ sender: UISwitch) {
+        UserEngagement.logEvent(.changeCsvImportSettings)
         importSettings.downloadMetadata = sender.isOn
     }
 
     @IBAction private func downloadCoversChanged(_ sender: UISwitch) {
+        UserEngagement.logEvent(.changeCsvImportSettings)
         importSettings.downloadCoverImages = sender.isOn
     }
 
     @IBAction private func overwriteExistingBooksChanged(_ sender: UISwitch) {
+        UserEngagement.logEvent(.changeCsvImportSettings)
         importSettings.overwriteExistingBooks = sender.isOn
     }
 
@@ -124,7 +130,7 @@ final class Import: UITableViewController {
         let alert = UIAlertController(title: "Confirm \(importFormat.description) Import", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Import", style: .default) { _ in
             SVProgressHUD.show(withStatus: "Importing")
-            UserEngagement.logEvent(.csvImport)
+            UserEngagement.logEvent(self.importFormat == .readingList ? .csvImport : .csvGoodReadsImport)
 
             let csvImporter = BookCSVImporter(format: self.importFormat, settings: self.importSettings)
             csvImporter.startImport(fromFileAt: url) { result in

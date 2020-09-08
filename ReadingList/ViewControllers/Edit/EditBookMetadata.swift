@@ -301,6 +301,7 @@ final class EditBookMetadata: FormViewController {
             present(confirmUpdateAlert(updateHandler: updateBookFromGoogleHandler(_:)), animated: true)
         } else if let isbn = book.isbn13 {
             SVProgressHUD.show(withStatus: "Searching...")
+            UserEngagement.logEvent(.searchForExistingBookByIsbn)
 
             googleBooksApi.fetch(isbn: isbn.string)
                 .always(on: .main) {
@@ -326,6 +327,7 @@ final class EditBookMetadata: FormViewController {
     func updateBookFromGoogleHandler(_: UIAlertAction) {
         guard let googleBooksId = book.googleBooksId else { return }
         SVProgressHUD.show(withStatus: "Downloading...")
+        UserEngagement.logEvent(.updateBookFromGoogle)
 
         googleBooksApi.fetch(googleBooksId: googleBooksId)
             .always(on: .main) {
@@ -393,6 +395,7 @@ final class EditBookMetadata: FormViewController {
 
     @objc func presentEditReadingState() {
         guard book.isValidForUpdate() else { return }
+        UserEngagement.logEvent(.addManualBook)
         navigationController!.pushViewController(EditBookReadState(newUnsavedBook: book, scratchpadContext: editBookContext), animated: true)
     }
 }
