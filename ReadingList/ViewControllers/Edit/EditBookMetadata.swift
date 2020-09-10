@@ -227,6 +227,10 @@ final class EditBookMetadata: FormViewController {
                 }
             }
             <<< LabelRow {
+                $0.title = "Core Data ID"
+                $0.value = book.objectID.uriRepresentation().absoluteString
+            }
+            <<< LabelRow {
                 $0.title = "Manual Book ID"
                 $0.value = book.manualBookId
             }
