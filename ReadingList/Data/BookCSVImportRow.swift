@@ -124,24 +124,24 @@ struct BookCSVImportRow {
         }
         authors = [firstAuthor] + additionalAuthors
 
-        let bookshelves = row["Bookshelves"]?.split(separator: ",").compactMap { $0.trimming().nilIfWhitespace() } ?? []
-
-        if bookshelves.contains("read") || bookshelves.contains("currently-reading") {
+        // The Exclusive Shelf seems to determine the "current" state of the book. Use this as an indicator of where to put the book.
+        let exclusiveShelf = row["Exclusive Shelf"]
+        if exclusiveShelf == "read" || exclusiveShelf == "currently-reading" {
+            // There is only one read date provided in the CSV, so we have to use that for both started and finished. And it's not always
+            // present either; in those cases, use the date added instead.
             if let dateString = row["Date Read"] ?? row["Date Added"] {
                 started = Date(dateString, format: "yyyy/MM/dd")
             } else {
                 started = Date()
             }
-        } else {
-            started = nil
-        }
-        if bookshelves.contains("read") {
-            if let dateString = row["Date Read"] ?? row["Date Added"] {
-                finished = Date(dateString, format: "yyyy/MM/dd")
+
+            if exclusiveShelf == "read" {
+                finished = started
             } else {
-                finished = Date()
+                finished = nil
             }
         } else {
+            started = nil
             finished = nil
         }
 
