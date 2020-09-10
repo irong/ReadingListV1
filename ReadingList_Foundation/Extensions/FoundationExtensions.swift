@@ -109,6 +109,10 @@ public extension Int {
     var int32: Int32 {
         Int32(self)
     }
+
+    func itemCount(singular item: String) -> String {
+        return "\(self.string) \(item.pluralising(self))"
+    }
 }
 
 public extension NSSortDescriptor {

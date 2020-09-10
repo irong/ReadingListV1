@@ -139,9 +139,9 @@ final class Import: UITableViewController {
                     SVProgressHUD.dismiss()
                     self.presentCsvErrorAlert(error)
                 case .success(let importResults):
-                    var statusMessagePieces = ["\(importResults.success) books imported"]
-                    if importResults.duplicate != 0 { statusMessagePieces.append("\(importResults.duplicate) rows ignored due pre-existing data") }
-                    if importResults.error != 0 { statusMessagePieces.append("\(importResults.error) rows ignored due to invalid data") }
+                    var statusMessagePieces = ["\(importResults.success.itemCount(singular: "book")) imported"]
+                    if importResults.duplicate != 0 { statusMessagePieces.append("\(importResults.duplicate.itemCount(singular: "row")) ignored due pre-existing data") }
+                    if importResults.error != 0 { statusMessagePieces.append("\(importResults.error.itemCount(singular: "row")) ignored due to invalid data") }
                     SVProgressHUD.showInfo(withStatus: statusMessagePieces.joined(separator: ". "))
                 }
             }
