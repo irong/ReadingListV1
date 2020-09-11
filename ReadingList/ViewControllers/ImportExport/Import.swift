@@ -141,11 +141,16 @@ final class Import: UITableViewController {
         var message = "Are you sure you want to import books from this file?"
         if importSettings.overwriteExistingBooks {
             message += " This will overwrite any existing books which have a matching ISBN"
-            if importFormat == .readingList {
-                message += " or Google Books ID."
-            } else {
-                message += "."
+            switch importFormat {
+            case .readingList:
+                message += " or Google Books ID"
+            case .goodreads:
+                // So, we do use Goodreads ID (in the manual ID slot), but we're not very explicit or clear about it.
+                // Let's indicate that we do this, but without opening the can of worms about
+                // having to explain what the "ID" is.
+                message += " or ID"
             }
+            message += "."
         }
         let alert = UIAlertController(title: "Confirm \(importFormat.description) Import", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Import", style: .default) { _ in

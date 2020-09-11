@@ -292,6 +292,7 @@ Import data from a CSV file, to move books between devices or services.</string>
                         <outlet property="downloadMetadataSwitch" destination="kWf-ob-sGk" id="3Ol-eW-4pI"/>
                         <outlet property="importFormatDescription" destination="2lx-7R-9nv" id="Udv-LR-lPW"/>
                         <outlet property="overwriteExistingSwitch" destination="x0W-Sn-kDf" id="w1Y-2J-AvJ"/>
+                        <outlet property="selectCsvFileCellLabel" destination="B7a-yl-6br" id="Q91-GN-jrL"/>
                         <segue destination="Tmh-NX-jny" kind="presentation" identifier="showFormatDetails" modalPresentationStyle="formSheet" id="KgS-GJ-UNa"/>
                         <segue destination="pWY-UA-Us8" kind="presentation" identifier="showGoodreadsInfo" modalPresentationStyle="formSheet" id="WBm-2U-ukv"/>
                     </connections>
@@ -338,7 +339,7 @@ Import data from a CSV file, to move books between devices or services.</string>
                                             </label>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="vX4-WI-FxR">
                                                 <rect key="frame" x="60" y="73.5" width="420" height="304.5"/>
-                                                <mutableString key="text">To import your books from Goodreads, you need to generate a Goodreads CSV export.  In Goodreads, navigate to My Books, then click on Import and Export under Tools on the left. Then click on the Export Library button at the top of the screen. This file can then be used to import into Reading List.  The Goodreads export does not include reading start dates. Any finished books will be imported with both the Start and Finish dates set to the Goodreads "Date Read".   Unfortunately, book covers are not able to be downloaded during import from Goodreads.</mutableString>
+                                                <string key="text">To import your books from Goodreads, you need to generate a Goodreads CSV export.  In Goodreads, navigate to My Books, then click on Import and Export under Tools on the left. Then click on the Export Library button at the top of the screen. This file can then be used to import into Reading List.  The Goodreads export does not include reading start dates. Any finished books will be imported with both the Start and Finish dates set to the Goodreads "Date Read".   Unfortunately, book covers are not able to be downloaded during import from Goodreads.</string>
                                                 <fontDescription key="fontDescription" name=".AppleSystemUIFont" family=".AppleSystemUIFont" pointSize="17"/>
                                                 <nil key="textColor"/>
                                                 <nil key="highlightedColor"/>
@@ -487,7 +488,7 @@ Import data from a CSV file, to move books between devices or services.</string>
                                             </label>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="pZs-3b-uNx">
                                                 <rect key="frame" x="60" y="73.5" width="420" height="183"/>
-                                                <mutableString key="text">You can import books using the Reading List CSV format. Importing books from a file can help to add historical reading data to the app, and enables you to transfer books between devices.  The Reading List CSV format has columns for all the data captured in within the app. To see a full list of the available columns, and further import requirements and behaviour, tap the button below.</mutableString>
+                                                <string key="text">You can import books using the Reading List CSV format. Importing books from a file can help to add historical reading data to the app, and enables you to transfer books between devices.  The Reading List CSV format has columns for all the data captured in within the app. To see a full list of the available columns, and further import requirements and behaviour, tap the button below.</string>
                                                 <fontDescription key="fontDescription" name=".AppleSystemUIFont" family=".AppleSystemUIFont" pointSize="17"/>
                                                 <nil key="textColor"/>
                                                 <nil key="highlightedColor"/>

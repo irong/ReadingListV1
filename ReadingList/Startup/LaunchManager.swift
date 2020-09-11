@@ -129,6 +129,7 @@ class LaunchManager {
             assertionFailure()
             return false
         }
+        importVC.preProvidedImportFile = url
 
         // Instantiate the stack of view controllers leading up to the Import view controller
         guard let navigation = UIStoryboard.ImportExport.instantiateViewController(withIdentifier: "Navigation") as? UINavigationController else {
@@ -141,11 +142,6 @@ class LaunchManager {
 
         // Put them on the screen
         settingsSplitVC.showDetailViewController(navigation, sender: self)
-
-        // Trigger the import dialog - wait to ensure the view controller is loaded
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            importVC.confirmImport(fromFile: url)
-        }
         return true
     }
 
