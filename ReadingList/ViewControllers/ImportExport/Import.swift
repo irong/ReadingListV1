@@ -11,6 +11,7 @@ final class Import: UITableViewController {
     @IBOutlet private weak var downloadCoversLabel: UILabel!
     @IBOutlet private weak var overwriteExistingSwitch: UISwitch!
     @IBOutlet private weak var importFormatDescription: UILabel!
+    @IBOutlet private  weak var selectCsvFileCellLabel: UILabel!
     private let selectFileCellIndex = IndexPath(row: 0, section: 3)
 
     /** We modify settings when switching to Goodreads, so we should be able to undo the changes if the user then switches back. */
@@ -35,6 +36,15 @@ final class Import: UITableViewController {
     @Persisted(encodedDataKey: "importSettings", defaultValue: .init())
     var importSettings: BookCSVImportSettings
 
+    /** Set to a file URL to have the file selection cell be an Import button, which will start importing from this file. */
+    var preProvidedImportFile: URL? {
+        didSet {
+            if isViewLoaded {
+                refreshUI()
+            }
+        }
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         monitorThemeSetting()
@@ -53,6 +63,12 @@ final class Import: UITableViewController {
         downloadCoversSwitch.isOn = importSettings.downloadCoverImages
         downloadCoversSwitch.isEnabled = importFormat != .goodreads
         downloadCoversLabel.isEnabled = importFormat != .goodreads
+
+        // If a CSV file has been pre-provided, then our UI is a little different, in that the
+        // "Select CSV File" button is now an "Import" button.
+        if preProvidedImportFile != nil {
+            selectCsvFileCellLabel.text = "Import"
+        }
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -88,7 +104,11 @@ final class Import: UITableViewController {
                 performSegue(withIdentifier: "showGoodreadsInfo", sender: self)
             }
         } else if indexPath == selectFileCellIndex {
-            presentDocumentPicker(presentingIndexPath: indexPath)
+            if let importFile = preProvidedImportFile {
+                confirmImport(fromFile: importFile)
+            } else {
+                presentDocumentPicker(presentingIndexPath: indexPath)
+            }
         } else {
             return
         }

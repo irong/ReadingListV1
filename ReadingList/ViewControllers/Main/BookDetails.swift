@@ -235,13 +235,14 @@ final class BookDetails: UIViewController, UIScrollViewDelegate { //swiftlint:di
 
         // FUTURE: Consider whether it is worth inspecting the changes to see if they affect this book; perhaps we should just always reload?
         let updatedObjects = userInfo[NSUpdatedObjectsKey] as? NSSet
+        let refreshedObjects = userInfo[NSRefreshedObjectsKey] as? NSSet
         let createdObjects = userInfo[NSInsertedObjectsKey] as? NSSet
         func setContainsRelatedList(_ set: NSSet?) -> Bool {
             guard let set = set else { return false }
             return set.compactMap { $0 as? List }.contains { $0.books.contains(book) }
         }
 
-        if updatedObjects?.contains(book) == true || setContainsRelatedList(deletedObjects) || setContainsRelatedList(updatedObjects) || setContainsRelatedList(createdObjects) {
+        if updatedObjects?.contains(book) == true || refreshedObjects?.contains(book) == true || setContainsRelatedList(deletedObjects) || setContainsRelatedList(updatedObjects) || setContainsRelatedList(refreshedObjects) || setContainsRelatedList(createdObjects) {
             // If the book was updated, update this page.
             setupViewFromBook()
         }
