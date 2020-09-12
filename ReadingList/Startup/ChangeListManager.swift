@@ -5,21 +5,26 @@ import WhatsNewKit
 struct ChangeListProvider {
     let generalImprovements = WhatsNew.Item(
         title: "Improvements and Fixes",
-        subtitle: "Various improvements and fixes",
+        subtitle: "Various performance improvements and bug fixes",
         image: UIImage(largeSystemImageNamed: "bolt.fill")
     )
 
     let changeLog = [
         Version(major: 1, minor: 13, patch: 0): [
             WhatsNew.Item(
-                title: "Bulk Scan",
-                subtitle: "Scan multiple barcodes in one session",
+                title: "Scan Multiple Barcodes",
+                subtitle: "Add books more quickly by tapping Scan Many",
                 image: UIImage(largeSystemImageNamed: "barcode")
             ),
             WhatsNew.Item(
                 title: "Import from Goodreads",
-                subtitle: "CSV Import can now be performed from a Goodreads export",
+                subtitle: "Move your books from Goodreads by performing a CSV import",
                 image: UIImage(largeSystemImageNamed: "arrow.up.doc.fill")
+            ),
+            WhatsNew.Item(
+                title: "Supplement Existing Books",
+                subtitle: "Download additional metadata for manually added books with an ISBN from the Edit screen",
+                image: UIImage(largeSystemImageNamed: "plus.circle.fill")
             )
         ]
     ]
