@@ -11,6 +11,7 @@ final class Import: UITableViewController {
     @IBOutlet private weak var downloadCoversLabel: UILabel!
     @IBOutlet private weak var overwriteExistingSwitch: UISwitch!
     @IBOutlet private weak var importFormatDescription: UILabel!
+    @IBOutlet private  weak var selectCsvFileCellLabel: UILabel!
     private let selectFileCellIndex = IndexPath(row: 0, section: 3)
 
     /** We modify settings when switching to Goodreads, so we should be able to undo the changes if the user then switches back. */
@@ -35,6 +36,15 @@ final class Import: UITableViewController {
     @Persisted(encodedDataKey: "importSettings", defaultValue: .init())
     var importSettings: BookCSVImportSettings
 
+    /** Set to a file URL to have the file selection cell be an Import button, which will start importing from this file. */
+    var preProvidedImportFile: URL? {
+        didSet {
+            if isViewLoaded {
+                refreshUI()
+            }
+        }
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         monitorThemeSetting()
@@ -53,6 +63,12 @@ final class Import: UITableViewController {
         downloadCoversSwitch.isOn = importSettings.downloadCoverImages
         downloadCoversSwitch.isEnabled = importFormat != .goodreads
         downloadCoversLabel.isEnabled = importFormat != .goodreads
+
+        // If a CSV file has been pre-provided, then our UI is a little different, in that the
+        // "Select CSV File" button is now an "Import" button.
+        if preProvidedImportFile != nil {
+            selectCsvFileCellLabel.text = "Import"
+        }
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -88,7 +104,11 @@ final class Import: UITableViewController {
                 performSegue(withIdentifier: "showGoodreadsInfo", sender: self)
             }
         } else if indexPath == selectFileCellIndex {
-            presentDocumentPicker(presentingIndexPath: indexPath)
+            if let importFile = preProvidedImportFile {
+                confirmImport(fromFile: importFile)
+            } else {
+                presentDocumentPicker(presentingIndexPath: indexPath)
+            }
         } else {
             return
         }
@@ -121,11 +141,16 @@ final class Import: UITableViewController {
         var message = "Are you sure you want to import books from this file?"
         if importSettings.overwriteExistingBooks {
             message += " This will overwrite any existing books which have a matching ISBN"
-            if importFormat == .readingList {
-                message += " or Google Books ID."
-            } else {
-                message += "."
+            switch importFormat {
+            case .readingList:
+                message += " or Google Books ID"
+            case .goodreads:
+                // So, we do use Goodreads ID (in the manual ID slot), but we're not very explicit or clear about it.
+                // Let's indicate that we do this, but without opening the can of worms about
+                // having to explain what the "ID" is.
+                message += " or ID"
             }
+            message += "."
         }
         let alert = UIAlertController(title: "Confirm \(importFormat.description) Import", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Import", style: .default) { _ in
@@ -139,9 +164,9 @@ final class Import: UITableViewController {
                     SVProgressHUD.dismiss()
                     self.presentCsvErrorAlert(error)
                 case .success(let importResults):
-                    var statusMessagePieces = ["\(importResults.success) books imported"]
-                    if importResults.duplicate != 0 { statusMessagePieces.append("\(importResults.duplicate) rows ignored due pre-existing data") }
-                    if importResults.error != 0 { statusMessagePieces.append("\(importResults.error) rows ignored due to invalid data") }
+                    var statusMessagePieces = ["\(importResults.success.itemCount(singular: "book")) imported"]
+                    if importResults.duplicate != 0 { statusMessagePieces.append("\(importResults.duplicate.itemCount(singular: "row")) ignored due pre-existing data") }
+                    if importResults.error != 0 { statusMessagePieces.append("\(importResults.error.itemCount(singular: "row")) ignored due to invalid data") }
                     SVProgressHUD.showInfo(withStatus: statusMessagePieces.joined(separator: ". "))
                 }
             }

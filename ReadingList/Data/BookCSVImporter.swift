@@ -98,16 +98,6 @@ class BookCSVParserDelegate: CSVParserDelegate {
             }
     }
 
-    private func findExistingBook(_ csvRow: BookCSVImportRow) -> Book? {
-        if let googleBooksId = csvRow.googleBooksId, let existingBookByGoogleId = Book.get(fromContext: self.context, googleBooksId: googleBooksId) {
-            return existingBookByGoogleId
-        }
-        if let isbn = csvRow.isbn13, let existingBookByIsbn = Book.get(fromContext: self.context, isbn: isbn.string) {
-            return existingBookByIsbn
-        }
-        return nil
-    }
-
     func lineParseSuccess(_ values: [String: String]) {
         guard let csvRow = BookCSVImportRow(for: importFormat, row: values) else {
             invalidCount += 1
@@ -118,7 +108,7 @@ class BookCSVParserDelegate: CSVParserDelegate {
         // FUTURE: Batch save
         context.performAndWait { [unowned self] in
             let book: Book
-            if let existingBook = findExistingBook(csvRow) {
+            if let existingBook = Book.get(fromContext: self.context, googleBooksId: csvRow.googleBooksId, isbn: csvRow.isbn13?.string, manualBookId: csvRow.manualBookId) {
                 guard settings.overwriteExistingBooks else {
                     duplicateCount += 1
                     return

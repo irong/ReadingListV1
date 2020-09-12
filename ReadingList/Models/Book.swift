@@ -289,27 +289,26 @@ extension Book {
         }
     }
 
-    static func get(fromContext context: NSManagedObjectContext, googleBooksId: String? = nil, isbn: String? = nil) -> Book? {
-        // if both are nil, leave early
-        guard googleBooksId != nil || isbn != nil else { return nil }
+    static func get(fromContext context: NSManagedObjectContext, googleBooksId: String? = nil, isbn: String? = nil, manualBookId: String? = nil) -> Book? {
+        let fetchRequest = NSManagedObject.fetchRequest(Book.self, limit: 1)
+        fetchRequest.returnsObjectsAsFaults = false
 
-        // First try fetching by google books ID
+        // Collect the predicates which we apply (OR'd) to our fetch request
+        var predicates = [NSPredicate]()
         if let googleBooksId = googleBooksId {
-            let googleBooksfetch = NSManagedObject.fetchRequest(Book.self, limit: 1)
-            googleBooksfetch.predicate = NSPredicate(format: "%K == %@", #keyPath(Book.googleBooksId), googleBooksId)
-            googleBooksfetch.returnsObjectsAsFaults = false
-            if let result = (try! context.fetch(googleBooksfetch)).first { return result }
+            predicates.append(NSPredicate(format: "%K == %@", #keyPath(Book.googleBooksId), googleBooksId))
         }
-
-        // then try fetching by ISBN
         if let isbn = isbn {
-            let isbnFetch = NSManagedObject.fetchRequest(Book.self, limit: 1)
-            isbnFetch.predicate = NSPredicate(format: "%K == %@", Book.Key.isbn13.rawValue, isbn)
-            isbnFetch.returnsObjectsAsFaults = false
-            return (try! context.fetch(isbnFetch)).first
+            predicates.append(NSPredicate(format: "%K == %@", Book.Key.isbn13.rawValue, isbn))
+        }
+        if let manualBookId = manualBookId {
+            predicates.append(NSPredicate(format: "%K == %@", #keyPath(Book.manualBookId), manualBookId))
         }
 
-        return nil
+        guard !predicates.isEmpty else { return nil }
+        fetchRequest.predicate = NSCompoundPredicate(orPredicateWithSubpredicates: predicates)
+
+        return (try! context.fetch(fetchRequest)).first
     }
 
     /**
