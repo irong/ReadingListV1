@@ -43,14 +43,7 @@ class LaunchManager {
             quickAction = nil
         }
 
-        let csvFileUrl: URL?
-        if let url = launchOptions?[.url] as? URL {
-            csvFileUrl = url.isFileURL && url.pathExtension == "csv" ? url : nil
-        } else {
-            csvFileUrl = nil
-        }
-
-        return LaunchOptions(url: csvFileUrl, quickAction: quickAction)
+        return LaunchOptions(url: launchOptions?[.url] as? URL, quickAction: quickAction)
     }
 
     /**
@@ -90,8 +83,8 @@ class LaunchManager {
 
         if let quickAction = options.quickAction {
             quickAction.perform(from: tabBarController)
-        } else if let csvFileUrl = options.url {
-            self.handleOpenUrl(csvFileUrl)
+        } else if let launchUrl = options.url {
+            self.handleOpenUrl(launchUrl)
         }
     }
 
@@ -102,36 +95,16 @@ class LaunchManager {
         if url.isFileURL && url.pathExtension == "csv" {
             return openCsvFileInApp(url: url)
         } else if url.scheme == "readinglist" {
-            os_log("Handling URL: %{public}s", type: .default, url.absoluteString)
-            // The "host" is the first part of the URL, which we use to identify the kind of thing we are opening/doing.
-            // "object" means show an object. Note: url.path starts with a "/" which we need to drop.
-            if url.host == "object", let coreDataUrl = URL(string: "x-coredata://\(url.path.dropFirst())") {
-                return showBook(withId: coreDataUrl)
-            }
-            return false
+            return ProprietaryUrlHandler(window: window).handleUrl(url)
         } else {
             os_log("Unrecognised URL type; handling not possible: %{public}s", type: .error, url.absoluteString)
             return false
         }
     }
 
-    private func showBook(withId coreDataId: URL) -> Bool {
-        guard let tabBarController = window.rootViewController as? TabBarController else {
-            assertionFailure()
-            return false
-        }
-        guard let objectId = PersistentStoreManager.container.viewContext.persistentStoreCoordinator?.managedObjectID(forURIRepresentation: coreDataId) else {
-            return false
-        }
-        if let book = PersistentStoreManager.container.viewContext.object(with: objectId) as? Book {
-            tabBarController.simulateBookSelection(book, allowTableObscuring: true)
-            return true
-        } else {
-            return false
-        }
-    }
-
     private func openCsvFileInApp(url: URL) -> Bool {
+        os_log("Opening CSV file URL: %{public}s", type: .default, url.absoluteString)
+
         guard let tabBarController = window.rootViewController as? TabBarController else {
             assertionFailure()
             return false
