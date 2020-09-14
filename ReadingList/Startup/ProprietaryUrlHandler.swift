@@ -3,7 +3,18 @@ import UIKit
 import os.log
 
 /// Handles app launch with a URL argument where the URL has scheme `readinglist://`
-struct ProprietaryUrlHandler {
+struct ProprietaryURLManager {
+
+    enum BookIdentifier {
+        case googleBooksId(_ id: String)
+        case manualId(_ id: String)
+        case isbn(_ isbn: String)
+    }
+
+    enum Action {
+        case viewBook(with id: BookIdentifier)
+    }
+
     var window: UIWindow
 
     init(window: UIWindow) {
