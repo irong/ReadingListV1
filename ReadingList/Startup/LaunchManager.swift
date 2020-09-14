@@ -94,8 +94,13 @@ class LaunchManager {
     @discardableResult func handleOpenUrl(_ url: URL) -> Bool {
         if url.isFileURL && url.pathExtension == "csv" {
             return openCsvFileInApp(url: url)
-        } else if url.scheme == "readinglist" {
-            return ProprietaryUrlHandler(window: window).handleUrl(url)
+        } else if url.scheme == ProprietaryURLManager.scheme {
+            if let urlAction = ProprietaryURLManager().getAction(from: url) {
+                return ProprietaryURLActionHandler(window: window).handle(urlAction)
+            } else {
+                os_log("Unparsable URL: %{public}s", type: .error, url.absoluteString)
+                return false
+            }
         } else {
             os_log("Unrecognised URL type; handling not possible: %{public}s", type: .error, url.absoluteString)
             return false
