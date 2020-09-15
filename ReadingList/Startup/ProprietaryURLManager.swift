@@ -2,13 +2,7 @@ import Foundation
 import UIKit
 import os.log
 
-enum BookIdentifier: Equatable {
-    case googleBooksId(_ id: String)
-    case manualId(_ id: String)
-    case isbn(_ isbn: String)
-}
-
-enum ProprietaryURLAction: Equatable {
+enum ProprietaryURLAction: Equatable {    
     case viewBook(id: BookIdentifier)
 }
 

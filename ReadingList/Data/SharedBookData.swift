@@ -11,8 +11,10 @@ struct SharedBookData: Codable {
     static var sharedBooks: [SharedBookData]
 }
 
-extension UserDefaults {
-    static var appExtensionShared = UserDefaults(suiteName: "com.andrewbennet.books.shared")!
+enum BookIdentifier: Equatable {
+    case googleBooksId(_ id: String)
+    case manualId(_ id: String)
+    case isbn(_ isbn: String)
 }
 
 extension BookIdentifier: Codable {
@@ -43,4 +45,8 @@ extension BookIdentifier: Codable {
             self = .isbn(try container.decode(String.self, forKey: .isbn))
         }
     }
+}
+
+extension UserDefaults {
+    static var appExtensionShared = UserDefaults(suiteName: "com.andrewbennet.books.shared")!
 }

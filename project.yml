@@ -18,7 +18,7 @@ packages:
     branch: stable 
   Eureka:
     url: https://github.com/xmartlabs/Eureka.git
-    minorVersion: 5.2.1
+    branch: xcode12
   ImageRow:
     url: https://github.com/EurekaCommunity/ImageRow
     branch: master
@@ -45,6 +45,7 @@ targets:
     dependencies:
       - sdk: StoreKit.framework
       - target: ReadingList_Foundation
+      - target: ReadingListWidget
       - package: Cosmos
       - package: SwiftyStoreKit
       - package: Eureka
@@ -147,3 +148,17 @@ targets:
                       xcrun simctl boot "${TARGET_DEVICE_IDENTIFIER}";
                       xcrun simctl status_bar "${TARGET_DEVICE_IDENTIFIER}" clear;
                   fi
+
+  ReadingListWidget:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: 14.0
+    sources:
+      - path: ReadingListWidget
+      - path: ReadingList/Data/SharedBookData.swift
+    dependencies:
+      - sdk: SwiftUI.framework
+      - sdk: WidgetKit.framework
+      - package: PersistedPropertyWrapper
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.andrewbennet.books.ReadingListWidget
