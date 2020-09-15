@@ -1,17 +1,20 @@
 import Foundation
 import PersistedPropertyWrapper
 
-struct SharedBookData: Codable {
+struct SharedBookData: Codable, Identifiable {
+    var id: BookIdentifier {
+        identifier
+    }
     let title: String
     let authorDisplay: String
     let identifier: BookIdentifier
-    let coverImage: Data
+    let coverImage: Data?
 
     @Persisted(encodedDataKey: "sharedBooks", defaultValue: [], storage: .appExtensionShared)
     static var sharedBooks: [SharedBookData]
 }
 
-enum BookIdentifier: Equatable {
+enum BookIdentifier: Equatable, Hashable {
     case googleBooksId(_ id: String)
     case manualId(_ id: String)
     case isbn(_ isbn: String)

@@ -3,11 +3,11 @@ import SwiftUI
 
 struct Provider: TimelineProvider {
     func placeholder(in context: Context) -> SimpleEntry {
-        SimpleEntry(date: Date())
+        SimpleEntry(date: Date(), books: SharedBookData.sharedBooks)
     }
 
     func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
-        let entry = SimpleEntry(date: Date())
+        let entry = SimpleEntry(date: Date(), books: SharedBookData.sharedBooks)
         completion(entry)
     }
 
@@ -18,7 +18,7 @@ struct Provider: TimelineProvider {
         let currentDate = Date()
         for hourOffset in 0 ..< 5 {
             let entryDate = Calendar.current.date(byAdding: .hour, value: hourOffset, to: currentDate)!
-            let entry = SimpleEntry(date: entryDate)
+            let entry = SimpleEntry(date: entryDate, books: SharedBookData.sharedBooks)
             entries.append(entry)
         }
 
@@ -29,13 +29,32 @@ struct Provider: TimelineProvider {
 
 struct SimpleEntry: TimelineEntry {
     let date: Date
+    let books: [SharedBookData]
 }
 
 struct ReadingListWidgetEntryView : View {
     var entry: Provider.Entry
 
     var body: some View {
-        Text(entry.date, style: .time)
+        HStack {
+            if entry.books.isEmpty {
+                Text("No books")
+            } else {
+                ForEach(entry.books) { _ in
+                    BookView()
+                        .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
+                }
+            }
+        }
+    }
+}
+
+struct BookView: View {
+    var body: some View {
+        VStack {
+            Text("Catcher in the Rye")
+            Text("J. D. Salinger")
+        }.border(Color.black, width: 1)
     }
 }
 
@@ -49,12 +68,13 @@ struct ReadingListWidget: Widget {
         }
         .configurationDisplayName("My Widget")
         .description("This is an example widget.")
+        .supportedFamilies([.systemMedium])
     }
 }
 
 struct ReadingListWidget_Previews: PreviewProvider {
     static var previews: some View {
-        ReadingListWidgetEntryView(entry: SimpleEntry(date: Date()))
-            .previewContext(WidgetPreviewContext(family: .systemSmall))
+        ReadingListWidgetEntryView(entry: SimpleEntry(date: Date(), books: []))
+            .previewContext(WidgetPreviewContext(family: .systemMedium))
     }
 }
