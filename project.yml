@@ -18,7 +18,7 @@ packages:
     branch: stable 
   Eureka:
     url: https://github.com/xmartlabs/Eureka.git
-    branch: xcode12
+    revision: 56346d0b9b6ab9081d26bdf1edba3a5096fa08f3
   ImageRow:
     url: https://github.com/EurekaCommunity/ImageRow
     branch: master

@@ -35,9 +35,10 @@ final class About: UITableViewController {
         switch indexPath.row {
         case 0: presentThemedSafariViewController(URL(string: "https://www.readinglist.app")!)
         case 1: share(indexPath)
-        case 2: contact(indexPath)
-        case 3: presentThemedSafariViewController(URL(string: "https://github.com/AndrewBennet/readinglist")!)
-        case 5:
+        case 2: presentThemedSafariViewController(URL(string: "https://twitter.com/ReadingListApp")!)
+        case 3: contact(indexPath)
+        case 4: presentThemedSafariViewController(URL(string: "https://github.com/AndrewBennet/readinglist")!)
+        case 6:
             if let thisVersionChangeList = thisVersionChangeList {
                 present(thisVersionChangeList, animated: true)
             }
