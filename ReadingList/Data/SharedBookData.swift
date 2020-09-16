@@ -51,5 +51,5 @@ extension BookIdentifier: Codable {
 }
 
 extension UserDefaults {
-    static var appExtensionShared = UserDefaults(suiteName: "com.andrewbennet.books.shared")!
+    static var appExtensionShared = UserDefaults(suiteName: "group.com.andrewbennet.books")!
 }

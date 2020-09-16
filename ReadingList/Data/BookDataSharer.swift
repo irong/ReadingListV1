@@ -1,6 +1,8 @@
 import Foundation
 import CoreData
+import WidgetKit
 
+@available(iOS 14.0, *)
 class BookDataSharer {
     private init() {}
     
@@ -11,6 +13,7 @@ class BookDataSharer {
         self.persistentContainer = persistentContainer
         // TODO: Or should this be a merge notificaiton or something?
         NotificationCenter.default.addObserver(self, selector: #selector(handleSave), name: .NSManagedObjectContextDidSave, object: persistentContainer.viewContext)
+        handleSave()
     }
     
     @objc func handleSave() {
@@ -22,6 +25,7 @@ class BookDataSharer {
             fetchRequest.predicate = NSPredicate(format: "%K == %ld", #keyPath(Book.readState), BookReadState.reading.rawValue)
             let books = try! background.fetch(fetchRequest)
             SharedBookData.sharedBooks = books.map(\.sharedData)
+            WidgetCenter.shared.reloadAllTimelines()
         }
     }
 }

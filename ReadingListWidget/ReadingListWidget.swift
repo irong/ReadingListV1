@@ -6,23 +6,13 @@ struct Provider: TimelineProvider {
         SimpleEntry(date: Date(), books: SharedBookData.sharedBooks)
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
-        let entry = SimpleEntry(date: Date(), books: SharedBookData.sharedBooks)
-        completion(entry)
+    func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> Void) {
+        completion(SimpleEntry(date: Date(), books: SharedBookData.sharedBooks))
     }
 
-    func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
-        var entries: [SimpleEntry] = []
-
-        // Generate a timeline consisting of five entries an hour apart, starting from the current date.
-        let currentDate = Date()
-        for hourOffset in 0 ..< 5 {
-            let entryDate = Calendar.current.date(byAdding: .hour, value: hourOffset, to: currentDate)!
-            let entry = SimpleEntry(date: entryDate, books: SharedBookData.sharedBooks)
-            entries.append(entry)
-        }
-
-        let timeline = Timeline(entries: entries, policy: .atEnd)
+    func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> Void) {
+        let entries = [SimpleEntry(date: Date(), books: SharedBookData.sharedBooks)]
+        let timeline = Timeline(entries: entries, policy: .never)
         completion(timeline)
     }
 }
@@ -32,17 +22,25 @@ struct SimpleEntry: TimelineEntry {
     let books: [SharedBookData]
 }
 
-struct ReadingListWidgetEntryView : View {
+struct ReadingListWidgetEntryView: View {
     var entry: Provider.Entry
-
+    let urlManager = ProprietaryURLManager()
+    
     var body: some View {
+        GeometryReader { geometry in
         HStack {
             if entry.books.isEmpty {
                 Text("No books")
             } else {
-                ForEach(entry.books) { _ in
-                    BookView()
-                        .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
+                ForEach(entry.books) { book in
+                    Link(destination: urlManager.getURL(from: .viewBook(id: book.id))) {
+                        
+                        BookView(bookData: book)
+                            .frame(width: (geometry.size.width / 4).rounded(.down) - 6,
+                                   height: (geometry.size.height - 6),
+                                   alignment: .top)
+                        }
+                    }
                 }
             }
         }
@@ -50,11 +48,28 @@ struct ReadingListWidgetEntryView : View {
 }
 
 struct BookView: View {
+    let bookData: SharedBookData
     var body: some View {
         VStack {
-            Text("Catcher in the Rye")
-            Text("J. D. Salinger")
-        }.border(Color.black, width: 1)
+            if let coverData = bookData.coverImage {
+                Image(uiImage: UIImage(data: coverData)!)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 53, height: 80)
+            } else {
+                Image(uiImage: UIImage(named: "CoverPlaceholder")!)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 53, height: 80)
+            }
+            Text(bookData.title).font(.caption)
+            Text(bookData.authorDisplay)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }//.padding()
+        
+        .background(Color(.systemGroupedBackground))
+        .cornerRadius(8, corners: .allCorners)
     }
 }
 

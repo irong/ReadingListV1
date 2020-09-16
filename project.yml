@@ -156,9 +156,11 @@ targets:
     sources:
       - path: ReadingListWidget
       - path: ReadingList/Data/SharedBookData.swift
+      - path: ReadingList/Startup/ProprietaryURLManager.swift
     dependencies:
       - sdk: SwiftUI.framework
       - sdk: WidgetKit.framework
       - package: PersistedPropertyWrapper
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.andrewbennet.books.ReadingListWidget
+      DEVELOPMENT_TEAM: YPDEV2E775
