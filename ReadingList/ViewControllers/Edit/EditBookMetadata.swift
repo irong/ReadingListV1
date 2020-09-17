@@ -120,7 +120,7 @@ final class EditBookMetadata: FormViewController {
                     }
                 }
             }
-            <<< DateRow {
+            <<< DatePickerRow {
                 $0.title = "Publication Date"
                 $0.value = book.publicationDate
                 $0.onChange { [weak self] cell in
