@@ -21,6 +21,13 @@ class BookTableHeader: UITableViewHeaderFooterView {
     @IBOutlet private weak var label: UILabel!
     @IBOutlet private weak var sortButton: UIButton!
 
+    override func awakeFromNib() {
+        super.awakeFromNib()
+        if #available(iOS 13.0, *) {
+            sortButton.setImage(UIImage(systemName: "arrow.up.arrow.down.circle"), for: .normal)
+        }
+    }
+
     @IBAction private func sortButtonTapped(_ sender: UIButton) {
         if #available(iOS 14.0, *) {
             assert(sender.showsMenuAsPrimaryAction)
