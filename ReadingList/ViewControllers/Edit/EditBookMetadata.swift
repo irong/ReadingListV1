@@ -120,7 +120,7 @@ final class EditBookMetadata: FormViewController {
                     }
                 }
             }
-            <<< DatePickerRow {
+            <<< DateInlineRow {
                 $0.title = "Publication Date"
                 $0.value = book.publicationDate
                 $0.onChange { [weak self] cell in
@@ -128,7 +128,6 @@ final class EditBookMetadata: FormViewController {
                     self.book.publicationDate = cell.value
                 }
             }
-
             <<< TextRow {
                 $0.cell.textField.autocapitalizationType = .words
                 $0.title = "Publisher"

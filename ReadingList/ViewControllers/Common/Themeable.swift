@@ -435,6 +435,10 @@ extension Theme {
         if #available(iOS 13.0, *) { return }
         SwitchRow.defaultCellUpdate = initialiseCell(_:_:)
         DateInlineRow.defaultCellUpdate = initialiseCell(_:_:)
+        DateInlineRow.InlineRow.defaultCellUpdate = { cell, _ in
+            initialiseCell(cell)
+            cell.datePicker.setValue(self.titleTextColor, forKey: "textColor")
+        }
         ThemedPushRow<Theme>.defaultCellUpdate = initialiseCell(_:_:)
         ListCheckRow<Theme>.defaultCellUpdate = initialiseCell(_:_:)
         ThemedPushRow<ProgressType>.defaultCellUpdate = initialiseCell(_:_:)
