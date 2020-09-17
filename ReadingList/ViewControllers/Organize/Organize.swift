@@ -88,33 +88,33 @@ final class Organize: UITableViewController {
         reloadHeaders()
     }
 
-    func onSortButtonTap(_ button: UIButton) {
-        let alert = UIAlertController.selectOption(ListSortOrder.allCases, title: "Choose Order", selected: ListSortOrder.selectedSort) { [weak self] sortOrder in
-            guard let `self` = self else { return }
-            ListSortOrder.selectedSort = sortOrder
-            self.dataSource.resultsController.fetchRequest.sortDescriptors = self.sortDescriptors()
-            try! self.dataSource.resultsController.performFetch()
-            self.dataSource.updateData(animate: true)
-        }
-        if let popover = alert.popoverPresentationController {
-            popover.sourceView = button
-            popover.sourceRect = button.bounds
-        }
-        self.present(alert, animated: true)
-    }
-
     override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
         guard !emptyDataSetManager.isShowingEmptyState else { return .leastNonzeroMagnitude }
         return BookTableHeader.height
+    }
+
+    func regenerateHeaderSortButtonMenuOrAlert(_ header: BookTableHeader) {
+        let selectedSort = ListSortOrder.selectedSort
+        header.alertOrMenu = AlertOrMenu(title: "Choose Order", items: ListSortOrder.allCases.map { sort in
+            AlertOrMenu.Item(title: sort == selectedSort ? "\(sort.description) ✓" : sort.description) { [weak self] in
+                guard let `self` = self else { return }
+                guard ListSortOrder.selectedSort != sort else { return }
+                ListSortOrder.selectedSort = sort
+                self.dataSource.resultsController.fetchRequest.sortDescriptors = self.sortDescriptors()
+                try! self.dataSource.resultsController.performFetch()
+                self.dataSource.updateData(animate: true)
+
+                // Regenerate the header menu so that the menu's ticks appear in the correct place next time
+                self.regenerateHeaderSortButtonMenuOrAlert(header)
+            }
+        })
     }
 
     override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         guard !emptyDataSetManager.isShowingEmptyState else { return nil }
         let header = tableView.dequeue(BookTableHeader.self)
         configureHeader(header, at: section)
-        header.onSortButtonTap = { [weak self] button in
-            self?.onSortButtonTap(button)
-        }
+        regenerateHeaderSortButtonMenuOrAlert(header)
         return header
     }
 
