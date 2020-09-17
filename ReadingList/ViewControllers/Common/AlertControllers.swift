@@ -19,26 +19,6 @@ extension UIAlertController {
 
         return alert
     }
-
-    static func selectOrder(_ orderable: Orderable, onChange: @escaping () -> Void) -> UIAlertController {
-        return selectOption(BookSort.allCases.filter { orderable.supports($0) }, title: "Choose Order", selected: orderable.getSort()) { sortOrder in
-            orderable.setSort(sortOrder)
-            onChange()
-        }
-    }
-
-    static func selectOption<Option>(_ options: [Option], title: String, selected: Option, _ onChange: @escaping (Option) -> Void) -> UIAlertController where Option: CustomStringConvertible, Option: Equatable {
-        let alert = UIAlertController(title: title, message: nil, preferredStyle: .actionSheet)
-        for option in options {
-            let title = selected == option ? "  \(option.description) ✓" : option.description
-            alert.addAction(UIAlertAction(title: title, style: .default) { _ in
-                if selected == option { return }
-                onChange(option)
-            })
-        }
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-        return alert
-    }
 }
 
 enum Orderable {
