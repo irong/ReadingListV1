@@ -434,7 +434,7 @@ extension Theme {
 
         if #available(iOS 13.0, *) { return }
         SwitchRow.defaultCellUpdate = initialiseCell(_:_:)
-        DateRow.defaultCellUpdate = initialiseCell(_:_:)
+        DateInlineRow.defaultCellUpdate = initialiseCell(_:_:)
         ThemedPushRow<Theme>.defaultCellUpdate = initialiseCell(_:_:)
         ListCheckRow<Theme>.defaultCellUpdate = initialiseCell(_:_:)
         ThemedPushRow<ProgressType>.defaultCellUpdate = initialiseCell(_:_:)

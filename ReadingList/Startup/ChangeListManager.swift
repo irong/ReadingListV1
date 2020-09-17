@@ -10,6 +10,13 @@ struct ChangeListProvider {
     )
 
     let changeLog = [
+        Version(major: 1, minor: 14, patch: 0): [
+            WhatsNew.Item(
+                title: "iOS 14 Support",
+                subtitle: "UI improvements to support iOS 14",
+                image: UIImage(largeSystemImageNamed: "apps.iphone")
+            )
+        ],
         Version(major: 1, minor: 13, patch: 0): [
             WhatsNew.Item(
                 title: "Scan Multiple Barcodes",

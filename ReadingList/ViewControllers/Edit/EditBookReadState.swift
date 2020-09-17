@@ -47,7 +47,7 @@ final class EditBookReadState: FormViewController {
                     self.updateBookFromForm()
                 }
             }
-            <<< DateRow(startedReadingKey) {
+            <<< DateInlineRow(startedReadingKey) {
                 $0.title = "Started"
                 $0.value = book.startedReading ?? now
                 $0.onChange { [unowned self] _ in
@@ -57,7 +57,7 @@ final class EditBookReadState: FormViewController {
                     (form.rowBy(tag: self.readStateKey) as! SegmentedRow<BookReadState>).value == .toRead
                 }
             }
-            <<< DateRow(finishedReadingKey) {
+            <<< DateInlineRow(finishedReadingKey) {
                 $0.title = "Finished"
                 $0.value = book.finishedReading ?? now
                 $0.onChange { [unowned self] _ in
@@ -149,12 +149,12 @@ final class EditBookReadState: FormViewController {
         case .toRead:
             book.setToRead()
         case .reading:
-            book.setReading(started: (form.rowBy(tag: startedReadingKey) as! DateRow).value ?? Date())
+            book.setReading(started: (form.rowBy(tag: startedReadingKey) as! DateInlineRow).value ?? Date())
             guard let progressType = (form.rowBy(tag: progressTypeKey) as! SegmentedRow<ProgressType>).value else { return }
             updateProgressFromForm(progressType)
         case .finished:
-            book.setFinished(started: (form.rowBy(tag: startedReadingKey) as! DateRow).value ?? Date(),
-                             finished: (form.rowBy(tag: finishedReadingKey) as! DateRow).value ?? Date())
+            book.setFinished(started: (form.rowBy(tag: startedReadingKey) as! DateInlineRow).value ?? Date(),
+                             finished: (form.rowBy(tag: finishedReadingKey) as! DateInlineRow).value ?? Date())
         }
     }
 
