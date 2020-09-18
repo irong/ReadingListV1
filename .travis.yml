@@ -28,4 +28,4 @@ after_deploy:
 - bundle exec fastlane tag_build
 before_install:
 - openssl aes-256-cbc -K $encrypted_07fef076f6ea_key -iv $encrypted_07fef076f6ea_iv
-  -in AuthKey_K665GM82PP.p8.enc -out fastlane/keys/AuthKey_K665GM82PP.p8 -d
+  -in AuthKey_K665GM82PP.p8.enc -out AuthKey_K665GM82PP.p8 -d
