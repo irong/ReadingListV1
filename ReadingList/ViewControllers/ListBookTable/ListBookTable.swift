@@ -102,8 +102,7 @@ final class ListBookTable: UITableViewController {
         }
     }
 
-    private func listTextField() -> UITextField {
-        guard let navigationBar = navigationController?.navigationBar else { preconditionFailure() }
+    private func listTextField(for navigationBar: UINavigationBar) -> UITextField {
         let textField = UITextField(frame: navigationBar.frame.inset(by: UIEdgeInsets(top: 0, left: 115, bottom: 0, right: 115)))
         textField.text = listNameFieldDefaultText
         textField.textAlignment = .center
@@ -175,7 +174,11 @@ final class ListBookTable: UITableViewController {
         searchController.searchBar.isEnabled = !isEditing
         if isEditing {
             if listNameField == nil {
-                listNameField = listTextField()
+                guard let navigationBar = navigationController?.navigationBar else {
+                    assertionFailure("Unexpected missing navigation bar")
+                    return
+                }
+                listNameField = listTextField(for: navigationBar)
                 navigationItem.title = nil
             }
         } else {

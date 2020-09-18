@@ -95,6 +95,7 @@ final class Organize: UITableViewController {
 
     func regenerateHeaderSortButtonMenuOrAlert(_ header: BookTableHeader) {
         let selectedSort = ListSortOrder.selectedSort
+        header.presenter = self
         header.alertOrMenu = AlertOrMenu(title: "Choose Order", items: ListSortOrder.allCases.map { sort in
             AlertOrMenu.Item(title: sort == selectedSort ? "\(sort.description) ✓" : sort.description) { [weak self] in
                 guard let `self` = self else { return }
