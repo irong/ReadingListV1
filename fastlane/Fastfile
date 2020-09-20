@@ -14,7 +14,7 @@ platform :ios do
     # testing is failing on Xcode 11 with an error about no suitable libswiftUIKit.dylib...
     # test
     setup_travis
-    match(type: "appstore")
+    match(type: "appstore", app_identifier: ["com.andrewbennet.books", "com.andrewbennet.books.ReadingListWidget"])
     build_app(
         workspace: "ReadingList.xcworkspace",
         scheme: "ReadingList"
