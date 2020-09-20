@@ -11,7 +11,7 @@ struct ProgressDisplay: View {
                 .padding([.leading, .trailing], 8)
                 .frame(minWidth: 0, maxWidth: .infinity, minHeight: height, maxHeight: height, alignment: .leading)
             Text("\(progressPercentage)%")
-                .font(.caption2)
+                .font(.system(size: 10))
                 .foregroundColor(Color(.secondaryLabel))
                 .fontWeight(.medium)
         }

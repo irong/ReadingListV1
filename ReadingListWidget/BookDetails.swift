@@ -13,7 +13,7 @@ struct BookDetails: View {
                 .cornerRadius(4, corners: .allCorners)
             VStack(alignment: .center, spacing: 2) {
                 Text(bookData.title)
-                    .font(.caption2)
+                    .font(.system(size: 10.5))
                     .fontWeight(.medium)
                     .multilineTextAlignment(.center)
                     .lineLimit(3)
