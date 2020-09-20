@@ -159,6 +159,7 @@ final class EditBookMetadata: FormViewController {
             <<< ImageRow {
                 $0.title = "Cover Image"
                 $0.cell.height = { 100 }
+                $0.sourceTypes = [.PhotoLibrary]
                 $0.value = UIImage(optionalData: self.book.coverImage)
                 $0.onChange { [weak self] cell in
                     guard let `self` = self else { return }
