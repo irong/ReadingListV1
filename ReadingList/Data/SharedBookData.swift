@@ -1,7 +1,7 @@
 import Foundation
 import PersistedPropertyWrapper
 
-struct SharedBookData: Codable, Identifiable {
+struct SharedBookData: Codable, Identifiable, Equatable {
     var id: BookIdentifier {
         identifier
     }
@@ -9,6 +9,8 @@ struct SharedBookData: Codable, Identifiable {
     let authorDisplay: String
     let identifier: BookIdentifier
     let coverImage: Data?
+    let percentageComplete: Int?
+    let currentlyReading: Bool
 
     @Persisted(encodedDataKey: "sharedBooks", defaultValue: [], storage: .appExtensionShared)
     static var sharedBooks: [SharedBookData]

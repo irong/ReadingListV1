@@ -185,7 +185,7 @@ class LaunchManager {
 
         AppLaunchHistory.lastLaunchedVersion = BuildInfo.thisBuild.version
         AppLaunchHistory.mostRecentWorkingVersionDescription = BuildInfo.thisBuild.fullDescription
-        
+
         if #available(iOS 14.0, *) {
             BookDataSharer.instance.inititialise(persistentContainer: PersistentStoreManager.container)
         }

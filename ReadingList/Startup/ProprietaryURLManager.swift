@@ -2,20 +2,26 @@ import Foundation
 import UIKit
 import os.log
 
-enum ProprietaryURLAction: Equatable {    
+enum ProprietaryURLAction: Equatable {
     case viewBook(id: BookIdentifier)
+    case editBookReadLog(id: BookIdentifier)
+    case addBookSearchOnline
 }
 
 fileprivate extension ProprietaryURLAction {
     var host: URLHost {
         switch self {
         case .viewBook(id: _): return .book
+        case .editBookReadLog(id: _): return .book
+        case .addBookSearchOnline: return .book
         }
     }
 
     var path: URLPath {
         switch self {
         case .viewBook(id: _): return .view
+        case .addBookSearchOnline: return .add
+        case .editBookReadLog(id: _): return .editReadLog
         }
     }
 }
@@ -42,6 +48,8 @@ private enum URLHost: String {
 
 private enum URLPath: String {
     case view = "/view"
+    case editReadLog = "/edit-read-log"
+    case add = "/add"
 }
 
 /// Handles app launch with a URL argument where the URL has scheme `readinglist://`
@@ -56,6 +64,10 @@ struct ProprietaryURLManager {
         switch action {
         case .viewBook(let bookIdentifier):
             components.queryItems = bookIdentifier.urlQuery
+        case .editBookReadLog(let bookIdentifier):
+            components.queryItems = bookIdentifier.urlQuery
+        case .addBookSearchOnline:
+            break
         }
 
         guard let url = components.url else { preconditionFailure() }
@@ -89,6 +101,11 @@ struct ProprietaryURLManager {
         case .view:
             guard let bookIdentifier = getBookIdentifier(from: queryItems) else { return nil }
             return .viewBook(id: bookIdentifier)
+        case .add:
+            return .addBookSearchOnline
+        case .editReadLog:
+            guard let bookIdentifier = getBookIdentifier(from: queryItems) else { return nil }
+            return .editBookReadLog(id: bookIdentifier)
         }
     }
 

@@ -10,13 +10,23 @@ struct ProprietaryURLActionHandler {
 
     func handle(_ action: ProprietaryURLAction) -> Bool {
         switch action {
-        case .viewBook(id: let id):
+        case .viewBook(let id):
             if let book = getBookFromIdentifier(id) {
                 showBook(book)
                 return true
             } else {
                 return false
             }
+        case .editBookReadLog(let id):
+            if let book = getBookFromIdentifier(id) {
+                showReadLog(for: book)
+                return true
+            } else {
+                return false
+            }
+        case .addBookSearchOnline:
+            searchOnline()
+            return true
         }
     }
 
@@ -37,5 +47,25 @@ struct ProprietaryURLActionHandler {
             return
         }
         tabBarController.simulateBookSelection(book, allowTableObscuring: true)
+    }
+
+    func showReadLog(for book: Book) {
+        guard let tabBarController = window.rootViewController as? TabBarController,
+              let selectedViewController = tabBarController.selectedSplitViewController else {
+            assertionFailure()
+            return
+        }
+        selectedViewController.present(
+            EditBookReadState(existingBookID: book.objectID).inNavigationController(),
+            animated: false
+        )
+    }
+
+    func searchOnline() {
+        guard let tabBarController = window.rootViewController as? TabBarController else {
+            assertionFailure()
+            return
+        }
+        QuickAction.searchOnline.perform(from: tabBarController)
     }
 }

@@ -1,95 +1,51 @@
 import WidgetKit
 import SwiftUI
 
-struct Provider: TimelineProvider {
-    func placeholder(in context: Context) -> SimpleEntry {
-        SimpleEntry(date: Date(), books: SharedBookData.sharedBooks)
+struct BookTimelineProvider: TimelineProvider {
+    func placeholder(in context: Context) -> BooksEntry {
+        BooksEntry(date: Date(), books: SharedBookData.sharedBooks)
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> Void) {
-        completion(SimpleEntry(date: Date(), books: SharedBookData.sharedBooks))
+    func getSnapshot(in context: Context, completion: @escaping (BooksEntry) -> Void) {
+        completion(BooksEntry(date: Date(), books: SharedBookData.sharedBooks))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> Void) {
-        let entries = [SimpleEntry(date: Date(), books: SharedBookData.sharedBooks)]
+        // The "timeline" consists of one entry, now, which never expires. The app itself is in charge of invaliding the
+        // widget when stuff changes.
+        let entries = [BooksEntry(date: Date(), books: SharedBookData.sharedBooks)]
         let timeline = Timeline(entries: entries, policy: .never)
         completion(timeline)
     }
 }
 
-struct SimpleEntry: TimelineEntry {
+struct BooksEntry: TimelineEntry {
     let date: Date
     let books: [SharedBookData]
 }
 
 struct ReadingListWidgetEntryView: View {
-    var entry: Provider.Entry
-    let urlManager = ProprietaryURLManager()
-    
-    var body: some View {
-        GeometryReader { geometry in
-        HStack {
-            if entry.books.isEmpty {
-                Text("No books")
-            } else {
-                ForEach(entry.books) { book in
-                    Link(destination: urlManager.getURL(from: .viewBook(id: book.id))) {
-                        
-                        BookView(bookData: book)
-                            .frame(width: (geometry.size.width / 4).rounded(.down) - 6,
-                                   height: (geometry.size.height - 6),
-                                   alignment: .top)
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
+    var entry: BookTimelineProvider.Entry
 
-struct BookView: View {
-    let bookData: SharedBookData
     var body: some View {
-        VStack {
-            if let coverData = bookData.coverImage {
-                Image(uiImage: UIImage(data: coverData)!)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 53, height: 80)
-            } else {
-                Image(uiImage: UIImage(named: "CoverPlaceholder")!)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 53, height: 80)
-            }
-            Text(bookData.title).font(.caption)
-            Text(bookData.authorDisplay)
-                .font(.caption2)
-                .foregroundColor(.secondary)
-        }//.padding()
-        
-        .background(Color(.systemGroupedBackground))
-        .cornerRadius(8, corners: .allCorners)
+        if entry.books.isEmpty {
+            NoBooksDisplay()
+        } else {
+            CurrentBooks(books: entry.books)
+        }
     }
 }
 
 @main
 struct ReadingListWidget: Widget {
-    let kind: String = "ReadingListWidget"
+    let kind: String = "com.andrewbennet.books.current-books"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: Provider()) { entry in
+        StaticConfiguration(kind: kind, provider: BookTimelineProvider()) { entry in
             ReadingListWidgetEntryView(entry: entry)
         }
-        .configurationDisplayName("My Widget")
-        .description("This is an example widget.")
+        .configurationDisplayName("Current Books")
+        .description("Quick access to the books are you reading or are next in your To Read list.")
         .supportedFamilies([.systemMedium])
-    }
-}
-
-struct ReadingListWidget_Previews: PreviewProvider {
-    static var previews: some View {
-        ReadingListWidgetEntryView(entry: SimpleEntry(date: Date(), books: []))
-            .previewContext(WidgetPreviewContext(family: .systemMedium))
     }
 }
