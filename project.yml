@@ -162,10 +162,16 @@ targets:
       - sdk: WidgetKit.framework
       - package: PersistedPropertyWrapper
     settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.andrewbennet.books.ReadingListWidget
-      DEVELOPMENT_TEAM: YPDEV2E775
-      CODE_SIGN_ENTITLEMENTS: ReadingListWidget/ReadingListWidget.entitlements
-      MARKETING_VERSION: 1.14.0 # TODO: Tie this in with the regular versioning system
-      PROVISIONING_PROFILE_SPECIFIER: match AppStore com.andrewbennet.books.ReadingListWidget
-      CODE_SIGN_IDENTITY[sdk=iphoneos*]: "Apple Distribution: Andrew Bennet (YPDEV2E775)"
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.andrewbennet.books.ReadingListWidget
+        DEVELOPMENT_TEAM: YPDEV2E775
+        CODE_SIGN_ENTITLEMENTS: ReadingListWidget/ReadingListWidget.entitlements
+        MARKETING_VERSION: 1.14.0 # TODO: Tie this in with the regular versioning system
+      configs:
+        Debug:
+          CODE_SIGN_STYLE: Automatic
+        Release:
+          CODE_SIGN_STYLE: Manual
+          PROVISIONING_PROFILE_SPECIFIER: match AppStore com.andrewbennet.books.ReadingListWidget
+          CODE_SIGN_IDENTITY[sdk=iphoneos*]: "Apple Distribution: Andrew Bennet (YPDEV2E775)"
 
