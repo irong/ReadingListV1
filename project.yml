@@ -166,4 +166,6 @@ targets:
       DEVELOPMENT_TEAM: YPDEV2E775
       CODE_SIGN_ENTITLEMENTS: ReadingListWidget/ReadingListWidget.entitlements
       MARKETING_VERSION: 1.14.0 # TODO: Tie this in with the regular versioning system
+      PROVISIONING_PROFILE_SPECIFIER: match AppStore com.andrewbennet.books.ReadingListWidget
+      CODE_SIGN_IDENTITY[sdk=iphoneos*]: "Apple Distribution: Andrew Bennet (YPDEV2E775)"
 
