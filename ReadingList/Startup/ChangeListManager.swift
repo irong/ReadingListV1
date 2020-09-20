@@ -13,7 +13,7 @@ struct ChangeListProvider {
         Version(major: 1, minor: 14, patch: 0): [
             WhatsNew.Item(
                 title: "iOS 14 Support",
-                subtitle: "UI improvements to support iOS 14",
+                subtitle: "UI improvements: new datepicker, new menus, new widget",
                 image: UIImage(largeSystemImageNamed: "apps.iphone")
             )
         ],

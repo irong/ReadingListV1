@@ -73,7 +73,11 @@ final class EditBookMetadata: FormViewController {
                 $0.value = self.book.title
                 $0.onChange { [weak self] cell in
                     guard let `self` = self else { return }
-                    self.book.title = cell.value ?? ""
+                    if let cellValue = cell.value {
+                        self.book.title = cellValue
+                    } else {
+                        self.book.setValue(nil, forKey: #keyPath(Book.title))
+                    }
                 }
             }
 
@@ -159,6 +163,7 @@ final class EditBookMetadata: FormViewController {
             <<< ImageRow {
                 $0.title = "Cover Image"
                 $0.cell.height = { 100 }
+                $0.sourceTypes = [.PhotoLibrary]
                 $0.value = UIImage(optionalData: self.book.coverImage)
                 $0.onChange { [weak self] cell in
                     guard let `self` = self else { return }
