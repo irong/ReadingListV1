@@ -5,8 +5,10 @@ struct CurrentBooks: View {
     let urlManager = ProprietaryURLManager()
     let books: [SharedBookData]
     let maxBookCount = 4
-    private let leadingTrailingPadding: CGFloat = 2
-    private let topBottomPadding: CGFloat = 12
+    private let leadingTrailingPadding: CGFloat = 8
+    private var topBottomPadding: CGFloat {
+        books.contains { $0.percentageComplete != nil } ? 18 : 24
+    }
 
     func desiredWidth(_ geometryProxy: GeometryProxy) -> CGFloat {
         (geometryProxy.size.width / CGFloat(maxBookCount)).rounded(.down) - leadingTrailingPadding * 2
@@ -26,7 +28,7 @@ struct CurrentBooks: View {
                         .padding([.top, .bottom], topBottomPadding)
                         .actionLink(.viewBook(id: book.id))
                 }
-            }
+            }.background(Color(UIColor.secondarySystemBackground))
         }
     }
 }

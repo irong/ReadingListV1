@@ -4,12 +4,16 @@ import SVProgressHUD
 import os.log
 import CoreData
 import ReadingList_Foundation
+import PersistedPropertyWrapper
 
 class LaunchManager {
 
     var window: UIWindow!
     var storeMigrationFailed = false
     var isFirstLaunch = false
+
+    @Persisted("hasEverInitialisedSharedWidgetData", defaultValue: false)
+    var hasEverInitialisedSharedWidgetData: Bool
 
     /**
      Performs any required initialisation immediately post after the app has launched.
@@ -188,6 +192,11 @@ class LaunchManager {
 
         if #available(iOS 14.0, *) {
             BookDataSharer.instance.inititialise(persistentContainer: PersistentStoreManager.container)
+            if !hasEverInitialisedSharedWidgetData {
+                // Not strictly a save, but the first time we launch the app as iOS 14, we ought to fill in the shared book data
+                BookDataSharer.instance.handleChanges()
+                hasEverInitialisedSharedWidgetData = true
+            }
         }
     }
 

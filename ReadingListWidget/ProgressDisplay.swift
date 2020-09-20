@@ -13,6 +13,7 @@ struct ProgressDisplay: View {
             Text("\(progressPercentage)%")
                 .font(.caption2)
                 .foregroundColor(Color(.secondaryLabel))
+                .fontWeight(.medium)
         }
     }
 }
