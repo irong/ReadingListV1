@@ -349,10 +349,14 @@ final class EditBookMetadata: FormViewController {
 
     func updateBookFromGoogle(fetchResult: GoogleBooksApi.FetchResult) {
         book.populate(fromFetchResult: fetchResult)
-        editBookContext.saveIfChanged()
-        dismiss(animated: true) {
-            // FUTURE: Would be nice to display whether any changes were made
-            SVProgressHUD.showInfo(withStatus: "Book updated")
+        if book.isValidForUpdate() {
+            editBookContext.saveIfChanged()
+            dismiss(animated: true) {
+                // FUTURE: Would be nice to display whether any changes were made
+                SVProgressHUD.showInfo(withStatus: "Book updated")
+            }
+        } else {
+            SVProgressHUD.showError(withStatus: "Could not update book details")
         }
     }
 
