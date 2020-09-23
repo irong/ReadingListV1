@@ -186,7 +186,7 @@ class LaunchManager {
 
         if #available(iOS 14.0, *) {
             BookDataSharer.instance.inititialise(persistentContainer: PersistentStoreManager.container)
-            if AppLaunchHistory.lastLaunchedBuildInfo?.buildNumber != BuildInfo.thisBuild.buildNumber {
+            if AppLaunchHistory.lastLaunchedBuildInfo?.buildNumber != BuildInfo.thisBuild.buildNumber || BuildInfo.thisBuild.type == .debug {
                 // Not strictly a save, but the first time we launch an updated version of the app, we ought to repopulate the shared book data
                 os_log("Repopulating shared book data for widget", type: .default)
                 BookDataSharer.instance.handleChanges(forceUpdate: true)
