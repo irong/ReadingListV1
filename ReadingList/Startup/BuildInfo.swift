@@ -1,11 +1,9 @@
 import Foundation
 import ReadingList_Foundation
 
-struct BuildInfo {
-    enum BuildType {
-        case debug
-        case testFlight
-        case appStore
+struct BuildInfo: Codable {
+    enum BuildType: Int, Codable {
+        case debug, testFlight, appStore //swiftlint:disable:this explicit_enum_raw_value
     }
 
     init(version: Version, buildNumber: Int, type: BuildType) {

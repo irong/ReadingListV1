@@ -14,10 +14,10 @@ class BookDataSharer {
         self.persistentContainer = persistentContainer
         NotificationCenter.default.addObserver(self, selector: #selector(handleChanges), name: .NSManagedObjectContextDidSave, object: persistentContainer.viewContext)
         NotificationCenter.default.addObserver(self, selector: #selector(handleChanges), name: .NSManagedObjectContextDidMergeChangesObjectIDs, object: persistentContainer.viewContext)
-        handleChanges()
+        handleChanges(forceUpdate: false)
     }
 
-    @objc func handleChanges() {
+    @objc func handleChanges(forceUpdate: Bool = false) {
         let background = persistentContainer.newBackgroundContext()
         background.perform { [unowned self] in
             let readingFetchRequest = fetchRequest(itemLimit: 4, readState: .reading)
@@ -29,8 +29,8 @@ class BookDataSharer {
             }
 
             let sharedData = books.map(\.sharedData)
-            if sharedData != SharedBookData.sharedBooks {
-                os_log("Shared book data has changed; updating and reloading widget timelines", type: .default)
+            if forceUpdate || sharedData != SharedBookData.sharedBooks {
+                os_log("Updating and reloading widget timelines", type: .default)
                 DispatchQueue.main.async {
                     SharedBookData.sharedBooks = sharedData
                     WidgetCenter.shared.reloadAllTimelines()

@@ -40,7 +40,22 @@ class UpgradeManager {
             // Spoof a previously last-launched version of 1.0, upon upgrade to 1.13. This version is only used
             // in tracking what features to show upon upgrade, and 1.13 was the first version to introduce in-app
             // change lists, so we shouldn't get any erroneous behaviour by this little lie.
-            AppLaunchHistory.lastLaunchedVersion = Version(major: 1, minor: 0, patch: 0)
+            do {
+                let versionData = try JSONEncoder().encode((Version(major: 1, minor: 0, patch: 0)))
+                UserDefaults.standard.set(versionData, forKey: "lastLaunchedVersion")
+            } catch {
+                os_log("Error encoding spoof version 1.0.0 as data", type: .error)
+            }
+        },
+        
+        UpgradeAction(id: 6) {
+            guard AppLaunchHistory.appOpenedCount > 0 else { return }
+            // Migrate the previously stored Version to a BuildInfo
+            if let lastLaunchedVersionData = UserDefaults.standard.data(forKey: "lastLaunchedVersion"),
+               let lastLaunchedVersion = try? JSONDecoder().decode(Version.self, from: lastLaunchedVersionData) {
+                // Build number of 1 and type of .appStore are made up!
+                AppLaunchHistory.lastLaunchedBuildInfo = BuildInfo(version: lastLaunchedVersion, buildNumber: 1, type: .appStore)
+            }
         }
     ]
 

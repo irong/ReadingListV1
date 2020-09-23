@@ -178,7 +178,7 @@ class LaunchManager {
         if isFirstLaunch {
             let firstOpenScreen = FirstOpenScreenProvider().build()
             window.rootViewController!.present(firstOpenScreen, animated: true)
-        } else if let lastLaunchedVersion = AppLaunchHistory.lastLaunchedVersion {
+        } else if let lastLaunchedVersion = AppLaunchHistory.lastLaunchedBuildInfo?.version {
             if let changeList = ChangeListProvider().changeListController(after: lastLaunchedVersion) {
                 window.rootViewController!.present(changeList, animated: true)
             }
@@ -186,15 +186,14 @@ class LaunchManager {
 
         if #available(iOS 14.0, *) {
             BookDataSharer.instance.inititialise(persistentContainer: PersistentStoreManager.container)
-            if AppLaunchHistory.lastLaunchedVersion != BuildInfo.thisBuild.version {
+            if AppLaunchHistory.lastLaunchedBuildInfo?.buildNumber != BuildInfo.thisBuild.buildNumber {
                 // Not strictly a save, but the first time we launch an updated version of the app, we ought to repopulate the shared book data
                 os_log("Repopulating shared book data for widget", type: .default)
-                BookDataSharer.instance.handleChanges()
+                BookDataSharer.instance.handleChanges(forceUpdate: true)
             }
         }
-        
-        AppLaunchHistory.lastLaunchedVersion = BuildInfo.thisBuild.version
-        AppLaunchHistory.mostRecentWorkingVersionDescription = BuildInfo.thisBuild.fullDescription
+
+        AppLaunchHistory.lastLaunchedBuildInfo = BuildInfo.thisBuild
     }
 
     @available(iOS, obsoleted: 13.0)
@@ -220,7 +219,7 @@ class LaunchManager {
         guard window.rootViewController?.presentedViewController == nil else { return }
 
         let compatibilityVersionMessage: String?
-        if let mostRecentWorkingVersion = AppLaunchHistory.mostRecentWorkingVersionDescription {
+        if let mostRecentWorkingVersion = AppLaunchHistory.lastLaunchedBuildInfo?.fullDescription {
             compatibilityVersionMessage = """
             \n\nYou previously had version \(mostRecentWorkingVersion), but now have version \
             \(BuildInfo.thisBuild.fullDescription). You will need to install \
