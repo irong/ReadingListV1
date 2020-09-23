@@ -12,9 +12,6 @@ class LaunchManager {
     var storeMigrationFailed = false
     var isFirstLaunch = false
 
-    @Persisted("hasEverInitialisedSharedWidgetData", defaultValue: false)
-    var hasEverInitialisedSharedWidgetData: Bool
-
     /**
      Performs any required initialisation immediately post after the app has launched.
      This must be called prior to any other initialisation actions.
@@ -187,17 +184,17 @@ class LaunchManager {
             }
         }
 
-        AppLaunchHistory.lastLaunchedVersion = BuildInfo.thisBuild.version
-        AppLaunchHistory.mostRecentWorkingVersionDescription = BuildInfo.thisBuild.fullDescription
-
         if #available(iOS 14.0, *) {
             BookDataSharer.instance.inititialise(persistentContainer: PersistentStoreManager.container)
-            if !hasEverInitialisedSharedWidgetData {
-                // Not strictly a save, but the first time we launch the app as iOS 14, we ought to fill in the shared book data
+            if AppLaunchHistory.lastLaunchedVersion != BuildInfo.thisBuild.version {
+                // Not strictly a save, but the first time we launch an updated version of the app, we ought to repopulate the shared book data
+                os_log("Repopulating shared book data for widget", type: .default)
                 BookDataSharer.instance.handleChanges()
-                hasEverInitialisedSharedWidgetData = true
             }
         }
+        
+        AppLaunchHistory.lastLaunchedVersion = BuildInfo.thisBuild.version
+        AppLaunchHistory.mostRecentWorkingVersionDescription = BuildInfo.thisBuild.fullDescription
     }
 
     @available(iOS, obsoleted: 13.0)
