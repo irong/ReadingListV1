@@ -32,8 +32,8 @@ struct CurrentBooks: View {
             // Push the full height VStack slightly up - it looks a bit nicer
             .offset(x: 0, y: -4)
         }
-        .padding(.top, 8)
-        .padding(.bottom, 8)
+        .padding(.top, 12)
+        .padding(.bottom, 4)
         .background(Color(UIColor.secondarySystemBackground))
     }
 }
