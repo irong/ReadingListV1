@@ -3,25 +3,23 @@ import SwiftUI
 
 struct BookDetails: View {
     let bookData: SharedBookData
+    let imageHeight: CGFloat
 
     var body: some View {
-        VStack(alignment: .center) {
+        VStack(alignment: .center, spacing: 4) {
             Image(uiImage: bookData.coverUiImage())
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: 54, height: 80)
+                .frame(height: imageHeight)
                 .cornerRadius(4, corners: .allCorners)
-            VStack(alignment: .center, spacing: 2) {
-                Text(bookData.title)
-                    .font(.system(size: 10.5))
-                    .fontWeight(.medium)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(3)
-                    .fixedSize(horizontal: false, vertical: true)
-                if let percentage = bookData.percentageComplete {
-                    ProgressDisplay(progressPercentage: percentage)
-                        .actionLink(.editBookReadLog(id: bookData.id))
-                }
+            Text(bookData.title)
+                .font(.system(.caption2))
+                .fontWeight(.medium)
+                .multilineTextAlignment(.center)
+                .layoutPriority(-1) // Allow the text to be compressed in favour of the image / progress view.
+            if let percentage = bookData.percentageComplete {
+                ProgressDisplay(progressPercentage: percentage)
+                    .actionLink(.editBookReadLog(id: bookData.id))
             }
         }
     }

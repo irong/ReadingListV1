@@ -2,33 +2,38 @@ import Foundation
 import SwiftUI
 
 struct CurrentBooks: View {
-    let urlManager = ProprietaryURLManager()
     let books: [SharedBookData]
-    let maxBookCount = 4
-    private let leadingTrailingPadding: CGFloat = 8
-    private var topBottomPadding: CGFloat {
-        books.contains { $0.percentageComplete != nil } ? 18 : 24
-    }
 
-    func desiredWidth(_ geometryProxy: GeometryProxy) -> CGFloat {
-        (geometryProxy.size.width / CGFloat(maxBookCount)).rounded(.down) - leadingTrailingPadding * 2
-    }
+    private let urlManager = ProprietaryURLManager()
+    private let booksPerRow = 4
 
     var body: some View {
         GeometryReader { geometry in
-            HStack(spacing: 0) {
-                ForEach(books[0..<maxBookCount]) { book in
-                    BookDetails(bookData: book)
-                        .frame(
-                            width: desiredWidth(geometry),
-                            height: geometry.size.height - topBottomPadding * 2,
-                            alignment: .top
-                        )
-                        .padding([.leading, .trailing], leadingTrailingPadding)
-                        .padding([.top, .bottom], topBottomPadding)
-                        .actionLink(.viewBook(id: book.id))
+            VStack {
+                HStack(alignment: .top, spacing: 0) {
+                    ForEach(books.prefix(booksPerRow)) { book in
+                        // We need to pass in the desired image height so that BookDetails doesn't need to use
+                        // a GeometryReader, which gobbles up all available height.
+                        BookDetails(bookData: book, imageHeight: geometry.size.height / 1.7)
+                            // Put the padding here rather than spacing in the HStack, so we can correctly set the frame width to be
+                            // the correct proportion of the total width.
+                            .padding([.leading, .trailing], 8)
+                            .frame(
+                                width: (geometry.size.width / CGFloat(booksPerRow)).rounded(.down),
+                                alignment: .top
+                            )
+                            .actionLink(.viewBook(id: book.id))
+                    }
                 }
-            }.background(Color(UIColor.secondarySystemBackground))
+            }
+            // Expand the VStack to be full height and width of the frame, so that the books HStack
+            // sits in the vertical center.
+            .frame(width: geometry.size.width, height: geometry.size.height, alignment: .leading)
+            // Push the full height VStack slightly up - it looks a bit nicer
+            .offset(x: 0, y: -4)
         }
+        .padding(.top, 8)
+        .padding(.bottom, 8)
+        .background(Color(UIColor.secondarySystemBackground))
     }
 }

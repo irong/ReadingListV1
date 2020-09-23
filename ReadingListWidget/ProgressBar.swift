@@ -6,13 +6,13 @@ struct ProgressBar: View {
 
     var body: some View {
         ZStack(alignment: .leading) {
-            GeometryReader { geo in
+            GeometryReader { geometryProxy in
                 RoundedRectangle(cornerRadius: 1)
                     .foregroundColor(Color(.tertiarySystemFill))
-                    .frame(width: geo.size.width, height: 2)
+                    .frame(width: geometryProxy.size.width, height: 2)
                 RoundedRectangle(cornerRadius: 1)
                     .foregroundColor(.blue)
-                    .frame(width: geo.size.width * currentProgress, height: 2)
+                    .frame(width: geometryProxy.size.width * currentProgress, height: 2)
             }
         }
     }
