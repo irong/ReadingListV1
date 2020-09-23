@@ -47,7 +47,7 @@ class UpgradeManager {
                 os_log("Error encoding spoof version 1.0.0 as data", type: .error)
             }
         },
-        
+
         UpgradeAction(id: 6) {
             guard AppLaunchHistory.appOpenedCount > 0 else { return }
             // Migrate the previously stored Version to a BuildInfo

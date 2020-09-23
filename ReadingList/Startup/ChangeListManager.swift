@@ -12,8 +12,8 @@ struct ChangeListProvider {
     let changeLog = [
         Version(major: 1, minor: 14, patch: 0): [
             WhatsNew.Item(
-                title: "iOS 14 Support",
-                subtitle: "UI improvements: new datepicker, new menus, new widget",
+                title: "Homescreen Widget",
+                subtitle: "For iOS 14, quick access to your books from the homescreen",
                 image: UIImage(largeSystemImageNamed: "apps.iphone")
             )
         ],
