@@ -11,6 +11,7 @@ struct ProprietaryURLActionHandler {
     func handle(_ action: ProprietaryURLAction) -> Bool {
         switch action {
         case .viewBook(let id):
+            UserEngagement.logEvent(.openBookFromUrl)
             if let book = getBookFromIdentifier(id) {
                 showBook(book)
                 return true
@@ -18,6 +19,7 @@ struct ProprietaryURLActionHandler {
                 return false
             }
         case .editBookReadLog(let id):
+            UserEngagement.logEvent(.openEditReadLogFromUrl)
             if let book = getBookFromIdentifier(id) {
                 showReadLog(for: book)
                 return true
@@ -25,6 +27,7 @@ struct ProprietaryURLActionHandler {
                 return false
             }
         case .addBookSearchOnline:
+            UserEngagement.logEvent(.openSearchOnlineFromUrl)
             searchOnline()
             return true
         }

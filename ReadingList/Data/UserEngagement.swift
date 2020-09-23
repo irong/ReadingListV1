@@ -96,6 +96,11 @@ class UserEngagement {
         case searchOnlineQuickAction = "Quick_Action_Search_Online"
         case scanBarcodeQuickAction = "Quick_Action_Scan_Barcode"
 
+        // Proprietary URL launch
+        case openBookFromUrl = "Open_Book_From_Url"
+        case openEditReadLogFromUrl = "Open_Edit_Read_Log_From_Url"
+        case openSearchOnlineFromUrl = "Open_Search_Online_From_Url"
+
         // Settings changes
         case disableAnalytics = "Disable_Analytics"
         case enableAnalytics = "Enable_Analytics"
