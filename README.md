@@ -1,5 +1,5 @@
 # Reading List
-[![Build Status](https://travis-ci.org/AndrewBennet/ReadingList.svg?branch=master)](https://travis-ci.org/AndrewBennet/ReadingList)
+[![Build Status](https://travis-ci.com/AndrewBennet/ReadingList.svg?branch=master)](https://travis-ci.com/AndrewBennet/ReadingList)
 [![codebeat badge](https://codebeat.co/badges/3f7723a7-8967-436e-b5e9-549e0261603c)](https://codebeat.co/projects/github-com-andrewbennet-readinglist)
 [![Twitter URL](https://img.shields.io/twitter/url?label=%40ReadingListApp&style=social&url=https%3A%2F%2Ftwitter.com%2Freadinglistapp)](https://twitter.com/ReadingListApp)
 
