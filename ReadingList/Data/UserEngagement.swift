@@ -7,10 +7,18 @@ import ReadingList_Foundation
 
 class UserEngagement {
 
-    @Persisted("sendAnalytics", defaultValue: true)
+    static var defaultAnalyticsEnabledValue: Bool {
+        #if DEBUG
+        return false
+        #else
+        return true
+        #endif
+    }
+
+    @Persisted("sendAnalytics", defaultValue: defaultAnalyticsEnabledValue)
     static var sendAnalytics: Bool
 
-    @Persisted("sendCrashReports", defaultValue: true)
+    @Persisted("sendCrashReports", defaultValue: defaultAnalyticsEnabledValue)
     static var sendCrashReports: Bool
 
     static func initialiseUserAnalytics() {
