@@ -12,9 +12,14 @@ struct ChangeListProvider {
     let changeLog = [
         Version(major: 1, minor: 14, patch: 0): [
             WhatsNew.Item(
-                title: "Homescreen Widget",
-                subtitle: "For iOS 14, quick access to your books from the homescreen",
+                title: "Homescreen Widgets",
+                subtitle: "On iOS 14, get quick access to your current books from the homescreen",
                 image: UIImage(largeSystemImageNamed: "apps.iphone")
+            ),
+            WhatsNew.Item(
+                title: "Follow on Twitter",
+                subtitle: "For the latest info and development updates, follow @ReadingListApp",
+                image: UIImage(named: "twitter")!
             )
         ],
         Version(major: 1, minor: 13, patch: 0): [
@@ -62,7 +67,7 @@ struct ChangeListProvider {
         var items = changeLog.filter { $0.key > version }.map(\.value).reduce([], +)
         if items.isEmpty { return nil }
         items.append(generalImprovements)
-        return whatsNewViewController(for: Array(items))
+        return whatsNewViewController(for: items)
     }
 
     private func whatsNewViewController(for items: [WhatsNew.Item]) -> WhatsNewViewController {
@@ -82,6 +87,11 @@ struct ChangeListProvider {
         } else {
             assertionFailure("Could not find title substring")
         }
+
+        configuration.detailButton = WhatsNewViewController.DetailButton(
+            title: "Follow on Twitter",
+            action: .website(url: "https://twitter.com/ReadingListApp")
+        )
 
         return WhatsNewViewController(whatsNew: whatsNew, configuration: configuration)
     }
