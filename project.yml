@@ -76,6 +76,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.andrewbennet.books
       configs:
         Debug:
+          # Stupid build errors from Firebase without this. Prevents Debug build being deployed to devices though...
+          EXCLUDED_ARCHS[sdk=iphonesimulator*]: arm64
           PROVISIONING_PROFILE_SPECIFIER: match Development com.andrewbennet.books
           OTHER_SWIFT_FLAGS: $(inherited) "-D" "DEBUG"
         Release:
