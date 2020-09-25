@@ -154,6 +154,11 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
 
             try! self.dataSource.performFetch()
             self.dataSource.updateData(animate: true)
+
+            if #available(iOS 14.0, *) {
+                // Change of sort order may result in changed data shared with the widget, so reload.
+                BookDataSharer.instance.handleChanges()
+            }
             UserEngagement.logEvent(.changeSortOrder)
         }
         configureHeader(header, at: section)
