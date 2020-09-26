@@ -22,3 +22,37 @@ extension Collection {
         return indices.contains(index) ? self[index] : nil
     }
 }
+
+extension SharedBookData {
+    func coverUiImage() -> UIImage {
+        if let coverData = coverImage, let uiImage = UIImage(data: coverData) {
+            return uiImage
+        } else {
+            return UIImage(named: "CoverPlaceholder_White")!
+        }
+    }
+}
+
+extension Date {
+    var start: Date {
+        Calendar.current.startOfDay(for: self)
+    }
+
+    func addingDays(_ count: Int) -> Date {
+        var addedDays = DateComponents()
+        addedDays.day = count
+        guard let newDate = Calendar.current.date(byAdding: addedDays, to: self) else {
+            preconditionFailure("Unexpected nil Date by adding \(count) days to \(self)")
+        }
+        return newDate
+    }
+
+    func daysUntil(_ otherDate: Date) -> Int {
+        let dateComponents = Calendar.current.dateComponents([.day], from: self.start, to: otherDate.start)
+        guard let daysBetween = dateComponents.day else {
+            assertionFailure("Unexpected nil day component")
+            return 0
+        }
+        return daysBetween
+    }
+}

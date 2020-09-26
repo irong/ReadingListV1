@@ -64,6 +64,13 @@ fileprivate extension Book {
     }
 
     var sharedData: SharedBookData {
-        SharedBookData(title: title, authorDisplay: authors.fullNames, identifier: identifier, coverImage: coverImage, percentageComplete: Int(currentPercentage), currentlyReading: readState == .reading)
+        SharedBookData(
+            title: title,
+            authorDisplay: authors.fullNames,
+            identifier: identifier,
+            coverImage: coverImage,
+            percentageComplete: Int(currentPercentage),
+            startDate: startedReading
+        )
     }
 }

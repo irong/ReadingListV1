@@ -12,7 +12,7 @@ struct ProgressBar: View {
                     .frame(width: geometryProxy.size.width, height: 2)
                 RoundedRectangle(cornerRadius: 1)
                     .foregroundColor(.blue)
-                    .frame(width: geometryProxy.size.width * currentProgress, height: 2)
+                    .frame(width: geometryProxy.size.width * min(max(currentProgress, 0), 1), height: 2)
             }
         }
     }

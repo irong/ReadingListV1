@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 import WidgetKit
 
-struct CurrentBooks: View {
+struct BookGrid: View {
     @Environment(\.widgetFamily) var size
     let books: [SharedBookData]
 
@@ -35,7 +35,7 @@ struct CurrentBooks: View {
                             if let book = books[safe: row * booksPerRow + column] {
                                 // We need to pass in the desired image height so that BookDetails doesn't need to use
                                 // a GeometryReader, which gobbles up all available height.
-                                BookDetails(bookData: book, imageHeight: imageHeight(geometry))
+                                BookGridItem(bookData: book, imageHeight: imageHeight(geometry))
                                     // Put the padding here rather than spacing in the HStack, so we can correctly set the frame width to be
                                     // the correct proportion of the total width.
                                     .padding([.leading, .trailing], 8)
@@ -57,11 +57,34 @@ struct CurrentBooks: View {
         }
         .padding(.top, 12)
         .padding(.bottom, 4)
-        .background(Color(UIColor.secondarySystemBackground))
     }
 }
 
-struct CurrentBooks_Previews: PreviewProvider {
+struct BookGridItem: View {
+    let bookData: SharedBookData
+    let imageHeight: CGFloat
+
+    var body: some View {
+        VStack(alignment: .center, spacing: 4) {
+            Image(uiImage: bookData.coverUiImage())
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(height: imageHeight)
+                .cornerRadius(4, corners: .allCorners)
+            Text(bookData.title)
+                .font(.system(.caption2))
+                .fontWeight(.medium)
+                .multilineTextAlignment(.center)
+                .layoutPriority(-1) // Allow the text to be compressed in favour of the image / progress view.
+            if let percentage = bookData.percentageComplete {
+                ProgressDisplay(progressPercentage: percentage)
+                    .actionLink(.editBookReadLog(id: bookData.id))
+            }
+        }
+    }
+}
+
+struct BookGrid_Previews: PreviewProvider {
     static let data: [SharedBookData] = {
         let dataPath = Bundle.main.url(forResource: "shared_book_data", withExtension: "json")!
         return try! JSONDecoder().decode([SharedBookData].self, from: Data(contentsOf: dataPath))
@@ -69,9 +92,9 @@ struct CurrentBooks_Previews: PreviewProvider {
 
     static var previews: some View {
         Group {
-            CurrentBooks(books: data)
+            BookGrid(books: data)
                 .previewContext(WidgetPreviewContext(family: .systemMedium))
-            CurrentBooks(books: data)
+            BookGrid(books: data)
                 .previewContext(WidgetPreviewContext(family: .systemLarge))
         }
     }

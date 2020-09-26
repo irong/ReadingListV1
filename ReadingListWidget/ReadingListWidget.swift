@@ -11,10 +11,12 @@ struct BookTimelineProvider: TimelineProvider {
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> Void) {
-        // The "timeline" consists of one entry, now, which never expires. The app itself is in charge of invaliding the
-        // widget when stuff changes.
-        let entries = [BooksEntry(date: Date(), books: SharedBookData.sharedBooks)]
-        let timeline = Timeline(entries: entries, policy: .never)
+        let startOfToday = Date().start
+        // Let's get a week's worth of entries
+        let entries = (0..<7).map { index in
+            BooksEntry(date: startOfToday.addingDays(index), books: SharedBookData.sharedBooks)
+        }
+        let timeline = Timeline(entries: entries, policy: .atEnd)
         completion(timeline)
     }
 }
@@ -24,14 +26,17 @@ struct BooksEntry: TimelineEntry {
     let books: [SharedBookData]
 }
 
-struct ReadingListWidgetEntryView: View {
+struct ReadingListCurrentBooksView: View {
+    @Environment(\.widgetFamily) var size
     var entry: BookTimelineProvider.Entry
 
     var body: some View {
         if entry.books.isEmpty {
-            NoBooksDisplay()
+            NoBooksView()
+        } else if size == .systemSmall {
+            SingleBookView(book: entry.books[0], entryDate: entry.date)
         } else {
-            CurrentBooks(books: entry.books)
+            BookGrid(books: entry.books)
         }
     }
 }
@@ -41,31 +46,17 @@ struct ReadingListCurrentBooksWidget: Widget {
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: BookTimelineProvider()) { entry in
-            ReadingListWidgetEntryView(entry: entry)
+            ReadingListCurrentBooksView(entry: entry)
+                .background(Color(.secondarySystemBackground))
         }
         .configurationDisplayName("Current Books")
         .description("Quick access to the books are you reading or are next in your To Read list.")
-        .supportedFamilies([.systemMedium, .systemLarge])
-    }
-}
-
-struct ReadingListSingleBookWidget: Widget {
-    let kind: String = "com.andrewbennet.books.single-book"
-
-    var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: BookTimelineProvider()) { entry in
-            SingleBookOrAddBook(book: entry.books.first)
-        }
-        .configurationDisplayName("Current Book")
-        .description("Quick access to the book at the top of your reading list")
-        .supportedFamilies([.systemSmall])
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }
 
 @main
 struct ReadingListWidgetBundle: WidgetBundle {
-    let kind: String = "com.andrewbennet.books.current-books"
-
     var body: some Widget {
         ReadingListCurrentBooksWidget()
     }
@@ -77,16 +68,16 @@ struct ReadingListWidget_Previews: PreviewProvider {
         return try! JSONDecoder().decode([SharedBookData].self, from: Data(contentsOf: dataPath))
     }()
 
+    static var entry = BooksEntry(date: Date(), books: data)
+
     static var previews: some View {
         Group {
-            SingleBookOrAddBook(book: nil)
+            ReadingListCurrentBooksView(entry: entry)
                 .previewContext(WidgetPreviewContext(family: .systemSmall))
-            SingleBookOrAddBook(book: data.first)
-                .previewContext(WidgetPreviewContext(family: .systemSmall))
-            ReadingListWidgetEntryView(entry: BooksEntry(date: Date(), books: data))
+            ReadingListCurrentBooksView(entry: entry)
                 .previewContext(WidgetPreviewContext(family: .systemMedium))
-            ReadingListWidgetEntryView(entry: BooksEntry(date: Date(), books: data))
+            ReadingListCurrentBooksView(entry: entry)
                 .previewContext(WidgetPreviewContext(family: .systemLarge))
-        }
+        }.background(Color(.secondarySystemBackground))
     }
 }
