@@ -5,6 +5,8 @@ options:
   usesTabs: false
   indentWith: 4
   bundleIdPrefix: com.andrewbennet
+  groupOrdering: 
+    - order: [ReadingList, ReadingList_Foundation, ReadingList_UITests, ReadingList_UnitTests, ReadingListWidget, Debug]
 
 packages:
   Cosmos:
@@ -32,12 +34,21 @@ packages:
     url: https://github.com/sharplet/Regex.git
     minorVersion: 2.1.1
 
+fileGroups:
+  - Debug/
+  - README.md
+  - Podfile
+  - project.yml
+
 targets:
   ReadingList:
     type: application
     platform: iOS
     deploymentTarget: 12.0
-    sources: [ReadingList]
+    sources:
+      - path: ReadingList
+        excludes:
+          - Debug
     scheme:
       testTargets:
         - ReadingList_UnitTests
@@ -60,6 +71,13 @@ targets:
                   "/usr/local/bin/swiftlint" --path "${PROJECT_DIR}"
                 fi
     postBuildScripts:
+      - name: "Copy Debug Files"
+        script: |
+                BUILD_APP_DIR=${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}
+                if [ "$CONFIGURATION" == "Debug" ]; then
+                  cp "$SRCROOT/Debug/examplebooks.csv" "$BUILD_APP_DIR/examplebooks.csv"
+                  cp "$SRCROOT/Debug/example_barcode.jpg" "$BUILD_APP_DIR/example_barcode.jpg"
+                fi
       - name: "[CP] Embed Pods Frameworks"
         script:
       - name: Run Crashlytics Script
