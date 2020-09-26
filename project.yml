@@ -181,6 +181,13 @@ targets:
       - sdk: SwiftUI.framework
       - sdk: WidgetKit.framework
       - package: PersistedPropertyWrapper
+    postBuildScripts:
+      - name: "Copy Debug Files"
+        script: |
+                BUILD_APP_DIR=${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}
+                if [ "$CONFIGURATION" == "Debug" ]; then
+                  cp "$SRCROOT/Debug/shared_book_data.json" "$BUILD_APP_DIR/shared_book_data.json"
+                fi
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.andrewbennet.books.ReadingListWidget

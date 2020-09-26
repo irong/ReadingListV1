@@ -30,6 +30,20 @@ final class DebugForm: FormViewController {
                     }
                 }
             }
+            <<< ButtonRow {
+                $0.title = "Export Shared Data"
+                $0.onCellSelection { [weak self] cell, _ in
+                    let encoded = try! JSONEncoder().encode(SharedBookData.sharedBooks)
+                    let temporaryFilePath = URL.temporary(fileWithName: "shared_book_data.json")
+                    try! encoded.write(to: temporaryFilePath)
+                    let activityViewController = UIActivityViewController(activityItems: [temporaryFilePath], applicationActivities: [])
+                    if let popover = activityViewController.popoverPresentationController {
+                        popover.sourceView = cell
+                        popover.sourceRect = cell.frame
+                    }
+                    self?.present(activityViewController, animated: true, completion: nil)
+                }
+            }
 
         +++ Section("Debug Controls")
             <<< SwitchRow {
