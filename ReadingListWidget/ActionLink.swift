@@ -14,4 +14,8 @@ extension View {
     func actionLink(_ action: ProprietaryURLAction) -> some View {
         modifier(LinkedToAction(action: action))
     }
+
+    func widgetURL(for action: ProprietaryURLAction) -> some View {
+        widgetURL(ProprietaryURLManager().getURL(from: action))
+    }
 }

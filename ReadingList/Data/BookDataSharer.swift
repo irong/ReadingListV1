@@ -17,14 +17,16 @@ class BookDataSharer {
         handleChanges(forceUpdate: false)
     }
 
+    private let bookRetrievalCount = 8
+
     @objc func handleChanges(forceUpdate: Bool = false) {
         let background = persistentContainer.newBackgroundContext()
         background.perform { [unowned self] in
-            let readingFetchRequest = fetchRequest(itemLimit: 4, readState: .reading)
+            let readingFetchRequest = fetchRequest(itemLimit: bookRetrievalCount, readState: .reading)
             var books = try! background.fetch(readingFetchRequest)
 
-            if books.count < 4 {
-                let toReadFetchRequest = fetchRequest(itemLimit: 4 - books.count, readState: .toRead)
+            if books.count < bookRetrievalCount {
+                let toReadFetchRequest = fetchRequest(itemLimit: bookRetrievalCount - books.count, readState: .toRead)
                 books.append(contentsOf: try! background.fetch(toReadFetchRequest))
             }
 

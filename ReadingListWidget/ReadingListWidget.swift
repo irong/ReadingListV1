@@ -36,8 +36,7 @@ struct ReadingListWidgetEntryView: View {
     }
 }
 
-@main
-struct ReadingListWidget: Widget {
+struct ReadingListCurrentBooksWidget: Widget {
     let kind: String = "com.andrewbennet.books.current-books"
 
     var body: some WidgetConfiguration {
@@ -46,6 +45,48 @@ struct ReadingListWidget: Widget {
         }
         .configurationDisplayName("Current Books")
         .description("Quick access to the books are you reading or are next in your To Read list.")
-        .supportedFamilies([.systemMedium])
+        .supportedFamilies([.systemMedium, .systemLarge])
+    }
+}
+
+struct ReadingListSingleBookWidget: Widget {
+    let kind: String = "com.andrewbennet.books.single-book"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: BookTimelineProvider()) { entry in
+            SingleBookOrAddBook(book: entry.books.first)
+        }
+        .configurationDisplayName("Current Book")
+        .description("Quick access to the book at the top of your reading list")
+        .supportedFamilies([.systemSmall])
+    }
+}
+
+@main
+struct ReadingListWidgetBundle: WidgetBundle {
+    let kind: String = "com.andrewbennet.books.current-books"
+
+    var body: some Widget {
+        ReadingListCurrentBooksWidget()
+    }
+}
+
+struct ReadingListWidget_Previews: PreviewProvider {
+    static let data: [SharedBookData] = {
+        let dataPath = Bundle.main.url(forResource: "shared_book_data", withExtension: "json")!
+        return try! JSONDecoder().decode([SharedBookData].self, from: Data(contentsOf: dataPath))
+    }()
+
+    static var previews: some View {
+        Group {
+            SingleBookOrAddBook(book: nil)
+                .previewContext(WidgetPreviewContext(family: .systemSmall))
+            SingleBookOrAddBook(book: data.first)
+                .previewContext(WidgetPreviewContext(family: .systemSmall))
+            ReadingListWidgetEntryView(entry: BooksEntry(date: Date(), books: data))
+                .previewContext(WidgetPreviewContext(family: .systemMedium))
+            ReadingListWidgetEntryView(entry: BooksEntry(date: Date(), books: data))
+                .previewContext(WidgetPreviewContext(family: .systemLarge))
+        }
     }
 }
