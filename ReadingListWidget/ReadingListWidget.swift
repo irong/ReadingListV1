@@ -47,7 +47,6 @@ struct ReadingListCurrentBooksWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: BookTimelineProvider()) { entry in
             ReadingListCurrentBooksView(entry: entry)
-                .background(Color(.secondarySystemBackground))
         }
         .configurationDisplayName("Current Books")
         .description("Quick access to the books are you reading or are next in your To Read list.")

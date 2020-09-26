@@ -25,7 +25,7 @@ struct SingleBookView: View {
                     Image(uiImage: book.coverUiImage())
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(width: 45, alignment: .leading)
+                        .frame(width: 55, alignment: .leading)
                         .cornerRadius(6)
                     if book.percentageComplete == nil, let daysReadText = daysReadText {
                         Text(daysReadText)
@@ -64,6 +64,8 @@ struct SingleBookView: View {
         .padding([.top, .bottom], 16)
         .padding([.leading, .trailing], 8)
         .offset(x: 0, y: book.percentageComplete == nil ? -8 : 0)
+        .frame(maxHeight: .infinity, alignment: .center)
+        .background(Color(.secondarySystemBackground))
         .widgetURL(for: .viewBook(id: book.id))
     }
 
