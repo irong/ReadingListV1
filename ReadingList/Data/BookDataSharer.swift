@@ -20,34 +20,59 @@ class BookDataSharer {
     private let bookRetrievalCount = 8
 
     @objc func handleChanges(forceUpdate: Bool = false) {
-        let background = persistentContainer.newBackgroundContext()
-        background.perform { [unowned self] in
+        let backgroundContext = persistentContainer.newBackgroundContext()
+        backgroundContext.perform { [unowned self] in
             let readingFetchRequest = fetchRequest(itemLimit: bookRetrievalCount, readState: .reading)
-            var books = try! background.fetch(readingFetchRequest)
+            var currentBooks = try! backgroundContext.fetch(readingFetchRequest)
 
-            if books.count < bookRetrievalCount {
-                let toReadFetchRequest = fetchRequest(itemLimit: bookRetrievalCount - books.count, readState: .toRead)
-                books.append(contentsOf: try! background.fetch(toReadFetchRequest))
+            if currentBooks.count < bookRetrievalCount {
+                let toReadFetchRequest = fetchRequest(itemLimit: bookRetrievalCount - currentBooks.count, readState: .toRead)
+                currentBooks.append(contentsOf: try! backgroundContext.fetch(toReadFetchRequest))
             }
 
-            let sharedData = books.map(\.sharedData)
-            if forceUpdate || sharedData != SharedBookData.sharedBooks {
-                os_log("Updating and reloading widget timelines", type: .default)
+            let finishedBooksRequest = fetchRequest(itemLimit: bookRetrievalCount, readState: .finished, sortOrderOverride: .finishDate)
+            let finishedBooks = try! backgroundContext.fetch(finishedBooksRequest)
+
+            let currentBooksData = currentBooks.map(\.sharedData)
+            let finishedBooksData = finishedBooks.map(\.sharedData)
+            if forceUpdate {
+                os_log("Updating and reloading all widget timelines", type: .default)
                 DispatchQueue.main.async {
-                    SharedBookData.sharedBooks = sharedData
+                    SharedBookData.currentBooks = currentBooksData
+                    SharedBookData.finishedBooks = finishedBooksData
                     WidgetCenter.shared.reloadAllTimelines()
                 }
+            } else {
+                if currentBooksData != SharedBookData.currentBooks {
+                    os_log("Updating and reloading Current Books widget timelines", type: .default)
+                    DispatchQueue.main.async {
+                        SharedBookData.currentBooks = currentBooksData
+                        WidgetCenter.shared.reloadTimelines(ofKind: WidgetKind.currentBooks)
+                    }
+                }
+                if finishedBooksData != SharedBookData.finishedBooks {
+                    os_log("Updating and reloading Finished Books widget timelines", type: .default)
+                    DispatchQueue.main.async {
+                        SharedBookData.finishedBooks = finishedBooksData
+                        WidgetCenter.shared.reloadTimelines(ofKind: WidgetKind.finishedBooks)
+                    }
+                }
             }
+            
         }
     }
 
-    private func fetchRequest(itemLimit: Int, readState: BookReadState) -> NSFetchRequest<Book> {
+    private func fetchRequest(itemLimit: Int, readState: BookReadState, sortOrderOverride: BookSort? = nil) -> NSFetchRequest<Book> {
         let fetchRequest = NSFetchRequest<Book>()
         fetchRequest.entity = Book.entity()
         fetchRequest.fetchLimit = itemLimit
         fetchRequest.returnsObjectsAsFaults = false
         fetchRequest.predicate = NSPredicate(format: "%K == %ld", #keyPath(Book.readState), readState.rawValue)
-        fetchRequest.sortDescriptors = BookSort.byReadState[readState]!.bookSortDescriptors
+        if let sortOrderOverride = sortOrderOverride {
+            fetchRequest.sortDescriptors = sortOrderOverride.bookSortDescriptors
+        } else {
+            fetchRequest.sortDescriptors = BookSort.byReadState[readState]!.bookSortDescriptors
+        }
         return fetchRequest
     }
 }
@@ -70,7 +95,8 @@ fileprivate extension Book {
             identifier: identifier,
             coverImage: coverImage,
             percentageComplete: Int(currentPercentage),
-            startDate: startedReading
+            startDate: startedReading,
+            finishDate: finishedReading
         )
     }
 }

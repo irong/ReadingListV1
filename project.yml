@@ -49,6 +49,7 @@ targets:
       - path: ReadingList
         excludes:
           - Debug
+      - path: ReadingListWidget/WidgetKind.swift
     scheme:
       testTargets:
         - ReadingList_UnitTests
@@ -186,7 +187,8 @@ targets:
         script: |
                 BUILD_APP_DIR=${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}
                 if [ "$CONFIGURATION" == "Debug" ]; then
-                  cp "$SRCROOT/Debug/shared_book_data.json" "$BUILD_APP_DIR/shared_book_data.json"
+                  cp "$SRCROOT/Debug/shared_current-books.json" "$BUILD_APP_DIR/shared_current-books.json"
+                  cp "$SRCROOT/Debug/shared_finished-books.json" "$BUILD_APP_DIR/shared_finished-books.json"
                 fi
     settings:
       base:

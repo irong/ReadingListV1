@@ -56,3 +56,11 @@ extension Date {
         return daysBetween
     }
 }
+
+extension Bundle {
+    func decodedData<T>(as: T.Type, jsonFileName fileName: String) -> T where T: Decodable {
+        let dataPath = Bundle.main.url(forResource: fileName, withExtension: "json")!
+        let data = try! Data(contentsOf: dataPath)
+        return try! JSONDecoder().decode(T.self, from: data)
+    }
+}

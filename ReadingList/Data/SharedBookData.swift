@@ -11,9 +11,19 @@ struct SharedBookData: Codable, Identifiable, Equatable {
     let coverImage: Data?
     let percentageComplete: Int?
     let startDate: Date?
+    let finishDate: Date?
 
-    @Persisted(encodedDataKey: "sharedBooks", defaultValue: [], storage: .appExtensionShared)
-    static var sharedBooks: [SharedBookData]
+    /**
+     Books which are Currently Reading or To Read.
+     */
+    @Persisted(encodedDataKey: "currentBooks", defaultValue: [], storage: .appExtensionShared)
+    static var currentBooks: [SharedBookData]
+
+    /**
+     Books which are Finished.
+     */
+    @Persisted(encodedDataKey: "finishedBooks", defaultValue: [], storage: .appExtensionShared)
+    static var finishedBooks: [SharedBookData]
 }
 
 enum BookIdentifier: Equatable, Hashable {
