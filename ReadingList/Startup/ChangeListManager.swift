@@ -14,7 +14,7 @@ struct ChangeListProvider {
             WhatsNew.Item(
                 title: "Homescreen Widgets",
                 subtitle: "On iOS 14, get quick access to your current books from the homescreen",
-                image: UIImage(largeSystemImageNamed: "apps.iphone")
+                image: UIImage(largeSystemImageNamed: "apps.iphone") ?? UIImage(largeSystemImageNamed: "square.grid.2x2.fill")
             ),
             WhatsNew.Item(
                 title: "Follow on Twitter",
