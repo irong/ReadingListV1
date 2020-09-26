@@ -66,7 +66,7 @@ struct SingleBookView: View {
         .offset(x: 0, y: book.percentageComplete == nil ? -8 : 0)
         .frame(maxHeight: .infinity, alignment: .center)
         .background(Color(.secondarySystemBackground))
-        .widgetURL(for: .viewBook(id: book.id))
+        .widgetURL(for: book.percentageComplete == nil ? .viewBook(id: book.id) : .editBookReadLog(id: book.id))
     }
 
 }
