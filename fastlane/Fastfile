@@ -68,7 +68,7 @@ platform :ios do
 
   desc "Create framed screenshots for a range of devices"
   lane :snaps do
-    snapshot(xcargs: '-only-testing:ReadingList_UITests/Screenshots')
+    snapshot(xcargs: '-only-testing:ReadingList_UITests/Screenshots', override_status_bar: true)
     frame_screenshots(white: true)
   end
 

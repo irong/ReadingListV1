@@ -6,7 +6,7 @@ options:
   indentWith: 4
   bundleIdPrefix: com.andrewbennet
   groupOrdering: 
-    - order: [ReadingList, ReadingList_Foundation, ReadingList_UITests, ReadingList_UnitTests, ReadingListWidget, Debug]
+    - order: [ReadingList, ReadingList_Foundation, ReadingList_UITests, ReadingList_UnitTests, ReadingListWidget, Debug, fastlane]
 
 packages:
   Cosmos:
@@ -36,6 +36,7 @@ packages:
 
 fileGroups:
   - Debug/
+  - fastlane/
   - README.md
   - Podfile
   - project.yml
@@ -137,38 +138,6 @@ targets:
     scheme:
       testTargets:
         - ReadingList_UITests
-      preActions:
-        - name: Set simulator status bar overrides
-          settingsTarget: ReadingList_UITests
-          script: |
-                  function version {
-                      echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }';
-                  }
-
-                  if [[ "${SDKROOT}" != *"simulator"* ]]; then
-                      exit 0;
-                  fi
-
-                  if [ $(version "${TARGET_DEVICE_OS_VERSION}") -ge $(version "13") ]; then
-                      xcrun simctl boot "${TARGET_DEVICE_IDENTIFIER}";
-                      xcrun simctl status_bar "${TARGET_DEVICE_IDENTIFIER}" override --dataNetwork wifi --wifiMode active --wifiBars 3 --cellularMode notSupported --batteryState discharging --batteryLevel 100;
-                  fi
-      postActions:
-        - name: Reset simulator status bar
-          settingsTarget: ReadingList_UITests
-          script: |
-                  function version {
-                      echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }';
-                  }
-
-                  if [[ "${SDKROOT}" != *"simulator"* ]]; then
-                      exit 0;
-                  fi
-
-                  if [ $(version "${TARGET_DEVICE_OS_VERSION}") -ge $(version "13") ]; then
-                      xcrun simctl boot "${TARGET_DEVICE_IDENTIFIER}";
-                      xcrun simctl status_bar "${TARGET_DEVICE_IDENTIFIER}" clear;
-                  fi
 
   ReadingListWidget:
     type: app-extension

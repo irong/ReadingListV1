@@ -163,6 +163,14 @@ class LaunchManager {
         return true
     }
 
+    var presentFirstLaunchOrChangeLog: Bool {
+        #if DEBUG
+        return !CommandLine.arguments.contains("--UITests_Screenshots")
+        #else
+        return true
+        #endif
+    }
+
     private func initialiseAfterPersistentStoreLoad() {
         #if DEBUG
         Debug.initialiseData()
@@ -175,12 +183,14 @@ class LaunchManager {
             NotificationCenter.default.addObserver(self, selector: #selector(self.initialiseTheme), name: .ThemeSettingChanged, object: nil)
         }
 
-        if isFirstLaunch {
-            let firstOpenScreen = FirstOpenScreenProvider().build()
-            window.rootViewController!.present(firstOpenScreen, animated: true)
-        } else if let lastLaunchedVersion = AppLaunchHistory.lastLaunchedBuildInfo?.version {
-            if let changeList = ChangeListProvider().changeListController(after: lastLaunchedVersion) {
-                window.rootViewController!.present(changeList, animated: true)
+        if presentFirstLaunchOrChangeLog {
+            if isFirstLaunch {
+                let firstOpenScreen = FirstOpenScreenProvider().build()
+                window.rootViewController!.present(firstOpenScreen, animated: true)
+            } else if let lastLaunchedVersion = AppLaunchHistory.lastLaunchedBuildInfo?.version {
+                if let changeList = ChangeListProvider().changeListController(after: lastLaunchedVersion) {
+                    window.rootViewController!.present(changeList, animated: true)
+                }
             }
         }
 

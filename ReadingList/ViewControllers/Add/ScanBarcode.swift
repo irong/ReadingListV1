@@ -178,9 +178,11 @@ final class ScanBarcode: UIViewController {
     private func setupAvSession() {
         #if DEBUG
         if CommandLine.arguments.contains("--UITests_Screenshots") {
-            let imageView = UIImageView(frame: view.frame)
+            // Not sure why, but the view frame seems way to big when running on iPad
+            let frameToUse = UIDevice.current.userInterfaceIdiom == .pad ? CGRect(x: 0, y: 0, width: 600, height: 600) : view.frame
+            let imageView = UIImageView(frame: frameToUse)
+            imageView.image = UIImage(named: "example_barcode.jpg")!
             imageView.contentMode = .scaleAspectFill
-            imageView.image = #imageLiteral(resourceName: "example_barcode.jpg")
             view.addSubview(imageView)
             return
         }
