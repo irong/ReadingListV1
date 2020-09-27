@@ -11,7 +11,6 @@ cache:
 install:
 - bundle install
 - brew update && brew install mint
-- pod repo update
 before_script:
 - echo -e "machine github.com\n  login AndrewBennet\n  password $GITHUB_TOKEN" > ~/.netrc
 - bundle exec fastlane preprocess
