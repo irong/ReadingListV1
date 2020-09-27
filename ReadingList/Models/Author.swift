@@ -2,7 +2,8 @@ import Foundation
 import CoreData
 
 @objc(Author)
-class Author: NSObject, NSCoding {
+class Author: NSObject, NSSecureCoding {
+    static var supportsSecureCoding = true
 
     let lastName: String
     let firstNames: String?
@@ -29,8 +30,8 @@ class Author: NSObject, NSCoding {
     }
 
     required convenience init?(coder aDecoder: NSCoder) {
-        let lastName = aDecoder.decodeObject(forKey: "lastName") as! String
-        let firstNames = aDecoder.decodeObject(forKey: "firstNames") as! String?
+        let lastName = aDecoder.decodeObject(of: NSString.self, forKey: "lastName")! as String
+        let firstNames = aDecoder.decodeObject(of: NSString.self, forKey: "firstNames") as String?
         self.init(lastName: lastName, firstNames: firstNames)
     }
 
