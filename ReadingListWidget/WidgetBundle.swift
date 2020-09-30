@@ -29,17 +29,17 @@ struct ReadingListWidget_Previews: PreviewProvider {
 
     static var previews: some View {
         Group {
-            ReadingListBooksView(books: currentBooksEntry.books, entryDate: currentBooksEntry.date)
+            ReadingListBooksView(books: currentBooksEntry.books, type: .current, entryDate: currentBooksEntry.date)
                 .previewContext(WidgetPreviewContext(family: .systemSmall))
-            ReadingListBooksView(books: currentBooksEntry.books, entryDate: currentBooksEntry.date)
+            ReadingListBooksView(books: currentBooksEntry.books, type: .current, entryDate: currentBooksEntry.date)
                 .previewContext(WidgetPreviewContext(family: .systemMedium))
-            ReadingListBooksView(books: currentBooksEntry.books, entryDate: currentBooksEntry.date)
+            ReadingListBooksView(books: currentBooksEntry.books, type: .current, entryDate: currentBooksEntry.date)
                 .previewContext(WidgetPreviewContext(family: .systemLarge))
-            ReadingListBooksView(books: finishedBooksEntry.books, entryDate: finishedBooksEntry.date)
+            ReadingListBooksView(books: finishedBooksEntry.books, type: .finished, entryDate: finishedBooksEntry.date)
                 .previewContext(WidgetPreviewContext(family: .systemSmall))
-            ReadingListBooksView(books: finishedBooksEntry.books, entryDate: finishedBooksEntry.date)
+            ReadingListBooksView(books: finishedBooksEntry.books, type: .finished, entryDate: finishedBooksEntry.date)
                 .previewContext(WidgetPreviewContext(family: .systemMedium))
-            ReadingListBooksView(books: finishedBooksEntry.books, entryDate: finishedBooksEntry.date)
+            ReadingListBooksView(books: finishedBooksEntry.books, type: .finished, entryDate: finishedBooksEntry.date)
                 .previewContext(WidgetPreviewContext(family: .systemLarge))
         }.background(Color(.secondarySystemBackground))
     }
