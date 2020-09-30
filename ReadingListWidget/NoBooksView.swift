@@ -15,8 +15,10 @@ struct NoBooksView: View {
                     .font(.system(.headline))
             }
             .foregroundColor(.blue)
-            .actionLink(.addBookSearchOnline)
         }
+        .multilineTextAlignment(.center)
+        .padding([.leading, .trailing], 8)
+        .widgetURL(for: .addBookSearchOnline)
     }
 }
 
