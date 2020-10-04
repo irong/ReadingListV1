@@ -11,6 +11,9 @@ struct ReadingListWidgetBundle: WidgetBundle {
     var body: some Widget {
         ReadingListCurrentBooksWidget()
         ReadingListFinishedBooksWidget()
+        SearchOnlineWidget()
+        ScanBarcodeWidget()
+        AddBooksWidget()
     }
 }
 
@@ -41,6 +44,12 @@ struct ReadingListWidget_Previews: PreviewProvider {
                 .previewContext(WidgetPreviewContext(family: .systemMedium))
             ReadingListBooksView(books: finishedBooksEntry.books, type: .finished, entryDate: finishedBooksEntry.date)
                 .previewContext(WidgetPreviewContext(family: .systemLarge))
+            AddBookSingleMethodView(mode: .searchOnline)
+                .previewContext(WidgetPreviewContext(family: .systemSmall))
+            AddBookSingleMethodView(mode: .scanBarcode)
+                .previewContext(WidgetPreviewContext(family: .systemSmall))
+            AddBooksView()
+                .previewContext(WidgetPreviewContext(family: .systemMedium))
         }.background(Color(.secondarySystemBackground))
     }
 }

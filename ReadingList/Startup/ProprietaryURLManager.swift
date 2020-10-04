@@ -6,6 +6,8 @@ enum ProprietaryURLAction: Equatable {
     case viewBook(id: BookIdentifier)
     case editBookReadLog(id: BookIdentifier)
     case addBookSearchOnline
+    case addBookScanBarcode
+    case addBookManually
 }
 
 fileprivate extension ProprietaryURLAction {
@@ -14,14 +16,26 @@ fileprivate extension ProprietaryURLAction {
         case .viewBook(id: _): return .book
         case .editBookReadLog(id: _): return .book
         case .addBookSearchOnline: return .book
+        case .addBookScanBarcode: return .book
+        case .addBookManually: return .book
         }
     }
 
     var path: URLPath {
         switch self {
         case .viewBook(id: _): return .view
-        case .addBookSearchOnline: return .add
         case .editBookReadLog(id: _): return .editReadLog
+        case .addBookScanBarcode, .addBookManually, .addBookSearchOnline: return .add
+        }
+    }
+
+    var query: [URLQueryItem] {
+        switch self {
+        case .editBookReadLog(id: let id): return id.urlQuery
+        case .viewBook(id: let id): return id.urlQuery
+        case .addBookManually: return [URLQueryItem(name: URLQueryItemKey.addMethod.rawValue, value: AddMethod.manual.rawValue)]
+        case .addBookSearchOnline: return [URLQueryItem(name: URLQueryItemKey.addMethod.rawValue, value: AddMethod.search.rawValue)]
+        case .addBookScanBarcode: return [URLQueryItem(name: URLQueryItemKey.addMethod.rawValue, value: AddMethod.barcode.rawValue)]
         }
     }
 }
@@ -40,6 +54,13 @@ private enum URLQueryItemKey: String {
     case googleBooksId = "gbid"
     case manualBookId = "mid"
     case isbn = "isbn"
+    case addMethod = "method"
+}
+
+private enum AddMethod: String { //swiftlint:disable redundant_string_enum_value
+    case manual = "manual"
+    case search = "search"
+    case barcode = "barcode"
 }
 
 private enum URLHost: String {
@@ -61,15 +82,7 @@ struct ProprietaryURLManager {
         components.scheme = Self.scheme
         components.host = action.host.rawValue
         components.path = action.path.rawValue
-        switch action {
-        case .viewBook(let bookIdentifier):
-            components.queryItems = bookIdentifier.urlQuery
-        case .editBookReadLog(let bookIdentifier):
-            components.queryItems = bookIdentifier.urlQuery
-        case .addBookSearchOnline:
-            break
-        }
-
+        components.queryItems = action.query
         guard let url = components.url else { preconditionFailure() }
         return url
     }
@@ -102,10 +115,21 @@ struct ProprietaryURLManager {
             guard let bookIdentifier = getBookIdentifier(from: queryItems) else { return nil }
             return .viewBook(id: bookIdentifier)
         case .add:
-            return .addBookSearchOnline
+            return getAddMethod(from: queryItems)
         case .editReadLog:
             guard let bookIdentifier = getBookIdentifier(from: queryItems) else { return nil }
             return .editBookReadLog(id: bookIdentifier)
+        }
+    }
+
+    private func getAddMethod(from queryItems: [URLQueryItem]?) -> ProprietaryURLAction? {
+        guard let queryItems = queryItems else { return nil }
+        guard let addMethod = queryItems.first(where: { $0.name == URLQueryItemKey.addMethod.rawValue })?.value else { return nil }
+        guard let addMethodValue = AddMethod(rawValue: addMethod) else { return nil }
+        switch addMethodValue {
+        case .barcode: return .addBookScanBarcode
+        case .manual: return .addBookManually
+        case .search: return .addBookSearchOnline
         }
     }
 

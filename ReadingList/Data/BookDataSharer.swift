@@ -37,27 +37,19 @@ class BookDataSharer {
 
             let currentBooksData = currentBooks.map { $0.buildSharedData() }
             let finishedBooksData = finishedBooks.map { $0.buildSharedData() }
-            if forceUpdate {
-                os_log("Updating and reloading all widget timelines", type: .default)
+
+            if forceUpdate || currentBooksData != SharedBookData.currentBooks {
+                os_log("Updating and reloading Current Books widget timelines", type: .default)
                 DispatchQueue.main.async {
                     SharedBookData.currentBooks = currentBooksData
+                    WidgetCenter.shared.reloadTimelines(ofKind: WidgetKind.currentBooks)
+                }
+            }
+            if forceUpdate || finishedBooksData != SharedBookData.finishedBooks {
+                os_log("Updating and reloading Finished Books widget timelines", type: .default)
+                DispatchQueue.main.async {
                     SharedBookData.finishedBooks = finishedBooksData
-                    WidgetCenter.shared.reloadAllTimelines()
-                }
-            } else {
-                if currentBooksData != SharedBookData.currentBooks {
-                    os_log("Updating and reloading Current Books widget timelines", type: .default)
-                    DispatchQueue.main.async {
-                        SharedBookData.currentBooks = currentBooksData
-                        WidgetCenter.shared.reloadTimelines(ofKind: WidgetKind.currentBooks)
-                    }
-                }
-                if finishedBooksData != SharedBookData.finishedBooks {
-                    os_log("Updating and reloading Finished Books widget timelines", type: .default)
-                    DispatchQueue.main.async {
-                        SharedBookData.finishedBooks = finishedBooksData
-                        WidgetCenter.shared.reloadTimelines(ofKind: WidgetKind.finishedBooks)
-                    }
+                    WidgetCenter.shared.reloadTimelines(ofKind: WidgetKind.finishedBooks)
                 }
             }
         }
