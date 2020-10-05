@@ -18,7 +18,7 @@ class PersistentStoreManager {
             os_log("Reinitialising persistent container")
         }
 
-        // Register our custom transformer
+        // Register our custom transformer for Author tranformable attributes
         AuthorTransformer.register()
 
         // Migrate the store to the latest version if necessary and then initialise
