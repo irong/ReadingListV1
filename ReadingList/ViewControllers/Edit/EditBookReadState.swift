@@ -191,7 +191,12 @@ final class EditBookReadState: FormViewController {
                 self.dismiss(animated: true)
             })
             confirmExit.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-            confirmExit.popoverPresentationController?.barButtonItem = navigationItem.leftBarButtonItem
+            if let popover = confirmExit.popoverPresentationController {
+                guard let barButtonItem = navigationItem.leftBarButtonItem ?? navigationItem.rightBarButtonItem else {
+                    preconditionFailure("Missing navigation bar button item")
+                }
+                popover.barButtonItem = barButtonItem
+            }
             present(confirmExit, animated: true, completion: nil)
             return
         }

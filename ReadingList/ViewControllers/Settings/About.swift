@@ -5,10 +5,21 @@ import MessageUI
 final class About: UITableViewController {
 
     let thisVersionChangeList = ChangeListProvider().thisVersionChangeList()
+    let changeListRowIndex = 6
 
     override func viewDidLoad() {
         super.viewDidLoad()
         monitorThemeSetting()
+    }
+
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        let rowCount = super.tableView(tableView, numberOfRowsInSection: section)
+        // We hide this (bottom) cell if we aren't showing a change list
+        if thisVersionChangeList == nil {
+            return rowCount - 1
+        } else {
+            return rowCount
+        }
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -16,7 +27,7 @@ final class About: UITableViewController {
         if #available(iOS 13.0, *) { } else {
             cell.defaultInitialise(withTheme: GeneralSettings.theme)
         }
-        if thisVersionChangeList == nil {
+        if indexPath.section == 0 && indexPath.row == changeListRowIndex && thisVersionChangeList == nil {
             cell.isHidden = true
         }
         return cell
@@ -38,7 +49,7 @@ final class About: UITableViewController {
         case 2: presentThemedSafariViewController(URL(string: "https://twitter.com/ReadingListApp")!)
         case 3: contact(indexPath)
         case 4: presentThemedSafariViewController(URL(string: "https://github.com/AndrewBennet/readinglist")!)
-        case 6:
+        case changeListRowIndex:
             if let thisVersionChangeList = thisVersionChangeList {
                 present(thisVersionChangeList, animated: true)
             }

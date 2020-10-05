@@ -30,6 +30,14 @@ struct ProprietaryURLActionHandler {
             UserEngagement.logEvent(.openSearchOnlineFromUrl)
             searchOnline()
             return true
+        case .addBookScanBarcode:
+            UserEngagement.logEvent(.openScanBarcodeFromUrl)
+            scanBarcode()
+            return true
+        case .addBookManually:
+            UserEngagement.logEvent(.openAddManuallyFromUrl)
+            addManually()
+            return true
         }
     }
 
@@ -70,5 +78,28 @@ struct ProprietaryURLActionHandler {
             return
         }
         QuickAction.searchOnline.perform(from: tabBarController)
+    }
+
+    func scanBarcode() {
+        guard let tabBarController = window.rootViewController as? TabBarController else {
+            assertionFailure()
+            return
+        }
+        QuickAction.scanBarcode.perform(from: tabBarController)
+    }
+
+    func addManually() {
+        guard let tabBarController = window.rootViewController as? TabBarController else {
+            assertionFailure()
+            return
+        }
+        tabBarController.selectedTab = .toRead
+
+        // Dismiss any modal views before presenting
+        let navController = tabBarController.selectedSplitViewController!.masterNavigationController
+        navController.dismissAndPopToRoot()
+
+        let viewController = EditBookMetadata(bookToCreateReadState: .toRead).inThemedNavController()
+        navController.viewControllers.first!.present(viewController, animated: true, completion: nil)
     }
 }

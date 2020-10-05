@@ -25,60 +25,61 @@ struct SingleBookView: View {
     }()
 
     var body: some View {
-        VStack(alignment: .center) {
-            HStack(alignment: .top, spacing: 8) {
-                Image(uiImage: book.coverUiImage())
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 55, alignment: .leading)
-                    .cornerRadius(6)
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(book.title)
-                        .font(.system(size: 13))
-                        .fontWeight(.medium)
-                        .allowsTightening(true)
-                    Text(book.authorDisplay)
-                        .font(.system(size: 12))
-                }.frame(maxWidth: .infinity, alignment: .leading)
-            }.frame(maxWidth: .infinity)
-            VStack(alignment: .leading, spacing: 2) {
-                if let progress = book.percentageComplete {
-                    ProgressBar(currentProgress: CGFloat(progress) / 100)
-                        .frame(height: 2)
-                    HStack {
-                        Text("\(progress)%")
-                        Spacer()
-                        if let started = book.startDate, let text = daysText(number: started.daysUntil(entryDate)) {
-                            Text(text)
+        GeometryReader { geometryProxy in
+            VStack(alignment: .center) {
+                HStack(alignment: .top, spacing: 8) {
+                    Image(uiImage: book.coverUiImage())
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: geometryProxy.size.width / 3, alignment: .leading)
+                        .cornerRadius(6)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(book.title)
+                            .font(.system(size: 13))
+                            .fontWeight(.medium)
+                            .allowsTightening(true)
+                        Text(book.authorDisplay)
+                            .font(.system(size: 12))
+                    }.frame(maxWidth: .infinity, alignment: .leading)
+                }.frame(maxWidth: .infinity)
+                VStack(alignment: .leading, spacing: 2) {
+                    if let progress = book.percentageComplete {
+                        ProgressBar(currentProgress: CGFloat(progress) / 100)
+                            .frame(height: 2)
+                        HStack {
+                            Text("\(progress)%")
+                            Spacer()
+                            if let started = book.startDate, let text = daysText(number: started.daysUntil(entryDate)) {
+                                Text(text)
+                            }
                         }
+                    } else if let started = book.startDate {
+                        HStack {
+                            if let finished = book.finishDate, let text = daysText(number: started.daysUntil(finished)) {
+                                Text(dateFormatter.string(from: finished))
+                                Spacer()
+                                Text(text)
+                            } else if let text = daysText(number: started.daysUntil(entryDate)) {
+                                Text(text)
+                                Spacer()
+                            }
+                        }.padding([.leading, .trailing], 4)
                     }
-                } else if let started = book.startDate {
-                    HStack {
-                        if let finished = book.finishDate, let text = daysText(number: started.daysUntil(finished)) {
-                            Text(dateFormatter.string(from: finished))
-                            Spacer()
-                            Text(text)
-                        } else if let text = daysText(number: started.daysUntil(entryDate)) {
-                            Text(text)
-                            Spacer()
-                        }
-                    }.padding([.leading, .trailing], 4)
                 }
+                .foregroundColor(.secondary)
+                .font(.system(size: 11))
+                .padding([.leading, .trailing], 4)
             }
-            .foregroundColor(.secondary)
-            .font(.system(size: 11))
-            .padding([.leading, .trailing], 4)
+            .padding([.top, .bottom], 16)
+            .padding([.leading, .trailing], 8)
+            // If we didn't have anything to show under the main portion of the view,
+            // bump the view up a little bit
+            .offset(x: 0, y: book.percentageComplete == nil && book.startDate == nil && book.finishDate == nil ? -8 : 0)
+            .frame(maxHeight: .infinity, alignment: .center)
+            .background(Color(.secondarySystemBackground))
+            .widgetURL(for: book.percentageComplete == nil ? .viewBook(id: book.id) : .editBookReadLog(id: book.id))
         }
-        .padding([.top, .bottom], 16)
-        .padding([.leading, .trailing], 8)
-        // If we didn't have anything to show under the main portion of the view,
-        // bump the view up a little bit
-        .offset(x: 0, y: book.percentageComplete == nil && book.startDate == nil && book.finishDate == nil ? -8 : 0)
-        .frame(maxHeight: .infinity, alignment: .center)
-        .background(Color(.secondarySystemBackground))
-        .widgetURL(for: book.percentageComplete == nil ? .viewBook(id: book.id) : .editBookReadLog(id: book.id))
     }
-
 }
 
 struct SingleBook_Previews: PreviewProvider {

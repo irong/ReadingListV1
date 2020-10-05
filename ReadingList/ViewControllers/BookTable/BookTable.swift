@@ -274,7 +274,7 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
                 UIAction(title: "Update Notes", image: UIImage(systemName: ImageNames.updateNotes)) { _ in
                     self.present(EditBookNotes(existingBookID: book.objectID).inNavigationController(), animated: true)
                 },
-                UIAction(title: "Manage Lists", image: UIImage(systemName: ImageNames.updateNotes)) { _ in
+                UIAction(title: "Manage Lists", image: UIImage(systemName: ImageNames.manageLists)) { _ in
                     self.present(ManageLists.getAppropriateVcForManagingLists([book]), animated: true)
                 },
                 UIAction(title: "Edit Book", image: UIImage(systemName: ImageNames.editBook)) { _ in

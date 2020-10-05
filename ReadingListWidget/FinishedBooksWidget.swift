@@ -22,7 +22,7 @@ struct ReadingListFinishedBooksWidget: Widget {
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: BookTimelineFinishedBooksProvider()) { entry in
-            ReadingListBooksView(books: entry.books, entryDate: entry.date)
+            ReadingListBooksView(books: entry.books, type: .finished, entryDate: entry.date)
         }
         .configurationDisplayName("Finished Books")
         .description("An overview of your recently finished books.")
