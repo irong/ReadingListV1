@@ -12,7 +12,7 @@ languages([
   "en-GB"
 ])
 scheme("ReadingList_UITests")
-workspace("ReadingList.xcworkspace")
+project("ReadingList.xcodeproj")
 ios_version("14.0")
 #clear_previous_screenshots(true)
 reinstall_app(true)

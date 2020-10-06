@@ -6,9 +6,11 @@ options:
   indentWith: 4
   bundleIdPrefix: com.andrewbennet
   groupOrdering: 
-    - order: [ReadingList, ReadingList_Foundation, ReadingList_UITests, ReadingList_UnitTests, ReadingListWidget, Debug, fastlane]
+    - order: [ReadingList, ReadingList_UITests, ReadingList_UnitTests, ReadingListWidget, Packages, Debug, fastlane]
 
 packages:
+  ReadingList_Foundation:
+    path: ReadingList_Foundation
   Cosmos:
     url: https://github.com/evgenyneu/Cosmos
     minorVersion: 22.1.0
@@ -68,8 +70,8 @@ targets:
         - ReadingList_UITests
     dependencies:
       - sdk: StoreKit.framework
-      - target: ReadingList_Foundation
       - target: ReadingListWidget
+      - package: ReadingList_Foundation
       - package: Cosmos
       - package: SwiftyStoreKit
       - package: Eureka
@@ -114,7 +116,7 @@ targets:
         OTHER_LDFLAGS: -ObjC
       configs:
         Debug:
-          # Stupid build errors from Firebase without this. Prevents Debug build being deployed to devices though...
+          # Stupid build errors from Firebase without this line
           EXCLUDED_ARCHS[sdk=iphonesimulator*]: arm64
           PROVISIONING_PROFILE_SPECIFIER: match Development com.andrewbennet.books
           OTHER_SWIFT_FLAGS: $(inherited) "-D" "DEBUG"
@@ -128,12 +130,6 @@ targets:
           enabled: 1
         com.apple.InAppPurchase:
           enabled: 1
-
-  ReadingList_Foundation:
-    type: framework
-    platform: iOS
-    deploymentTarget: 12.0
-    sources: [ReadingList_Foundation]
 
   ReadingList_UnitTests:
     type: bundle.unit-test
