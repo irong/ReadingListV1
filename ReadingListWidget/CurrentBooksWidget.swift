@@ -26,7 +26,7 @@ struct ReadingListCurrentBooksWidget: Widget {
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: BookTimelineCurrentBooksProvider()) { entry in
-            ReadingListBooksView(books: entry.books, entryDate: entry.date)
+            ReadingListBooksView(books: entry.books, type: .current, entryDate: entry.date)
         }
         .configurationDisplayName("Current Books")
         .description("Quick access to the books are you reading or are next in your To Read list.")

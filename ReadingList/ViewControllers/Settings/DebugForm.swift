@@ -9,7 +9,7 @@ final class DebugForm: FormViewController {
     @objc func dismissSelf() {
         dismiss(animated: true, completion: nil)
     }
-    
+
     private func writeToTempFile(data: [SharedBookData]) -> URL {
         let encoded = try! JSONEncoder().encode(data)
         let temporaryFilePath = URL.temporary(fileWithName: "shared_current-books.json")

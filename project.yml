@@ -182,7 +182,6 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.andrewbennet.books.ReadingListWidget
         DEVELOPMENT_TEAM: YPDEV2E775
         CODE_SIGN_ENTITLEMENTS: ReadingListWidget/ReadingListWidget.entitlements
-        MARKETING_VERSION: 1.14.0 # TODO: Tie this in with the regular versioning system
       configs:
         Debug:
           CODE_SIGN_STYLE: Automatic
