@@ -68,6 +68,13 @@ targets:
       testTargets:
         - ReadingList_UnitTests
         - ReadingList_UITests
+      postActions:
+        # See https://github.com/firebase/firebase-ios-sdk/issues/6472#issuecomment-694449182
+        - settingsTarget: ReadingList
+          script: |
+                  rm -rf "${TARGET_BUILD_DIR}/${TARGET_NAME}.app/Frameworks/FirebaseAnalytics.framework"
+                    "${TARGET_BUILD_DIR}/${TARGET_NAME}.app/Frameworks/GoogleAppMeasurement.framework" 
+                    "${TARGET_BUILD_DIR}/${TARGET_NAME}.app/Frameworks/FIRAnalyticsConnector.framework"
     dependencies:
       - sdk: StoreKit.framework
       - target: ReadingListWidget
