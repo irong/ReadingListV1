@@ -12,22 +12,22 @@ packages:
   ReadingList_Foundation:
     path: ReadingList_Foundation
   Cosmos:
-    url: https://github.com/evgenyneu/Cosmos
+    url: https://github.com/evgenyneu/Cosmos.git
     minorVersion: 22.1.0
   SwiftyStoreKit:
-    url: https://github.com/bizz84/SwiftyStoreKit
+    url: https://github.com/bizz84/SwiftyStoreKit.git
     minorVersion: 0.16.0
   Swifter:
-    url: https://github.com/httpswift/swifter
+    url: https://github.com/httpswift/swifter.git
     branch: stable 
   Eureka:
     url: https://github.com/xmartlabs/Eureka.git
     minorVersion: 5.3.0
   ImageRow:
-    url: https://github.com/EurekaCommunity/ImageRow
+    url: https://github.com/EurekaCommunity/ImageRow.git
     branch: master
   WhatsNewKit:
-    url: https://github.com/SvenTiigi/WhatsNewKit
+    url: https://github.com/SvenTiigi/WhatsNewKit.git
     minorVersion: 1.3.5
   PersistedPropertyWrapper:
     url: https://github.com/AndrewBennet/PersistedPropertyWrapper.git
