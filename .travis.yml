@@ -2,9 +2,10 @@ language: swift
 osx_image: xcode12
 git:
   depth: false
+env:
+  - FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT=10
 cache:
   bundler: true
-  cocoapods: true
   directories:
   - "$HOME/Library/Caches/Homebrew/"
   - "/usr/local/lib/mint/"
