@@ -37,7 +37,7 @@ packages:
     minorVersion: 2.1.1
   Firebase:
     url: https://github.com/firebase/firebase-ios-sdk.git
-    branch: 6.33-spm-beta
+    branch: 6.34-spm-beta
   Promises:
     url: https://github.com/google/promises.git
     minorVersion: 1.2.0
