@@ -75,6 +75,9 @@ targets:
                   rm -rf "${TARGET_BUILD_DIR}/${TARGET_NAME}.app/Frameworks/FirebaseAnalytics.framework"
                     "${TARGET_BUILD_DIR}/${TARGET_NAME}.app/Frameworks/GoogleAppMeasurement.framework" 
                     "${TARGET_BUILD_DIR}/${TARGET_NAME}.app/Frameworks/FIRAnalyticsConnector.framework"
+                    "${TARGET_BUILD_DIR}/${TARGET_NAME}.app/PlugIns/FirebaseAnalytics.framework"
+                    "${TARGET_BUILD_DIR}/${TARGET_NAME}.app/PlugIns/GoogleAppMeasurement.framework"
+                    "${TARGET_BUILD_DIR}/${TARGET_NAME}.app/PlugIns/FIRAnalyticsConnector.framework"
     dependencies:
       - sdk: StoreKit.framework
       - target: ReadingListWidget
