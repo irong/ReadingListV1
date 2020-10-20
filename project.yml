@@ -13,7 +13,7 @@ packages:
     path: ReadingList_Foundation
   Cosmos:
     url: https://github.com/evgenyneu/Cosmos.git
-    minorVersion: 22.1.0
+    minorVersion: 23.0.0
   SwiftyStoreKit:
     url: https://github.com/bizz84/SwiftyStoreKit.git
     minorVersion: 0.16.0
