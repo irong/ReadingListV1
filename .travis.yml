@@ -2,16 +2,16 @@ language: swift
 osx_image: xcode12.1
 git:
   depth: false
+env:
+  - FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT=10
 cache:
   bundler: true
-  cocoapods: true
   directories:
   - "$HOME/Library/Caches/Homebrew/"
   - "/usr/local/lib/mint/"
 install:
 - bundle install
 - brew update && brew install mint
-- pod repo update
 before_script:
 - echo -e "machine github.com\n  login AndrewBennet\n  password $GITHUB_TOKEN" > ~/.netrc
 - bundle exec fastlane preprocess

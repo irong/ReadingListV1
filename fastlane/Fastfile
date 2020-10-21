@@ -6,7 +6,6 @@ platform :ios do
   desc "Configures Fabric, builds the project file and sets the build number from git."
   lane :preprocess do
     sh "cd .. && mint run yonaskolb/xcodegen"
-    sh "cd .. && pod install"
     increment_build_number(build_number: number_of_commits)
   end
 
@@ -16,7 +15,7 @@ platform :ios do
     setup_travis
     match(type: "appstore", app_identifier: ["com.andrewbennet.books", "com.andrewbennet.books.ReadingListWidget"])
     build_app(
-        workspace: "ReadingList.xcworkspace",
+        project: "ReadingList.xcodeproj",
         scheme: "ReadingList"
     )
   end

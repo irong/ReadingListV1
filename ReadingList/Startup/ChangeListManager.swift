@@ -1,5 +1,6 @@
 import Foundation
 import ReadingList_Foundation
+import UIKit
 import WhatsNewKit
 
 struct ChangeListProvider {
