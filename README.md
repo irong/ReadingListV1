@@ -20,15 +20,9 @@
 
 ## Dependencies
 
-Reading List uses a couple of package managers: 
-
-- [Mint](https://github.com/yonaskolb/Mint), to manage Swift command line tool packages
-- [Bundler](https://github.com/bundler/bundler), to manage Ruby tools
-
-Mint can be installed using [Homebrew](https://brew.sh/) (among [other methods](https://github.com/yonaskolb/Mint#installing)); Bundler can be installed with [RubyGems](https://rubygems.org/):
+Reading List uses the [Mint](https://github.com/yonaskolb/Mint) package manager to manage Swift command line tool packages. Mint can be installed using [Homebrew](https://brew.sh/) (among [other methods](https://github.com/yonaskolb/Mint#installing)):
 
     brew install mint
-    gem install bundler
 
 ### XcodeGen
 XcodeGen is a command-line tool written in Swift. It generates your Xcode project using your folder structure and a project spec, which contains all the information necessary to generate a project, such as targets, schemes, settings.
@@ -53,4 +47,3 @@ Reading List mostly uses [storyboards](https://developer.apple.com/library/conte
 Reading List uses [Core Data](https://developer.apple.com/documentation/coredata) for data persistence. There are three entities used in Reading List: `Book`, `Subject` and `List`. The attributes and relations between then are illustrated below:
 
 <img src="./media/coredata_entities.png" width="400px;" alt="Core data entities"/>
-
