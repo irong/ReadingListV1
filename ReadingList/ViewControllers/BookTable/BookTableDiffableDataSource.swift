@@ -1,4 +1,5 @@
 import ReadingList_Foundation
+import UIKit
 import CoreData
 
 /// The common functions exposed by all BookTable data sources

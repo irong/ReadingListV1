@@ -6,9 +6,11 @@ options:
   indentWith: 4
   bundleIdPrefix: com.andrewbennet
   groupOrdering: 
-    - order: [ReadingList, ReadingList_Foundation, ReadingList_UITests, ReadingList_UnitTests, ReadingListWidget, Debug, fastlane]
+    - order: [ReadingList, ReadingList_UITests, ReadingList_UnitTests, ReadingListWidget, Packages, Debug, fastlane]
 
 packages:
+  ReadingList_Foundation:
+    path: ReadingList_Foundation
   Cosmos:
     url: https://github.com/evgenyneu/Cosmos.git
     minorVersion: 23.0.0
@@ -33,12 +35,23 @@ packages:
   Regex:
     url: https://github.com/sharplet/Regex.git
     minorVersion: 2.1.1
+  Firebase:
+    url: https://github.com/firebase/firebase-ios-sdk.git
+    branch: 6.34-spm-beta
+  Promises:
+    url: https://github.com/google/promises.git
+    minorVersion: 1.2.0
+  CHCSVParser:
+    url: https://github.com/AndrewBennet/CHCSVParser.git # Fork with SPM support
+    branch: master
+  SVProgressHUD:
+    url: https://github.com/sereivoanyong/SVProgressHUD.git # Fork with SPM support
+    branch: master
 
 fileGroups:
   - Debug/
   - fastlane/
   - README.md
-  - Podfile
   - project.yml
 
 targets:
@@ -55,10 +68,20 @@ targets:
       testTargets:
         - ReadingList_UnitTests
         - ReadingList_UITests
+      postActions:
+        # See https://github.com/firebase/firebase-ios-sdk/issues/6472#issuecomment-694449182
+        - settingsTarget: ReadingList
+          script: |
+                  rm -rf "${TARGET_BUILD_DIR}/${PRODUCT_NAME}.app/Frameworks/FirebaseAnalytics.framework"
+                    "${TARGET_BUILD_DIR}/${PRODUCT_NAME}.app/Frameworks/GoogleAppMeasurement.framework"
+                    "${TARGET_BUILD_DIR}/${PRODUCT_NAME}.app/Frameworks/FIRAnalyticsConnector.framework"
+                    "${TARGET_BUILD_DIR}/${PRODUCT_NAME}.app/PlugIns/FirebaseAnalytics.framework"
+                    "${TARGET_BUILD_DIR}/${PRODUCT_NAME}.app/PlugIns/GoogleAppMeasurement.framework"
+                    "${TARGET_BUILD_DIR}/${PRODUCT_NAME}.app/PlugIns/FIRAnalyticsConnector.framework"
     dependencies:
       - sdk: StoreKit.framework
-      - target: ReadingList_Foundation
       - target: ReadingListWidget
+      - package: ReadingList_Foundation
       - package: Cosmos
       - package: SwiftyStoreKit
       - package: Eureka
@@ -66,6 +89,14 @@ targets:
       - package: WhatsNewKit
       - package: PersistedPropertyWrapper
       - package: Regex
+      - package: Promises
+      - package: CHCSVParser
+      - package: SVProgressHUD
+      - package: Firebase
+        product: FirebaseCrashlytics
+      - package: Firebase
+        product: FirebaseAnalytics
+      
     preBuildScripts:
       - name: SwiftLint
         script: |
@@ -80,12 +111,10 @@ targets:
                   cp "$SRCROOT/Debug/examplebooks.csv" "$BUILD_APP_DIR/examplebooks.csv"
                   cp "$SRCROOT/Debug/example_barcode.jpg" "$BUILD_APP_DIR/example_barcode.jpg"
                 fi
-      - name: "[CP] Embed Pods Frameworks"
-        script:
       - name: Run Crashlytics Script
         inputFiles: [$(BUILT_PRODUCTS_DIR)/$(INFOPLIST_PATH)]
         script: |
-                "${PODS_ROOT}/FirebaseCrashlytics/run"
+                "${BUILD_DIR%Build/*}SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run"
     settings:
       base:
         CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED: YES
@@ -94,9 +123,10 @@ targets:
         DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
         DEVELOPMENT_TEAM: YPDEV2E775
         PRODUCT_BUNDLE_IDENTIFIER: com.andrewbennet.books
+        OTHER_LDFLAGS: -ObjC
       configs:
         Debug:
-          # Stupid build errors from Firebase without this. Prevents Debug build being deployed to devices though...
+          # Stupid build errors from Firebase without this line
           EXCLUDED_ARCHS[sdk=iphonesimulator*]: arm64
           PROVISIONING_PROFILE_SPECIFIER: match Development com.andrewbennet.books
           OTHER_SWIFT_FLAGS: $(inherited) "-D" "DEBUG"
@@ -110,12 +140,6 @@ targets:
           enabled: 1
         com.apple.InAppPurchase:
           enabled: 1
-
-  ReadingList_Foundation:
-    type: framework
-    platform: iOS
-    deploymentTarget: 12.0
-    sources: [ReadingList_Foundation]
 
   ReadingList_UnitTests:
     type: bundle.unit-test

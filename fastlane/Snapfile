@@ -3,15 +3,16 @@ devices([
 	#"iPhone 8",
 	#"iPhone 8 Plus",
 	#"iPhone 11 Pro",
-	"iPhone 11 Pro Max",
-	"iPad Pro (9.7-inch)",
-	"iPad Pro (12.9-inch) (4th generation)"
+	#"iPhone 11 Pro Max",
+	#"iPad Pro (9.7-inch)",
+	#"iPad Pro (12.9-inch) (3rd generation)",
+	"iPad Pro (12.9-inch) (2nd generation)"
 ])
 languages([
   "en-GB"
 ])
 scheme("ReadingList_UITests")
-workspace("ReadingList.xcworkspace")
+project("ReadingList.xcodeproj")
 ios_version("14.0")
 #clear_previous_screenshots(true)
 reinstall_app(true)

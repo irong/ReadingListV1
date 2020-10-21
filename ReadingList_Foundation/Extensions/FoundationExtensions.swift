@@ -1,5 +1,6 @@
 import Foundation
 import AVFoundation
+import UIKit
 import os.log
 
 public extension String {
