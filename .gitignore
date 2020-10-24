@@ -1,9 +1,7 @@
 xcuserdata
 *.xcuserstate
 *.xcodeproj/*
-*.xcworkspace/*
 .DS_Store
-Pods/
 screenshots.html
 fastlane/report.xml
 fastlane/test_output
