@@ -68,20 +68,29 @@ final class About: UITableViewController {
     private func contact(_ indexPath: IndexPath) {
         let canSendEmail = MFMailComposeViewController.canSendMail()
 
-        let controller = UIAlertController(title: "Send Feedback?", message: """
-            If you have any questions or suggestions, please email me\
-            \(canSendEmail ? "." : " at \(Settings.feedbackEmailAddress).") \
-            I'll do my best to respond.
-            """, preferredStyle: .actionSheet)
-        controller.addAction(UIAlertAction(title: "OK", style: canSendEmail ? .default : .cancel) { _ in
-            if canSendEmail {
-                self.presentContactMailComposeWindow()
-            }
-        })
+        let controller = UIAlertController(title: "", message: """
+            Hi there 👋
+
+            To suggest features or report bugs, please email me. I try my best to \
+            reply to every email I receive, but this app is a one-person project, so \
+            please be patient if it takes a little time for my reply!
+
+            If you do have a specific question, I would suggest first looking on the FAQ \
+            in case your answer is there.
+            """, preferredStyle: .alert)
         if canSendEmail {
-            controller.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            controller.addAction(UIAlertAction(title: "Email", style: .default) { _ in
+                self.presentContactMailComposeWindow()
+            })
+        } else {
+            controller.addAction(UIAlertAction(title: "Copy Email Address", style: .default) { _ in
+                UIPasteboard.general.string = "feedback@readinglist.app"
+            })
         }
-        controller.popoverPresentationController?.setSourceCell(atIndexPath: indexPath, inTable: tableView, arrowDirections: [.up, .down])
+        controller.addAction(UIAlertAction(title: "Open FAQ", style: .default) { _ in
+            self.presentThemedSafariViewController(URL(string: "https://www.readinglist.app/faqs/")!)
+        })
+        controller.addAction(UIAlertAction(title: "Cancel", style: .cancel))
 
         present(controller, animated: true)
     }
