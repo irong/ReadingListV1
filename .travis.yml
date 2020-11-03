@@ -13,6 +13,7 @@ install:
 - bundle install
 - brew update && brew install mint
 before_script:
+- /usr/bin/xcodebuild -version
 - echo -e "machine github.com\n  login AndrewBennet\n  password $GITHUB_TOKEN" > ~/.netrc
 - bundle exec fastlane preprocess
 script:
