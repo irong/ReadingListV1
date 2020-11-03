@@ -1,5 +1,6 @@
 import UIKit
 import MessageUI
+import SwiftUI
 import ReadingList_Foundation
 import FirebaseCrashlytics
 
@@ -31,7 +32,11 @@ final class Settings: UITableViewController {
 
     #if DEBUG
     @objc func onLongPressHeader(_ recognizer: UILongPressGestureRecognizer) {
-        present(DebugForm().inThemedNavController(), animated: true, completion: nil)
+        if #available(iOS 13.0, *) {
+            present(UIHostingController(rootView: DebugSettings { [weak self] in
+                self?.dismiss(animated: true, completion: nil)
+            }), animated: true, completion: nil)
+        }
     }
     #endif
 
