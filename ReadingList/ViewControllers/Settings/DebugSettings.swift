@@ -1,3 +1,4 @@
+#if DEBUG
 import SwiftUI
 import SVProgressHUD
 
@@ -14,7 +15,7 @@ public struct DebugSettings: View {
         try! encoded.write(to: temporaryFilePath)
         return temporaryFilePath
     }
-    
+
     let onDismiss: () -> Void
 
     @State private var currentBookDataPresented = false
@@ -23,7 +24,6 @@ public struct DebugSettings: View {
     @State private var finishedBookDataPresented = false
     @State private var finishedBookDataFile: URL?
 
-    
     public var body: some View {
         NavigationView {
             Form {
@@ -67,7 +67,6 @@ public struct DebugSettings: View {
 
 @available(iOS 13.0, *)
 struct ActivityViewController: UIViewControllerRepresentable {
-
     var activityItems: [Any]
     var applicationActivities: [UIActivity]?
 
@@ -84,3 +83,4 @@ struct DebugSettings_Previews: PreviewProvider {
         DebugSettings { }
     }
 }
+#endif
