@@ -146,7 +146,7 @@ final class BookDetails: UIViewController, UIScrollViewDelegate { //swiftlint:di
 
         // Show or hide the links, depending on whether we have valid URLs. If both links are hidden, the enclosing stack should be too.
         googleBooks.isHidden = book.googleBooksId == nil
-        amazon.isHidden = book.amazonAffiliateLink == nil
+        amazon.isHidden = book.amazonAffiliateLink == nil || !GeneralSettings.showAmazonLinks
         amazon.superview!.superview!.isHidden = googleBooks.isHidden && amazon.isHidden
 
         // Remove all the existing list labels, then add a label per list. Copy the list properties from another similar label, that's easier
@@ -374,14 +374,38 @@ extension BookDetails: ThemeableViewController {
     }
 }
 
-extension Book {
-    var amazonAffiliateLink: URL? {
-        let authorText = authors.first?.fullName
-        let amazonSearch = "https://www.amazon.com/s?url=search-alias%3Dstripbooks&field-author=\(authorText ?? "")&field-title=\(title)"
+private extension Book {
+    var amazonTopLevelDomain: String {
+        switch Locale.current.regionCode {
+        case "US": return ".com"
+        case "CA": return ".ca"
+        case "MX": return ".com.mx"
+        case "AU": return ".com.au"
+        case "GB": return ".co.uk"
+        case "DE": return ".de"
+        case "IT": return ".it"
+        case "FR": return ".fr"
+        case "ES": return ".es"
+        case "NL": return ".nl"
+        case "SE": return ".se"
+        case "CN": return ".cn"
+        case "BR": return ".com.br"
+        case "IN": return ".in"
+        case "JP": return ".co.jp"
+        default: return ".com"
+        }
+    }
 
-        // Use https://bestazon.io/#WebService to localize Amazon links
-        // US store: readinglistio-20; UK store: readinglistio-21
-        let refURL = "https://www.readinglistapp.xyz"
-        return URL(string: "http://lnks.io/r.php?Conf_Source=API&refURL=\(refURL.urlEncoding())&destURL=\(amazonSearch.urlEncoding())&Amzn_AfiliateID_GB=readinglistio-21&Amzn_AfiliateID_US=readinglistio-20")
+    var amazonTag: String? {
+        switch Locale.current.regionCode {
+        case "GB": return "&tag=readinglistio-21"
+        case "US": return "&tag=readinglistio-20"
+        default: return nil
+        }
+    }
+
+    var amazonAffiliateLink: URL? {
+        guard let isbn = isbn13 else { return nil }
+        return URL(string: "https://www.amazon\(amazonTopLevelDomain)/s?k=\(isbn.string)&i=stripbooks\(amazonTag ?? "")")
     }
 }

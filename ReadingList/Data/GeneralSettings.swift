@@ -19,6 +19,9 @@ struct GeneralSettings {
     @Persisted("addCustomBooksToTopOfCustom", defaultValue: false)
     static var addBooksToTopOfCustom: Bool
 
+    @Persisted("showAmazonLinks", defaultValue: true)
+    static var showAmazonLinks: Bool
+
     @available(iOS, obsoleted: 13.0)
     @Persisted("theme", defaultValue: .normal)
     static var theme: Theme

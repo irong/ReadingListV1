@@ -13,6 +13,14 @@ final class General: FormViewController {
 
         form +++ Section(header: "Appearance", footer: "Enable Expanded Descriptions to automatically show each book's full description.")
             <<< SwitchRow {
+                $0.title = "Show Amazon Links"
+                $0.value = GeneralSettings.showAmazonLinks
+                $0.onChange { row in
+                    guard let newValue = row.value else { return }
+                    GeneralSettings.showAmazonLinks = newValue
+                }
+            }
+            <<< SwitchRow {
                 $0.title = "Expanded Descriptions"
                 $0.value = GeneralSettings.showExpandedDescription
                 $0.onChange { row in
