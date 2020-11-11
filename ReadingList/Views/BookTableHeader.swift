@@ -23,9 +23,7 @@ class BookTableHeader: UITableViewHeaderFooterView {
 
     override func awakeFromNib() {
         super.awakeFromNib()
-        if #available(iOS 13.0, *) {
-            sortButton.setImage(UIImage(systemName: "arrow.up.arrow.down.circle"), for: .normal)
-        }
+        sortButton.setImage(UIImage(systemName: "arrow.up.arrow.down.circle"), for: .normal)
     }
 
     @IBAction private func sortButtonTapped(_ sender: UIButton) {

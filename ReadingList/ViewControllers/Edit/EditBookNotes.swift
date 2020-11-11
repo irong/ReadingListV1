@@ -49,10 +49,8 @@ class EditBookNotes: FormViewController {
         // Prevent the default behaviour of allowing a swipe-down to dismiss the modal presentation. This would
         // not give a confirmation alert before discarding a user's unsaved changes. By handling the dismiss event
         // ourselves we can present a confirmation dialog.
-        if #available(iOS 13.0, *) {
-            isModalInPresentation = true
-            navigationController?.presentationController?.delegate = self
-        }
+        isModalInPresentation = true
+        navigationController?.presentationController?.delegate = self
     }
 
     func configureNavigationItem() {

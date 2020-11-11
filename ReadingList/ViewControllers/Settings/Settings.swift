@@ -31,11 +31,9 @@ final class Settings: UITableViewController {
 
     #if DEBUG
     @objc func onLongPressHeader(_ recognizer: UILongPressGestureRecognizer) {
-        if #available(iOS 13.0, *) {
-            present(UIHostingController(rootView: DebugSettings { [weak self] in
-                self?.dismiss(animated: true, completion: nil)
-            }), animated: true, completion: nil)
-        }
+        present(UIHostingController(rootView: DebugSettings { [weak self] in
+            self?.dismiss(animated: true, completion: nil)
+        }), animated: true, completion: nil)
     }
     #endif
 

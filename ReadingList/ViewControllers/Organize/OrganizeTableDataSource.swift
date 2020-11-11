@@ -42,7 +42,6 @@ extension OrganizeTableViewDataSourceCommon {
     }
 }
 
-@available(iOS 13.0, *)
 final class OrganizeTableViewDataSource: EmptyDetectingTableDiffableDataSource<String, NSManagedObjectID>, OrganizeTableViewDataSourceCommon {
     let sortManager: SortManager<List>
     let resultsController: NSFetchedResultsController<List>
@@ -84,7 +83,6 @@ final class OrganizeTableViewDataSource: EmptyDetectingTableDiffableDataSource<S
     }
 }
 
-@available(iOS 13.0, *)
 extension OrganizeTableViewDataSource: ResultsControllerSnapshotGeneratorDelegate {
     typealias SectionType = String
 

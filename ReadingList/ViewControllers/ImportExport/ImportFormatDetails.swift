@@ -90,13 +90,9 @@ extension ImportFormatDetails: UIPopoverPresentationControllerDelegate {
 private extension BookCSVColumn {
     var helpText: NSAttributedString? {
         let mainFont = UIFont.preferredFont(forTextStyle: .callout)
-        let highlightFont: UIFont
         let calloutFontDescriptor = UIFontDescriptor.preferredFontDescriptor(withTextStyle: .callout)
-        if #available(iOS 13.0, *) {
-            highlightFont = .monospacedSystemFont(ofSize: calloutFontDescriptor.pointSize, weight: .regular)
-        } else {
-            highlightFont = .italicSystemFont(ofSize: calloutFontDescriptor.pointSize)
-        }
+        let highlightFont = UIFont.monospacedSystemFont(ofSize: calloutFontDescriptor.pointSize, weight: .regular)
+
         switch self {
         case .title:
             return NSAttributedString("Required column.", font: mainFont)

@@ -191,7 +191,6 @@ final class Organize: UITableViewController {
         return !tableView.isEditing
     }
 
-    @available(iOS 13.0, *)
     override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         // the PreviewProvider doesn't seem to work when instantiating the ListBookTable - all the cells become really
         // big, and that persists when you open from the preview.
@@ -208,7 +207,6 @@ final class Organize: UITableViewController {
         }
     }
 
-    @available(iOS 13.0, *)
     override func tableView(_ tableView: UITableView, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {
         guard let indexPath = configuration.identifier as? IndexPath else { return }
         animator.addAnimations {

@@ -5,9 +5,7 @@ import ReadingList_Foundation
 
 final class General: FormViewController {
     override func viewDidLoad() {
-        if #available(iOS 13.0, *) {
-            initialiseInsetGroupedTable()
-        }
+        initialiseInsetGroupedTable()
 
         super.viewDidLoad()
 

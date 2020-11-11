@@ -35,12 +35,10 @@ class SplitViewController: UISplitViewController, UISplitViewControllerDelegate 
         // with the detail view controller presented, but not in split mode (in split mode we expect both the master
         // and the detail view controllers to be visible initially). When this happens, we pop the master navigation
         // controller to return the master root controller to visibility.
-        if #available(iOS 13.0, *) {
-            if hasAppeared { return }
-            if !isSplit && detailIsPresented {
-                os_log("UISplitViewController becoming visible, but with the detail view controller presented when not in split mode. Attempting to fix the problem by popping the master navigation view controller.", type: .default)
-                self.masterNavigationController.popViewController(animated: false)
-            }
+        if hasAppeared { return }
+        if !isSplit && detailIsPresented {
+            os_log("UISplitViewController becoming visible, but with the detail view controller presented when not in split mode. Attempting to fix the problem by popping the master navigation view controller.", type: .default)
+            self.masterNavigationController.popViewController(animated: false)
         }
     }
 

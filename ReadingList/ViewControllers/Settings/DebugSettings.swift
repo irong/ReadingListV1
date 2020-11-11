@@ -2,7 +2,6 @@
 import SwiftUI
 import SVProgressHUD
 
-@available(iOS 13.0, *)
 public struct DebugSettings: View {
     let showSortNumber = Binding(
         get: { Debug.showSortNumber },
@@ -65,7 +64,6 @@ public struct DebugSettings: View {
     }
 }
 
-@available(iOS 13.0, *)
 struct ActivityViewController: UIViewControllerRepresentable {
     var activityItems: [Any]
     var applicationActivities: [UIActivity]?
@@ -77,7 +75,6 @@ struct ActivityViewController: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: UIViewControllerRepresentableContext<ActivityViewController>) {}
 }
 
-@available(iOS 13.0, *)
 struct DebugSettings_Previews: PreviewProvider {
     static var previews: some View {
         DebugSettings { }
