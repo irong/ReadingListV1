@@ -29,27 +29,8 @@ final class General: FormViewController {
                 }
             }
 
-        if #available(iOS 13.0, *) {} else {
-            form.allSections[0] <<< ThemedPushRow<Theme> {
-                $0.title = "Theme"
-                $0.options = Theme.allCases
-                $0.value = GeneralSettings.theme
-                $0.onChange { row in
-                    guard let theme = row.value else { return }
-                    // Half a second seems long enough for the animation to have completed; if we change the theme while
-                    // the animation is still running, we get stuck with an incorrect coloured navigation item. Could
-                    // not find a workaround, so settled for a slightly longer delay before theme transition.
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        GeneralSettings.theme = theme
-                        NotificationCenter.default.post(name: .ThemeSettingChanged, object: nil)
-                        UserEngagement.logEvent(.changeTheme)
-                    }
-                }
-            }
-        }
-
         form +++ Section(header: "Progress", footer: "Choose whether to default to Page Number or Percentage when setting progress.")
-                <<< ThemedPushRow<ProgressType> {
+                <<< PushRow<ProgressType> {
                     $0.title = "Default Progress Type"
                     $0.options = [.page, .percentage]
                     $0.value = GeneralSettings.defaultProgressType
@@ -116,8 +97,6 @@ final class General: FormViewController {
                     }
                     $0.value = UserEngagement.sendAnalytics
                 }
-
-        monitorThemeSetting()
     }
 
     func crashReportsSwitchChanged(_ sender: _SwitchRow) {

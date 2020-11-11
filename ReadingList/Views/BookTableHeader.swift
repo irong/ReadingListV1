@@ -42,9 +42,6 @@ class BookTableHeader: UITableViewHeaderFooterView {
     func configure(labelText: String, enableSort: Bool) {
         label.text = labelText
         sortButton.isEnabled = enableSort
-        if #available(iOS 13.0, *) { } else {
-            initialise(withTheme: GeneralSettings.theme)
-        }
     }
 
     private func buildBookSortAlertOrMenu() -> AlertOrMenu {
@@ -74,12 +71,5 @@ class BookTableHeader: UITableViewHeaderFooterView {
         configure(labelText: "\(bookCount) BOOK\(bookCount == 1 ? "" : "S")", enableSort: enableSort)
         orderable = .list(list)
         alertOrMenu = buildBookSortAlertOrMenu()
-    }
-
-    private func initialise(withTheme theme: Theme) {
-        if #available(iOS 13.0, *) { } else {
-            label.textColor = theme.subtitleTextColor
-            sortButton.tintColor = theme.subtitleTextColor
-        }
     }
 }

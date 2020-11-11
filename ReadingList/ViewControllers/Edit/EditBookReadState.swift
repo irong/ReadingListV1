@@ -105,8 +105,6 @@ final class EditBookReadState: FormViewController {
                     return "\(value)%"
                 }
             }
-
-        monitorThemeSetting()
     }
 
     override func viewDidAppear(_ animated: Bool) {

@@ -21,8 +21,4 @@ struct GeneralSettings {
 
     @Persisted("showAmazonLinks", defaultValue: true)
     static var showAmazonLinks: Bool
-
-    @available(iOS, obsoleted: 13.0)
-    @Persisted("theme", defaultValue: .normal)
-    static var theme: Theme
 }

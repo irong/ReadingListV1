@@ -2,6 +2,7 @@ import Foundation
 import UIKit
 import CoreData
 import Cosmos
+import SafariServices
 import ReadingList_Foundation
 
 final class BookDetails: UIViewController, UIScrollViewDelegate { //swiftlint:disable:this type_body_length
@@ -192,8 +193,6 @@ final class BookDetails: UIViewController, UIScrollViewDelegate { //swiftlint:di
 
         // Watch for changes in the managed object context
         NotificationCenter.default.addObserver(self, selector: #selector(saveOccurred(_:)), name: .NSManagedObjectContextObjectsDidChange, object: PersistentStoreManager.container.viewContext)
-
-        monitorThemeSetting()
     }
 
     override func viewDidLayoutSubviews() {
@@ -209,17 +208,17 @@ final class BookDetails: UIViewController, UIScrollViewDelegate { //swiftlint:di
 
     @IBAction private func updateReadingLogPressed(_ sender: Any) {
         guard let book = book else { return }
-        present(EditBookReadState(existingBookID: book.objectID).inThemedNavController(), animated: true)
+        present(EditBookReadState(existingBookID: book.objectID).inNavigationController(), animated: true)
     }
 
     @IBAction private func editBookPressed(_ sender: Any) {
         guard let book = book else { return }
-        present(EditBookMetadata(bookToEditID: book.objectID).inThemedNavController(), animated: true)
+        present(EditBookMetadata(bookToEditID: book.objectID).inNavigationController(), animated: true)
     }
 
     @IBAction private func updateNotesPressed(_ sender: Any) {
         guard let book = book else { return }
-        present(EditBookNotes(existingBookID: book.objectID).inThemedNavController(), animated: true)
+        present(EditBookNotes(existingBookID: book.objectID).inNavigationController(), animated: true)
     }
 
     @objc func saveOccurred(_ notification: NSNotification) {
@@ -276,13 +275,13 @@ final class BookDetails: UIViewController, UIScrollViewDelegate { //swiftlint:di
     @objc func amazonButtonPressed() {
         guard let book = book, let amazonLink = book.amazonAffiliateLink else { return }
         UserEngagement.logEvent(.viewOnAmazon)
-        presentThemedSafariViewController(amazonLink)
+        present(SFSafariViewController(url: amazonLink), animated: true)
     }
 
     @objc func googleBooksButtonPressed() {
         guard let googleBooksId = book?.googleBooksId else { return }
         guard let url = GoogleBooksRequest.webpage(googleBooksId).url else { return }
-        presentThemedSafariViewController(url)
+        present(SFSafariViewController(url: url), animated: true)
     }
 
     @IBAction private func addToList(_ sender: Any) {
@@ -343,34 +342,6 @@ final class BookDetails: UIViewController, UIScrollViewDelegate { //swiftlint:di
             UserEngagement.logEvent(.deleteBook)
         })
         return previewActions
-    }
-}
-
-extension BookDetails: ThemeableViewController {
-    @available(iOS, obsoleted: 13.0)
-    func initialise(withTheme theme: Theme) {
-        if #available(iOS 13.0, *) { return }
-        view.backgroundColor = theme.viewBackgroundColor
-        navigationController?.view.backgroundColor = theme.viewBackgroundColor
-        navigationController?.navigationBar.initialise(withTheme: theme)
-        (navigationItem.titleView as! UINavigationBarLabel).textColor = theme.titleTextColor
-        titleAuthorHeadings[0].textColor = theme.titleTextColor
-        titleAuthorHeadings[1].textColor = theme.subtitleTextColor
-        changeReadStateButton.initialise(withTheme: theme)
-
-        bookDescription.color = theme.subtitleTextColor
-        bookDescription.gradientColor = theme.viewBackgroundColor
-        bookDescription.buttonColor = theme.tint
-        bookNotes.color = theme.subtitleTextColor
-        bookNotes.gradientColor = theme.viewBackgroundColor
-
-        amazon.textColor = theme.tint
-        googleBooks.textColor = theme.tint
-        titles.forEach { $0.textColor = theme.titleTextColor }
-        tableSubHeadings.forEach { $0.textColor = theme.subtitleTextColor }
-        tableValues.forEach { $0.textColor = theme.titleTextColor }
-        separatorLines.forEach { $0.backgroundColor = theme.cellSeparatorColor }
-        listsStack.arrangedSubviews.forEach { ($0 as! UILabel).textColor = theme.titleTextColor }
     }
 }
 

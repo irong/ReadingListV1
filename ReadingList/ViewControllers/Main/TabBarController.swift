@@ -39,8 +39,6 @@ final class TabBarController: UITabBarController {
         // Tabs 3 and 4 are already configured by the Organise and Settings storyboards
         tabBar.items![0].configure(tag: TabOption.toRead.rawValue, title: "To Read", image: #imageLiteral(resourceName: "courses"), selectedImage: #imageLiteral(resourceName: "courses-filled"))
         tabBar.items![1].configure(tag: TabOption.finished.rawValue, title: "Finished", image: #imageLiteral(resourceName: "to-do"), selectedImage: #imageLiteral(resourceName: "to-do-filled"))
-
-        monitorThemeSetting()
     }
 
     var selectedTab: TabOption {

@@ -78,11 +78,6 @@ struct ChangeListProvider {
 
         var configuration = WhatsNewViewController.Configuration()
         configuration.itemsView.imageSize = .fixed(height: 40)
-        if #available(iOS 13.0, *) { } else {
-            if GeneralSettings.theme.isDark {
-                configuration.apply(theme: .darkBlue)
-            }
-        }
         if let startIndex = title.startIndex(ofFirstSubstring: coloredTitlePortion) {
             configuration.titleView.secondaryColor = .init(startIndex: startIndex, length: coloredTitlePortion.count, color: .systemBlue)
         } else {

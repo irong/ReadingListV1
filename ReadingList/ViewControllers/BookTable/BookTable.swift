@@ -53,14 +53,8 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
             self.dataSource.object(at: $0)
         }
 
-        // On iOS 13 we use Diffable Data Sources; on prior OSes we use the legacy data source which peforms more manual row interactions
-        if #available(iOS 13.0, *) {
-            dataSource = BookTableDiffableDataSource(tableView, controllers: resultsControllers.map(\.controller), sortManager: sortManager,
+        dataSource = BookTableDiffableDataSource(tableView, controllers: resultsControllers.map(\.controller), sortManager: sortManager,
                                                      searchController: searchController, onContentChanged: reconfigureNavigationBarAndSectionHeaders)
-        } else {
-            dataSource = BookTableLegacyDataSource(tableView, controllers: resultsControllers.map(\.controller), sortManager: sortManager,
-                                                   searchController: searchController, onContentChanged: reconfigureNavigationBarAndSectionHeaders)
-        }
 
         // The empty data source manager is in charge of handling and reacting to the empty table state
         let emptyStateMode = BookTableEmptyDataSourceManager.mode(from: readStates)
@@ -74,7 +68,6 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
         dataSource.updateData(animate: false)
         configureNavigationBarButtons()
 
-        monitorThemeSetting()
         super.viewDidLoad()
     }
 
@@ -218,7 +211,7 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
             self.present(UIStoryboard.SearchOnline.rootAsFormSheet(), animated: true, completion: nil)
         },
         AlertOrMenu.Item(title: "Add Manually", image: UIImage(ifAvailable: ImageNames.addBookManually)) {
-            self.present(EditBookMetadata(bookToCreateReadState: .toRead).inThemedNavController(), animated: true, completion: nil)
+            self.present(EditBookMetadata(bookToCreateReadState: .toRead).inNavigationController(), animated: true, completion: nil)
         }
     ])
 
@@ -542,12 +535,12 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
                 })
                 alert.addAction(UIAlertAction(title: "Update Notes", style: .default) { _ in
                     let book = self.dataSource.object(at: indexPath)
-                    self.present(EditBookNotes(existingBookID: book.objectID).inThemedNavController(), animated: true)
+                    self.present(EditBookNotes(existingBookID: book.objectID).inNavigationController(), animated: true)
                     callback(true)
                 })
                 alert.addAction(UIAlertAction(title: "Edit Book", style: .default) { _ in
                     let book = self.dataSource.object(at: indexPath)
-                    self.present(EditBookMetadata(bookToEditID: book.objectID).inThemedNavController(), animated: true)
+                    self.present(EditBookMetadata(bookToEditID: book.objectID).inNavigationController(), animated: true)
                     callback(true)
                 })
                 alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
@@ -562,7 +555,7 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
     override func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         let logImage = UIImage(ifAvailable: ImageNames.manageLog) ?? #imageLiteral(resourceName: "Timetable")
         var actions = [UIContextualAction(style: .normal, title: "Log", image: logImage) { _, _, callback in
-            self.present(EditBookReadState(existingBookID: self.dataSource.object(at: indexPath).objectID).inThemedNavController(), animated: true)
+            self.present(EditBookReadState(existingBookID: self.dataSource.object(at: indexPath).objectID).inNavigationController(), animated: true)
             callback(true)
         }]
 
@@ -597,7 +590,7 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
                 self.setEditing(false, animated: false)
             }
         }
-        leadingSwipeAction.backgroundColor = readStateOfSection == .toRead ? UIColor(.buttonBlue) : UIColor(.buttonGreen)
+        leadingSwipeAction.backgroundColor = readStateOfSection == .toRead ? .systemBlue : .systemGreen
         if readStateOfSection == .toRead {
             leadingSwipeAction.image = UIImage(ifAvailable: ImageNames.startBookPlay) ?? #imageLiteral(resourceName: "Play")
         } else {

@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="15505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="qYh-NF-gdy">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="17156" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="qYh-NF-gdy">
     <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15509"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="17126"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--Themed Navigation Controller-->
+        <!--Navigation Controller-->
         <scene sceneID="lTw-9q-5OW">
             <objects>
-                <navigationController id="BJH-LT-6o4" customClass="ThemedNavigationController" customModule="ReadingList" customModuleProvider="target" sceneMemberID="viewController">
+                <navigationController id="BJH-LT-6o4" sceneMemberID="viewController">
                     <navigationBar key="navigationBar" contentMode="scaleToFill" largeTitles="YES" id="7ZT-Qa-UWK">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="96"/>
                         <autoresizingMask key="autoresizingMask"/>
@@ -30,7 +30,7 @@
                     <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="grouped" separatorStyle="default" allowsSelectionDuringEditing="YES" allowsMultipleSelectionDuringEditing="YES" rowHeight="92" sectionHeaderHeight="60" estimatedSectionHeaderHeight="60" sectionFooterHeight="1" id="KXn-Og-bAI">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
+                        <color key="backgroundColor" systemColor="groupTableViewBackgroundColor"/>
                         <connections>
                             <outlet property="dataSource" destination="4HX-WC-tQz" id="E8k-dW-boW"/>
                             <outlet property="delegate" destination="4HX-WC-tQz" id="xSO-ff-FJD"/>
@@ -45,10 +45,10 @@
             </objects>
             <point key="canvasLocation" x="-7046" y="-461"/>
         </scene>
-        <!--Themed Split View Controller-->
+        <!--Split View Controller-->
         <scene sceneID="nq6-fH-kF6">
             <objects>
-                <splitViewController id="qYh-NF-gdy" customClass="ThemedSplitViewController" customModule="ReadingList" customModuleProvider="target" sceneMemberID="viewController">
+                <splitViewController id="qYh-NF-gdy" customClass="SplitViewController" customModule="ReadingList" customModuleProvider="target" sceneMemberID="viewController">
                     <tabBarItem key="tabBarItem" title="" id="SkP-Ti-gmE"/>
                     <connections>
                         <segue destination="BJH-LT-6o4" kind="relationship" relationship="masterViewController" id="4g6-O6-K7z"/>
@@ -71,6 +71,11 @@
         </scene>
     </scenes>
     <inferredMetricsTieBreakers>
-        <segue reference="Uat-sc-yvW"/>
+        <segue reference="bOj-r5-ku9"/>
     </inferredMetricsTieBreakers>
+    <resources>
+        <systemColor name="groupTableViewBackgroundColor">
+            <color red="0.94901960784313721" green="0.94901960784313721" blue="0.96862745098039216" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
+    </resources>
 </document>

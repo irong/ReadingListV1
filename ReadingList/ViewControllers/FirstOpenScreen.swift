@@ -37,11 +37,6 @@ struct FirstOpenScreenProvider {
 
         var config = WhatsNewViewController.Configuration()
         config.itemsView.imageSize = .fixed(height: 40)
-        if #available(iOS 13.0, *) { } else {
-            if GeneralSettings.theme.isDark {
-                config.apply(theme: .darkBlue)
-            }
-        }
         if let startIndex = title.startIndex(ofFirstSubstring: readingList) {
             config.titleView.secondaryColor = .init(startIndex: startIndex, length: readingList.count, color: .systemBlue)
         } else {

@@ -16,7 +16,6 @@ final class Settings: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         versionLabel.text = "v\(BuildInfo.thisBuild.versionAndConfiguration)"
-        monitorThemeSetting()
 
         #if DEBUG
         tableView.tableHeaderView!.addGestureRecognizer(UILongPressGestureRecognizer(target: self, action: #selector(onLongPressHeader(_:))))
@@ -63,20 +62,11 @@ final class Settings: UITableViewController {
         }
     }
 
-    override func initialise(withTheme theme: Theme) {
-        if #available(iOS 13.0, *) { return }
-        super.initialise(withTheme: theme)
-        headerLabels.forEach { $0.textColor = theme.titleTextColor }
-    }
-
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
-        if #available(iOS 13.0, *) { } else {
-            cell.defaultInitialise(withTheme: GeneralSettings.theme)
-        }
         if splitViewController?.isSplit == true {
             // In split mode, change the cells a little to look more like the standard iOS settings app
-            cell.selectedBackgroundView = UIView(backgroundColor: UIColor(.splitViewCellSelection))
+            cell.selectedBackgroundView = UIView(backgroundColor: UIColor(named: "SplitViewCellSelection")!)
             cell.textLabel!.highlightedTextColor = .white
             cell.accessoryType = .none
         }

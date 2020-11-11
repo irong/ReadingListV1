@@ -46,8 +46,6 @@ class EditBookNotes: FormViewController {
                 }
             }
 
-        monitorThemeSetting()
-
         // Prevent the default behaviour of allowing a swipe-down to dismiss the modal presentation. This would
         // not give a confirmation alert before discarding a user's unsaved changes. By handling the dismiss event
         // ourselves we can present a confirmation dialog.

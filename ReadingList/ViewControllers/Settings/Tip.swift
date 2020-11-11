@@ -1,7 +1,7 @@
 import SwiftyStoreKit
 import StoreKit
 
-final class Tip: UIViewController, ThemeableViewController {
+final class Tip: UIViewController {
     let tipProductIds = ["smalltip", "mediumtip", "largetip", "verylargetip", "gianttip"]
     var tipProducts: Set<SKProduct>?
 
@@ -24,8 +24,6 @@ final class Tip: UIViewController, ThemeableViewController {
         if BuildInfo.thisBuild.type != .appStore {
             explanationLabel.text = explanationLabel.text! + "\n\nNote: because you are testing a beta version of this app, you won't be able to leave any tips."
         }
-
-        monitorThemeSetting()
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -94,11 +92,5 @@ final class Tip: UIViewController, ThemeableViewController {
                 (UIApplication.shared.delegate as! AppDelegate).window?.rootViewController?.present(alert, animated: true)
             }
         }
-    }
-
-    func initialise(withTheme theme: Theme) {
-        if #available(iOS 13.0, *) { return }
-        view.backgroundColor = theme.viewBackgroundColor
-        explanationLabel.textColor = theme.titleTextColor
     }
 }

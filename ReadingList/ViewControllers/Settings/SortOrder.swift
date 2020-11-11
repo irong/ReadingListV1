@@ -21,6 +21,5 @@ final class SortOrder: FormViewController {
                     GeneralSettings.addBooksToTopOfCustom = $0.value ?? false
                 }
             }
-        monitorThemeSetting()
     }
 }

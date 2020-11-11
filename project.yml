@@ -58,7 +58,7 @@ targets:
   ReadingList:
     type: application
     platform: iOS
-    deploymentTarget: 12.0
+    deploymentTarget: 13.2
     sources:
       - path: ReadingList
         excludes:
@@ -144,7 +144,7 @@ targets:
   ReadingList_UnitTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: 12.0
+    deploymentTarget: 13.2
     sources: [ReadingList_UnitTests]
     dependencies:
       - target: ReadingList
@@ -152,7 +152,7 @@ targets:
   ReadingList_UITests:
     type: bundle.ui-testing
     platform: iOS
-    deploymentTarget: 12.0
+    deploymentTarget: 13.2
     sources:
       - path: ReadingList_UITests
       - path: ReadingList/Api/GoogleBooksRequest.swift

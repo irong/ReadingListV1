@@ -1,16 +1,12 @@
 import Foundation
 import UIKit
 import MessageUI
+import SafariServices
 
 final class About: UITableViewController {
 
     let thisVersionChangeList = ChangeListProvider().thisVersionChangeList()
     let changeListRowIndex = 6
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        monitorThemeSetting()
-    }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         let rowCount = super.tableView(tableView, numberOfRowsInSection: section)
@@ -24,9 +20,6 @@ final class About: UITableViewController {
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
-        if #available(iOS 13.0, *) { } else {
-            cell.defaultInitialise(withTheme: GeneralSettings.theme)
-        }
         if indexPath.section == 0 && indexPath.row == changeListRowIndex && thisVersionChangeList == nil {
             cell.isHidden = true
         }
@@ -44,11 +37,11 @@ final class About: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         guard indexPath.section == 0 else { return }
         switch indexPath.row {
-        case 0: presentThemedSafariViewController(URL(string: "https://www.readinglist.app")!)
+        case 0: present(SFSafariViewController(url: URL(string: "https://www.readinglist.app")!), animated: true)
         case 1: share(indexPath)
-        case 2: presentThemedSafariViewController(URL(string: "https://twitter.com/ReadingListApp")!)
+        case 2: present(SFSafariViewController(url: URL(string: "https://twitter.com/ReadingListApp")!), animated: true)
         case 3: contact(indexPath)
-        case 4: presentThemedSafariViewController(URL(string: "https://github.com/AndrewBennet/readinglist")!)
+        case 4: present(SFSafariViewController(url: URL(string: "https://github.com/AndrewBennet/readinglist")!), animated: true)
         case changeListRowIndex:
             if let thisVersionChangeList = thisVersionChangeList {
                 present(thisVersionChangeList, animated: true)
@@ -88,7 +81,7 @@ final class About: UITableViewController {
             })
         }
         controller.addAction(UIAlertAction(title: "Open FAQ", style: .default) { _ in
-            self.presentThemedSafariViewController(URL(string: "https://www.readinglist.app/faqs/")!)
+            self.present(SFSafariViewController(url: URL(string: "https://www.readinglist.app/faqs/")!), animated: true)
         })
         controller.addAction(UIAlertAction(title: "Cancel", style: .cancel))
 

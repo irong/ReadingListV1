@@ -93,7 +93,6 @@ final class BookTableLegacyDataSource: LegacyEmptyDetectingTableDataSource, Book
         let cell = tableView.dequeue(BookTableViewCell.self, for: indexPath)
         let book = compoundResultsController.object(at: indexPath)
         cell.configureFrom(book)
-        cell.initialise(withTheme: GeneralSettings.theme)
         return cell
     }
 

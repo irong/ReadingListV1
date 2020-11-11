@@ -147,11 +147,7 @@ final class EditBookMetadata: FormViewController {
                 $0.cellUpdate { [weak self] cell, _ in
                     guard let `self` = self else { return }
                     cell.textLabel!.textAlignment = .left
-                    if #available(iOS 13.0, *) {
-                        cell.textLabel!.textColor = .label
-                    } else {
-                        cell.textLabel!.textColor = GeneralSettings.theme.titleTextColor
-                    }
+                    cell.textLabel!.textColor = .label
                     cell.accessoryType = .disclosureIndicator
                     cell.detailTextLabel?.text = self.book.subjects.map { $0.name }.sorted().joined(separator: ", ")
                 }
@@ -250,8 +246,6 @@ final class EditBookMetadata: FormViewController {
 
         // Validate on start
         validateBook()
-
-        monitorThemeSetting()
     }
 
     override func viewDidAppear(_ animated: Bool) {

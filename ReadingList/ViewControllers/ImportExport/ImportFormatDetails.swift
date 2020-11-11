@@ -5,11 +5,6 @@ class ImportFormatDetails: UITableViewController {
     private let csvColumns = BookCSVColumn.allCases
     private let csvColumnsSectionIndex = 1
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        monitorThemeSetting()
-    }
-
     @IBAction private func doneTapped(_ sender: UIBarButtonItem) {
         self.presentingViewController?.dismiss(animated: true)
     }
@@ -41,7 +36,6 @@ class ImportFormatDetails: UITableViewController {
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "basicCell", for: indexPath)
-        cell.defaultInitialise(withTheme: GeneralSettings.theme)
         if indexPath.section == csvColumnsSectionIndex {
             let csvColumn = csvColumns[indexPath.row]
             cell.textLabel?.text = csvColumn.header

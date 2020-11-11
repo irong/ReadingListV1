@@ -177,12 +177,6 @@ class LaunchManager {
         #endif
         window.rootViewController = TabBarController()
 
-        // Initialise app-level theme, and monitor the set theme, if < iOS 13
-        if #available(iOS 13.0, *) { } else {
-            initialiseTheme()
-            NotificationCenter.default.addObserver(self, selector: #selector(self.initialiseTheme), name: .ThemeSettingChanged, object: nil)
-        }
-
         if presentFirstLaunchOrChangeLog {
             if isFirstLaunch {
                 let firstOpenScreen = FirstOpenScreenProvider().build()
@@ -204,14 +198,6 @@ class LaunchManager {
         }
 
         AppLaunchHistory.lastLaunchedBuildInfo = BuildInfo.thisBuild
-    }
-
-    @available(iOS, obsoleted: 13.0)
-    @objc private func initialiseTheme() {
-        if #available(iOS 13.0, *) { return }
-        let theme = GeneralSettings.theme
-        theme.configureForms()
-        window.tintColor = theme.tint
     }
 
     private func presentIncompatibleDataAlert() {
