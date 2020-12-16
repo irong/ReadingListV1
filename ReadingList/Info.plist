@@ -105,5 +105,17 @@
 	<false/>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSUbiquitousContainers</key>
+	<dict>
+		<key>iCloud.com.andrewbennet.books</key>
+		<dict>
+			<key>NSUbiquitousContainerIsDocumentScopePublic</key>
+			<false/>
+			<key>NSUbiquitousContainerName</key>
+			<string>ReadingList</string>
+			<key>NSUbiquitousContainerSupportedFolderLevels</key>
+			<string>Any</string>
+		</dict>
+	</dict>
 </dict>
 </plist>

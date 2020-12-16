@@ -26,6 +26,12 @@ final class TabBarController: UITabBarController {
     }
 
     func initialise() {
+        viewControllers = getRootViewControllers()
+        configureTabIcons()
+        monitorThemeSetting()
+    }
+
+    func getRootViewControllers() -> [UIViewController] {
         // The first two tabs of the tab bar controller are to the same storyboard. We cannot have different tab bar icons
         // if they are set up in storyboards, so we do them in code here, instead.
         let toRead = UIStoryboard.BookTable.instantiateRoot() as! UISplitViewController
@@ -34,13 +40,17 @@ final class TabBarController: UITabBarController {
         let finished = UIStoryboard.BookTable.instantiateRoot() as! UISplitViewController
         (finished.masterNavigationRoot as! BookTable).readStates = [.finished]
 
-        viewControllers = [toRead, finished, UIStoryboard.Organize.instantiateRoot(), UIStoryboard.Settings.instantiateRoot()]
+        return [toRead, finished, UIStoryboard.Organize.instantiateRoot(), UIStoryboard.Settings.instantiateRoot()]
+    }
 
-        // Tabs 3 and 4 are already configured by the Organise and Settings storyboards
-        tabBar.items![0].configure(tag: TabOption.toRead.rawValue, title: "To Read", image: #imageLiteral(resourceName: "courses"), selectedImage: #imageLiteral(resourceName: "courses-filled"))
-        tabBar.items![1].configure(tag: TabOption.finished.rawValue, title: "Finished", image: #imageLiteral(resourceName: "to-do"), selectedImage: #imageLiteral(resourceName: "to-do-filled"))
-
-        monitorThemeSetting()
+    func configureTabIcons() {
+        guard let items = tabBar.items else { preconditionFailure("Missing tab bar items") }
+        // Tabs 3 and 4 are usually configured by the Organise and Settings storyboards, but configure them anyway (there is a use
+        // case - when restoring from a backup we may have switched out the view controllers temporarily).
+        items[0].configure(tag: TabOption.toRead.rawValue, title: "To Read", image: #imageLiteral(resourceName: "courses"), selectedImage: #imageLiteral(resourceName: "courses-filled"))
+        items[1].configure(tag: TabOption.finished.rawValue, title: "Finished", image: #imageLiteral(resourceName: "to-do"), selectedImage: #imageLiteral(resourceName: "to-do-filled"))
+        items[2].configure(tag: TabOption.organise.rawValue, title: NSLocalizedString("OrganizeTabText", comment: ""), image: #imageLiteral(resourceName: "organise"), selectedImage: #imageLiteral(resourceName: "organise-filled"))
+        items[3].configure(tag: TabOption.settings.rawValue, title: "Settings", image: #imageLiteral(resourceName: "settings"), selectedImage: #imageLiteral(resourceName: "settings-filled"))
     }
 
     var selectedTab: TabOption {
