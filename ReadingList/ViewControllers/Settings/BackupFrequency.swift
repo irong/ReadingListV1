@@ -17,14 +17,14 @@ class BackupFrequency: UITableViewController {
         guard let label = cell.textLabel else { preconditionFailure("Missing cell text label") }
         let backupFrequencyPeriod = BackupFrequencyPeriod.allCases[indexPath.row]
         label.text = backupFrequencyPeriod.description
-        cell.accessoryType = backupFrequencyPeriod == AutoBackupManager.backupFrequency ? .checkmark : .none
+        cell.accessoryType = backupFrequencyPeriod == AutoBackupManager.shared.backupFrequency ? .checkmark : .none
         return cell
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        AutoBackupManager.backupFrequency = BackupFrequencyPeriod.allCases[indexPath.row]
+        AutoBackupManager.shared.backupFrequency = BackupFrequencyPeriod.allCases[indexPath.row]
         if #available(iOS 13.0, *) {
-            AutoBackupManager.scheduleBackup()
+            AutoBackupManager.shared.scheduleBackup()
         }
         tableView.reloadData()
         navigationController?.popViewController(animated: true)

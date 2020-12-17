@@ -31,6 +31,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         launchManager.handleApplicationDidBecomeActive()
     }
 
+    func applicationDidEnterBackground(_ application: UIApplication) {
+        launchManager.handleApplicationDidEnterBackground()
+    }
+
     func application(_ application: UIApplication, performActionFor shortcutItem: UIApplicationShortcutItem, completionHandler: @escaping (Bool) -> Void) {
         let didHandle = launchManager.handleQuickAction(shortcutItem)
         completionHandler(didHandle)

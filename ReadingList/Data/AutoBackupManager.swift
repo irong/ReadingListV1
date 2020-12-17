@@ -20,24 +20,34 @@ extension BackupFrequencyPeriod {
 }
 
 class AutoBackupManager {
+    static let shared = AutoBackupManager()
+
+    private init() { }
+
     @Persisted("backup-frequency-period", defaultValue: .daily)
-    static var backupFrequency: BackupFrequencyPeriod
+    var backupFrequency: BackupFrequencyPeriod
 
     @Persisted("last-backup-completion-date")
-    static var lastBackupCompletion: Date?
+    var lastBackupCompletion: Date?
 
-    static let backgroundTaskIdentifier = "com.andrewbennet.books.backup"
+    private let backgroundTaskIdentifier = "com.andrewbennet.books.backup"
 
     @available(iOS 13.0, *)
-    class func registerBackgroundTasks() {
+    func registerBackgroundTasks() {
         BGTaskScheduler.shared.register(forTaskWithIdentifier: backgroundTaskIdentifier, using: nil) { task in
             guard let processingTask = task as? BGProcessingTask else { preconditionFailure("Unexpected task type") }
             self.handleBackupTask(processingTask)
         }
     }
 
+    func backupIsDue() -> Bool {
+        guard let backupFrequencyDuration = backupFrequency.duration else { return false }
+        guard let lastBackupCompletion = lastBackupCompletion else { return true }
+        return lastBackupCompletion.addingTimeInterval(backupFrequencyDuration) < Date()
+    }
+
     @available(iOS 13.0, *)
-    class func scheduleBackup(startingAfter earliestBeginDate: Date? = nil) {
+    func scheduleBackup(startingAfter earliestBeginDate: Date? = nil) {
         guard let backupInterval = backupFrequency.duration else { return }
 
         let request = BGProcessingTaskRequest(identifier: backgroundTaskIdentifier)
@@ -55,7 +65,7 @@ class AutoBackupManager {
     }
 
     @available(iOS 13.0, *)
-    class func handleBackupTask(_ task: BGProcessingTask) {
+    func handleBackupTask(_ task: BGProcessingTask) {
         // Schedule a new backup task
         if let backupInterval = backupFrequency.duration {
             scheduleBackup(startingAfter: Date(timeIntervalSinceNow: backupInterval))

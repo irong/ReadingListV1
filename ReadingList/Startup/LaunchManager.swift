@@ -27,8 +27,8 @@ class LaunchManager {
         SVProgressHUD.setDefaults()
         SwiftyStoreKit.completeTransactions()
         if #available(iOS 13.0, *) {
-            AutoBackupManager.registerBackgroundTasks()
-            AutoBackupManager.scheduleBackup()
+            AutoBackupManager.shared.registerBackgroundTasks()
+            AutoBackupManager.shared.scheduleBackup()
         }
     }
 
@@ -37,6 +37,32 @@ class LaunchManager {
 
         if storeMigrationFailed {
             presentIncompatibleDataAlert()
+        }
+    }
+
+    func handleApplicationDidEnterBackground() {
+        // The only use of this lifecycle method is to run background backups, on iOS 12 where we don't have access
+        // to the newer background task scheduling functionality.
+        if #available(iOS 13.0, *) { return }
+
+        // Determine whether we ought to backup now
+        guard AutoBackupManager.shared.backupIsDue() else { return }
+
+        os_log("Running background task to perform data backup")
+        let taskIdentifier = UIApplication.shared.beginBackgroundTask()
+        guard taskIdentifier != .invalid else { return }
+
+        // Run the backup in the background
+        DispatchQueue.global(qos: .utility).async {
+            do {
+                try BackupManager().performBackup()
+                os_log("Background backup task completed")
+            } catch {
+                os_log("Backup failed: %{public}s", type: .error, error.localizedDescription)
+            }
+            DispatchQueue.main.async {
+                UIApplication.shared.endBackgroundTask(taskIdentifier)
+            }
         }
     }
 

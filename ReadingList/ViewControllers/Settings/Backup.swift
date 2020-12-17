@@ -169,7 +169,7 @@ final class Backup: UITableViewController {
         let cell = dequeueCell(withIdentifier: rightDetailCellIdentifier, for: indexPath)
         guard let textLabel = cell.textLabel, let rightDetailLabel = cell.detailTextLabel else { fatalError("Missing text label on cell") }
         textLabel.text = "Backup Frequency"
-        rightDetailLabel.text = AutoBackupManager.backupFrequency.description
+        rightDetailLabel.text = AutoBackupManager.shared.backupFrequency.description
         cell.accessoryType = .disclosureIndicator
         return cell
     }
