@@ -212,6 +212,7 @@ class BackupManager {
      Performs a backup of the current store into the Backups iCloud directory.
      Do not call from the Main thread.
      */
+    @discardableResult
     func performBackup() throws -> BackupInfo {
         guard let currentInstallBackupDirectory = currentInstallBackupDirectory else { throw BackupError.noContainerUrl }
 

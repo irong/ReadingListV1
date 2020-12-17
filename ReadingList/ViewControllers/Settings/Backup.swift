@@ -40,41 +40,51 @@ final class Backup: UITableViewController {
         }
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        // Ensure we use the latest backup frequency whenever this view appears (e.g. when the BackupFrequency view controller
+        // pops back to this view).
+        tableView.reloadRows(at: [IndexPath(row: 0, section: 2)], with: .none)
+    }
+
     override func numberOfSections(in tableView: UITableView) -> Int {
         // We don't show the backup history section if the user isn't logged in to iCloud, since they are likely to be stale
-        return FileManager.default.ubiquityIdentityToken == nil ? 1 : 2
+        return FileManager.default.ubiquityIdentityToken == nil ? 1 : 3
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if section == 0 { return 1 }
-        if section == 1 {
-            return backupsInfo.isEmpty ? 1 : backupsInfo.count
+        switch section {
+        case 0: return 1
+        case 1: return backupsInfo.isEmpty ? 1 : backupsInfo.count
+        case 2: return 1
+        default: fatalError("Unexpected call to numberOfRowsInSection for section \(section)")
         }
-        fatalError("Unexpected call to numberOfRowsInSection for section \(section)")
     }
 
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        if section == 1 {
-            return "Backups"
+        switch section {
+        case 0: return "Backup"
+        case 1: return "Restore"
+        case 2: return "Auto-Backup"
+        default: return nil
         }
-        return nil
     }
 
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
-        if section == 0 {
+        switch section {
+        case 0:
             if FileManager.default.ubiquityIdentityToken == nil {
                 return "App backup data is stored in iCloud. Ensure you are logged in to iCloud in order to back up your data."
             } else {
                 return "Tap to backup the Reading List data on this device to iCloud."
             }
-        } else if section == 1 {
+        case 1:
             if backupsInfo.isEmpty {
                 return "App data backups will be listed here once they have been made. Note that it can take some time for backups made on other devices to sync with iCloud and appear here."
             } else {
                 return "Tap a specific backup to restore the data on this device from a backup. Note that it can take some time for backups made on other devices to sync with iCloud and appear here."
             }
-        } else {
-            return nil
+        case 2: return "Select the frequency that Reading List automatically backs up your data."
+        default: return nil
         }
     }
 
@@ -96,21 +106,24 @@ final class Backup: UITableViewController {
 
     private let basicCellIdentifier = "BasicCell"
     private let subtitleCellIdentifier = "SubtitleCell"
+    private let rightDetailCellIdentifier = "RightDetailCell"
     private let backupNowCellIndexPath = IndexPath(row: 0, section: 0)
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        if indexPath == backupNowCellIndexPath {
-            return backupNowCell()
-        } else if indexPath.section == 1 {
+        switch indexPath.section {
+        case 0:
+            return backupNowCell(indexPath)
+        case 1:
             guard !backupsInfo.isEmpty else { return noBackupsAvailableCell(indexPath) }
             return backupInfoCell(at: indexPath)
-        } else {
-            fatalError("Unexpected index path section \(indexPath.section)")
+        case 2:
+            return backupFrequencyCell(indexPath)
+        default: fatalError("Unexpected index path section \(indexPath.section)")
         }
     }
 
-    private func backupNowCell() -> UITableViewCell {
-        let cell = dequeueCell(withIdentifier: basicCellIdentifier, for: backupNowCellIndexPath)
+    private func backupNowCell(_ indexPath: IndexPath) -> UITableViewCell {
+        let cell = dequeueCell(withIdentifier: basicCellIdentifier, for: indexPath)
         guard let textLabel = cell.textLabel else { fatalError("Missing text label on cell") }
         if let backupCreatedByThisController = backupCreatedByThisController {
             cell.isEnabled = false
@@ -149,6 +162,15 @@ final class Backup: UITableViewController {
         let backup = backupsInfo[indexPath.row]
         textLabel.text = "\(backup.markerFileInfo.deviceName) (\(byteFormatter.string(fromByteCount: Int64(backup.markerFileInfo.sizeBytes))))"
         subtitleLabel.text = dateFormatter.string(from: backup.markerFileInfo.created)
+        return cell
+    }
+
+    private func backupFrequencyCell(_ indexPath: IndexPath) -> UITableViewCell {
+        let cell = dequeueCell(withIdentifier: rightDetailCellIdentifier, for: indexPath)
+        guard let textLabel = cell.textLabel, let rightDetailLabel = cell.detailTextLabel else { fatalError("Missing text label on cell") }
+        textLabel.text = "Backup Frequency"
+        rightDetailLabel.text = AutoBackupManager.backupFrequency.description
+        cell.accessoryType = .disclosureIndicator
         return cell
     }
 
@@ -195,21 +217,9 @@ final class Backup: UITableViewController {
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if indexPath == backupNowCellIndexPath {
-            DispatchQueue.global(qos: .userInitiated).async {
-                do {
-                    self.backupCreatedByThisController = try self.backupManager.performBackup()
-                } catch {
-                    os_log("Error backing up: %{public}s", type: .error, error.localizedDescription)
-                    DispatchQueue.main.async {
-                        let alert = UIAlertController(title: "Error", message: "The backup could not be made. Please try again later.", preferredStyle: .alert)
-                        alert.addAction(UIAlertAction(title: "OK", style: .default))
-                        self.present(alert, animated: true)
-                    }
-                }
-
-                self.reloadBackupInfo()
-            }
-        } else if indexPath.section == 1 && !self.backupsInfo.isEmpty {
+            didSelectBackupNowCell()
+        } else if indexPath.section == 1 {
+            guard !self.backupsInfo.isEmpty else { return }
             let alert = UIAlertController(title: "Restore from Backup?", message: "Restoring from a backup will replace all current data with the data from the backup. Are you sure you wish to continue?", preferredStyle: .actionSheet)
             alert.addAction(UIAlertAction(title: "Restore", style: .destructive) { _ in
                 self.restore(from: self.backupsInfo[indexPath.row])
@@ -218,6 +228,26 @@ final class Backup: UITableViewController {
             alert.popoverPresentationController?.setSourceCell(atIndexPath: indexPath, inTable: tableView)
             present(alert, animated: true)
             tableView.deselectRow(at: indexPath, animated: true)
+        } else if indexPath.section == 2 && indexPath.row == 0 {
+            performSegue(withIdentifier: "presentBackupFrequency", sender: self)
+        }
+    }
+
+    private func didSelectBackupNowCell() {
+        guard FileManager.default.ubiquityIdentityToken != nil && backupCreatedByThisController == nil else { return }
+        DispatchQueue.global(qos: .userInitiated).async {
+            do {
+                self.backupCreatedByThisController = try self.backupManager.performBackup()
+            } catch {
+                os_log("Error backing up: %{public}s", type: .error, error.localizedDescription)
+                DispatchQueue.main.async {
+                    let alert = UIAlertController(title: "Error", message: "The backup could not be made. Please try again later.", preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "OK", style: .default))
+                    self.present(alert, animated: true)
+                }
+            }
+
+            self.reloadBackupInfo()
         }
     }
 

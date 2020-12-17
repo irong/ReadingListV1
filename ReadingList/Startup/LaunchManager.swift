@@ -26,6 +26,10 @@ class LaunchManager {
         UserEngagement.initialiseUserAnalytics()
         SVProgressHUD.setDefaults()
         SwiftyStoreKit.completeTransactions()
+        if #available(iOS 13.0, *) {
+            AutoBackupManager.registerBackgroundTasks()
+            AutoBackupManager.scheduleBackup()
+        }
     }
 
     func handleApplicationDidBecomeActive() {
