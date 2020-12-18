@@ -4,7 +4,7 @@ import UIKit
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
-    var launchManager = LaunchManager()
+    lazy var launchManager = LaunchManager(window: window)
     let upgradeManager = UpgradeManager()
 
     static var shared: AppDelegate {
@@ -16,7 +16,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        launchManager.initialise(window: window!)
+        launchManager.initialise()
         upgradeManager.performNecessaryUpgradeActions()
 
         // Grab any options which we will take action on after the persistent store is initialised

@@ -11,6 +11,13 @@ struct ChangeListProvider {
     )
 
     let changeLog = [
+        Version(major: 1, minor: 16, patch: 0): [
+            WhatsNew.Item(
+                title: "iCloud Backup",
+                subtitle: "Automatic back up to iCloud, to keep your data safe and secure",
+                image: UIImage(largeSystemImageNamed: "icloud.fill")
+            )
+        ],
         Version(major: 1, minor: 14, patch: 0): [
             WhatsNew.Item(
                 title: "Homescreen Widgets",

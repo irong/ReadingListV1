@@ -95,4 +95,66 @@ final class TabBarController: UITabBarController {
                 topTable.scrollToRow(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
         }
     }
+
+    func presentImportView(url: URL) {
+        // First select the correct tab (Settings)
+        selectedTab = .settings
+        guard let settingsSplitVC = selectedSplitViewController else { fatalError("Unexpected missing selected view controller") }
+
+        // Dismiss any existing navigation stack (implementation depends on whether the views are split or not)
+        settingsSplitVC.popDetailOrMasterToRoot(animated: false)
+
+        // Select the Import Export row to ensure it is highlighted
+        guard let settingsVC = settingsSplitVC.masterNavigationController.viewControllers.first as? Settings else {
+            fatalError("Missing Settings view controller")
+        }
+        settingsVC.tableView.selectRow(at: Settings.importExportIndexPath, animated: false, scrollPosition: .none)
+
+        // Instantiate the destination view controller
+        guard let importVC = UIStoryboard.ImportExport.instantiateViewController(withIdentifier: "Import") as? Import else {
+            fatalError("Missing Import view controller")
+        }
+        importVC.preProvidedImportFile = url
+
+        // Instantiate the stack of view controllers leading up to the Import view controller
+        guard let navigation = UIStoryboard.ImportExport.instantiateViewController(withIdentifier: "Navigation") as? UINavigationController else {
+            fatalError("Missing Navigation view controller")
+        }
+        navigation.setViewControllers([
+            UIStoryboard.ImportExport.instantiateViewController(withIdentifier: "ImportExport"),
+            importVC
+        ], animated: false)
+
+        // Put them on the screen
+        settingsSplitVC.showDetailViewController(navigation, sender: self)
+    }
+
+    func presentBackupView() {
+        // First select the correct tab (Settings)
+        selectedTab = .settings
+        guard let settingsSplitVC = selectedSplitViewController else { fatalError("Unexpected missing selected view controller") }
+
+        // Dismiss any existing navigation stack (implementation depends on whether the views are split or not)
+        settingsSplitVC.popDetailOrMasterToRoot(animated: false)
+
+        // Select the Backup row to ensure it is highlighted
+        guard let settingsVC = settingsSplitVC.masterNavigationController.viewControllers.first as? Settings else {
+            fatalError("Unexpected view controller type in settings master navigation controller")
+        }
+        settingsVC.tableView.selectRow(at: Settings.backupIndexPath, animated: false, scrollPosition: .none)
+
+        // Instantiate the destination view controller
+        guard let backupVC = UIStoryboard.Backup.instantiateViewController(withIdentifier: "Backup") as? Backup else {
+            fatalError("Missing Backup view controller")
+        }
+
+        // Instantiate the navigation view controller leading up to the Backup view controller
+        guard let navigation = UIStoryboard.Backup.instantiateViewController(withIdentifier: "Navigation") as? UINavigationController else {
+            fatalError("Missing Navigation view controller")
+        }
+        navigation.setViewControllers([backupVC], animated: false)
+
+        // Put them on the screen
+        settingsSplitVC.showDetailViewController(navigation, sender: self)
+    }
 }

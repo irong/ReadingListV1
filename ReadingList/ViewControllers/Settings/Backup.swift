@@ -41,6 +41,9 @@ final class Backup: UITableViewController {
     }
 
     override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        guard FileManager.default.ubiquityIdentityToken != nil else { return }
+
         // Ensure we use the latest backup frequency whenever this view appears (e.g. when the BackupFrequency view controller
         // pops back to this view).
         tableView.reloadRows(at: [IndexPath(row: 0, section: 2)], with: .none)
@@ -275,37 +278,12 @@ final class Backup: UITableViewController {
 
     private func restore(from backup: BackupInfo) {
         // This is a powerful function. We need to hot-replace the entire persistent store which is holding the app's data, while the app is running!
-        // To do this, we need to deallocate all objects which are using managed objects or managed object contexts.
-        guard let tabBarController = AppDelegate.shared.tabBarController else { preconditionFailure("No tab bar controller") }
-
-        // Replace the first 3 tab bar controllers with dummy view controllers, so we keep the same tab bar appearance
-        guard let lastVc = tabBarController.viewControllers?.last else { preconditionFailure("No tab bar view controllers present") }
-        tabBarController.viewControllers = [UIViewController(), UIViewController(), UIViewController(), lastVc]
-        tabBarController.configureTabIcons()
-
-        // The SVProgressHUD blocks taps, so the user cannot navigate to these dummy view controllers
-        DispatchQueue.main.async {
-            SVProgressHUD.show(withStatus: "Restoring")
+        // To do this, we use the restoration provider, which deallocates all objects which are using managed objects or managed object contexts.
+        guard let backupRestorationProvider = AppDelegate.shared.launchManager.backupRestorationManager else {
+            fatalError("No backup restoration provider available")
         }
 
-        // Restore on a background thread, of course
-        DispatchQueue.global(qos: .userInitiated).async {
-            do {
-                try self.backupManager.restoreFromBackup(backup: backup) { _ in
-                    // Add half a second to the backup time, since it's so fast it is disconserting!
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        self.restoreTabBarControllers()
-                        SVProgressHUD.showSuccess(withStatus: "Restored")
-                    }
-                }
-            } catch {
-                os_log("Error restoring backup: %{public}s", type: .error, error.localizedDescription)
-                DispatchQueue.main.async {
-                    self.restoreTabBarControllers()
-                    SVProgressHUD.showError(withStatus: "Could not restore from backup")
-                }
-            }
-        }
+        backupRestorationProvider.performRestore(from: backup)
     }
 
     private func restoreTabBarControllers() {

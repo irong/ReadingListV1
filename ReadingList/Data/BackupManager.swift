@@ -6,10 +6,23 @@ import os.log
 
 struct BackupMarkerFileInfo: Codable, Equatable {
     let deviceName: String
+    let deviceIdentifier: UUID
     let created: Date
+    let deviceIdiom: UIUserInterfaceIdiom
     let modelVersion: String
     let sizeBytes: UInt64
+
+    init(deviceIdentifier: UUID, size: UInt64) {
+        self.deviceIdentifier = deviceIdentifier
+        sizeBytes = size
+        created = Date()
+        deviceName = UIDevice.current.name
+        modelVersion = BooksModelVersion.latest.rawValue
+        deviceIdiom = UIDevice.current.userInterfaceIdiom
+    }
 }
+
+extension UIUserInterfaceIdiom: Codable { }
 
 struct BackupInfo: Equatable {
     let markerFileInfo: BackupMarkerFileInfo
@@ -19,6 +32,7 @@ struct BackupInfo: Equatable {
 enum BackupError: Error {
     case noCloudUser
     case noContainerUrl
+    case noDeviceIdentifierAvailable
     case unsupportedVersion
 }
 
@@ -53,10 +67,7 @@ class BackupManager {
     }
 
     deinit {
-        query.stop()
-        if let notificationCenterObserver = notificationCenterObserver {
-            NotificationCenter.default.removeObserver(notificationCenterObserver)
-        }
+        stopWatchingForCloudChanges()
     }
 
     /**
@@ -89,6 +100,13 @@ class BackupManager {
             }
         }
         query.start()
+    }
+    
+    func stopWatchingForCloudChanges() {
+        query.stop()
+        if let notificationCenterObserver = notificationCenterObserver {
+            NotificationCenter.default.removeObserver(notificationCenterObserver)
+        }
     }
 
     @objc private func metadataQueryGatheringComplete() {
@@ -143,7 +161,7 @@ class BackupManager {
      Replaces the current app's persistent store with that identified by the backup.
      Caution: calling this method required that no ManagedObjectContexts or ManagedObjects are in use throughout the app.
      */
-    func restoreFromBackup(backup: BackupInfo, completion: @escaping (Error?) -> Void) throws {
+    func restore(from backup: BackupInfo, completion: @escaping (Error?) -> Void) {
         // First, check that we recognise the backup's model version. It must not be a later version that
         // what this version of the app supports.
         guard let modelVersion = BooksModelVersion(rawValue: backup.markerFileInfo.modelVersion) else {
@@ -215,6 +233,7 @@ class BackupManager {
     @discardableResult
     func performBackup() throws -> BackupInfo {
         guard let currentInstallBackupDirectory = currentInstallBackupDirectory else { throw BackupError.noContainerUrl }
+        guard let deviceIdentifier = UIDevice.current.identifierForVendor else { throw BackupError.noDeviceIdentifierAvailable }
 
         // Get the target data directory
         let dataDirectory = URL(fileURLWithPath: backupDataDirectoryName, isDirectory: true, relativeTo: currentInstallBackupDirectory)
@@ -241,7 +260,7 @@ class BackupManager {
         }
 
         // JSON encode the marker file info and write to the suitable file path
-        let markerFileInfo = BackupMarkerFileInfo(deviceName: UIDevice.current.name, created: Date(), modelVersion: BooksModelVersion.latest.rawValue, sizeBytes: backupSize)
+        let markerFileInfo = BackupMarkerFileInfo(deviceIdentifier: deviceIdentifier, size: backupSize)
         let markerFileData = try JSONEncoder().encode(markerFileInfo)
         try markerFileData.write(to: backupInfoURL)
 
