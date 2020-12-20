@@ -9,6 +9,11 @@ final class Backup: UITableViewController {
     private var backupsInfo = [BackupInfo]()
     private var backupCreatedByThisController: BackupInfo?
     private var isWatchingForCloudChanges = false
+    
+    // TODO: Consider iCloud storage? Alert if full, etc?
+    // TODO: Alert if repeated auto-backup failures?
+    // TODO: Restructure backup manager so we don't download the whole backup before it is used?
+    // FUTURE: Expose a mechanism to backup and restore to/from a zip file
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -76,9 +81,9 @@ final class Backup: UITableViewController {
         switch section {
         case 0:
             if FileManager.default.ubiquityIdentityToken == nil {
-                return "App backup data is stored in iCloud. Ensure you are logged in to iCloud in order to back up your data."
+                return "App backup data is stored in iCloud. Ensure you are logged in to iCloud in order to back up or restore your data."
             } else {
-                return "Tap to backup the Reading List data on this device to iCloud."
+                return "Tap to backup the Reading List data on this device to iCloud. Note that it can take some time for the backup to upload to iCloud after it has been made."
             }
         case 1:
             if backupsInfo.isEmpty {
@@ -182,8 +187,8 @@ final class Backup: UITableViewController {
         if self.backupsInfo.isEmpty { return nil }
         return UISwipeActionsConfiguration(actions: [
             UIContextualAction(style: .destructive, title: "Delete") { _, _, completion in
-                let confirmation = UIAlertController(title: "Confirm Deletion", message: "Deleting this backup is irreversible. Are you sure you wish to delete this backup?", preferredStyle: .actionSheet)
-                confirmation.addAction(UIAlertAction(title: "Delete Backup", style: .destructive) { _ in
+                let confirmation = UIAlertController(title: "Confirm Deletion", message: "This action will delete the backup from iCloud, which will remove it as a backup option from all devices. Deleting this backup is irreversible. Are you sure you wish to delete this backup?", preferredStyle: .actionSheet)
+                confirmation.addAction(UIAlertAction(title: "Delete iCloud Backup", style: .destructive) { _ in
                     do {
                         try FileManager.default.removeItem(at: self.backupsInfo[indexPath.row].url)
                     } catch {

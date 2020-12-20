@@ -72,6 +72,7 @@ class LaunchManager {
             }
             DispatchQueue.main.async {
                 UIApplication.shared.endBackgroundTask(taskIdentifier)
+                AutoBackupManager.shared.lastBackupCompletion = Date()
             }
         }
     }

@@ -146,6 +146,10 @@ public extension URL {
     static func temporary() -> URL {
         return URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true).appendingPathComponent(UUID().uuidString)
     }
+    
+    static func temporaryDir() -> URL {
+        return URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true).appendingPathComponent(UUID().uuidString, isDirectory: true)
+    }
 
     static var documents: URL {
         return try! FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
@@ -182,6 +186,12 @@ public extension FileManager {
                 os_log("Unable to remove temporary file %{public}s: %{public}s", type: .error, url.path, error.localizedDescription)
             }
         }
+    }
+
+    func createTemporaryDirectory() -> URL {
+        let directory = URL.temporaryDir()
+        try! FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false, attributes: nil)
+        return directory
     }
 }
 

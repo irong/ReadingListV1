@@ -2,6 +2,7 @@ import Foundation
 import UIKit
 import CoreData
 import ReadingList_Foundation
+import ZIPFoundation
 import os.log
 
 struct BackupMarkerFileInfo: Codable, Equatable {
@@ -20,6 +21,17 @@ struct BackupMarkerFileInfo: Codable, Equatable {
         modelVersion = BooksModelVersion.latest.rawValue
         deviceIdiom = UIDevice.current.userInterfaceIdiom
     }
+
+    /**
+     Returns wheter this backup should be considered a better backup to use than that provided.
+     */
+    func isPreferableTo(_ other: BackupMarkerFileInfo) -> Bool {
+        let thisIsFromCurrentDevice = (deviceIdentifier == UIDevice.current.identifierForVendor)
+        let otherIsFromCurrentDevice = (other.deviceIdentifier == UIDevice.current.identifierForVendor)
+        if thisIsFromCurrentDevice && !otherIsFromCurrentDevice { return true }
+        if !thisIsFromCurrentDevice && otherIsFromCurrentDevice { return false }
+        return created < other.created
+    }
 }
 
 extension UIUserInterfaceIdiom: Codable { }
@@ -27,6 +39,8 @@ extension UIUserInterfaceIdiom: Codable { }
 struct BackupInfo: Equatable {
     let markerFileInfo: BackupMarkerFileInfo
     let url: URL
+    let isDownloaded: Bool
+    let isUploaded: Bool
 }
 
 enum BackupError: Error {
@@ -39,7 +53,7 @@ enum BackupError: Error {
 class BackupManager {
     private let dispatchQueue = DispatchQueue(label: "BackupManager", qos: .userInitiated)
     private let backupInfoFileName = "backup.info"
-    private let backupDataDirectoryName = "data"
+    private let backupDataArchiveName = "data.zip"
 
     private let query: NSMetadataQuery
     private let operationQueue: OperationQueue
@@ -147,14 +161,16 @@ class BackupManager {
             do {
                 let backupInfoData = try Data(contentsOf: backupMarkerFilePath)
                 let backupInfo = try JSONDecoder().decode(BackupMarkerFileInfo.self, from: backupInfoData)
-                backupInfos.append(BackupInfo(markerFileInfo: backupInfo, url: backupFolder))
+                backupInfos.append(BackupInfo(markerFileInfo: backupInfo, url: backupFolder, isDownloaded: false, isUploaded: false))
             } catch {
                 os_log("Error getting backup info from file %{public}s: %{public}s", type: .error, backupFolder.path, error.localizedDescription)
                 continue
             }
         }
 
-        return backupInfos
+        return backupInfos.sorted {
+            $0.markerFileInfo.isPreferableTo($1.markerFileInfo)
+        }
     }
 
     /**
@@ -170,14 +186,23 @@ class BackupManager {
         }
 
         // Build the path to the persistent store file backup.
-        let backupDataDirectory = URL(fileURLWithPath: backupDataDirectoryName, isDirectory: true, relativeTo: backup.url)
-        let storeBackup = URL(fileURLWithPath: PersistentStoreManager.storeFileName, relativeTo: backupDataDirectory)
+        let backupDataArchive = URL(fileURLWithPath: backupDataArchiveName, relativeTo: backup.url)
+        let backupDataArchiveUnzipped = FileManager.default.createTemporaryDirectory()
+        do {
+            try FileManager.default.unzipItem(at: backupDataArchive, to: backupDataArchiveUnzipped)
+        } catch {
+            os_log("Error unzipping archive %{public}s: %{public}s", type: .error, backupDataArchive.path, error.localizedDescription)
+            completion(error)
+            return
+        }
+        let storeBackup = URL(fileURLWithPath: PersistentStoreManager.storeFileName, relativeTo: backupDataArchiveUnzipped)
 
         // Build a new persistent store coordinator to perform the move
         let storeCoordinator = NSPersistentStoreCoordinator(managedObjectModel: modelVersion.managedObjectModel())
 
         // To be safe, we want to backup the current store to a temporary directory. If we can't, then don't go ahead with the restore.
-        let currentStoreBackup = URL.temporary()
+        let currentStoreBackupDir = FileManager.default.createTemporaryDirectory()
+        let currentStoreBackup = currentStoreBackupDir.appendingPathComponent(PersistentStoreManager.storeFileName)
         do {
             try PersistentStoreManager.container.copyPersistentStores(to: currentStoreBackup)
         } catch {
@@ -199,6 +224,10 @@ class BackupManager {
             // We now need to reinitialise the persistent store. This will replace the persistent container in use in the app,
             // and migrate the store (if necessary) to the current version.
             try PersistentStoreManager.initalisePersistentStore {
+                // Clear out temporary files - the current-store backup, and the backup unzip directory
+                try? FileManager.default.removeItem(at: currentStoreBackupDir)
+                try? FileManager.default.removeItem(at: backupDataArchiveUnzipped)
+
                 // If we get here, then we have successully restored!
                 completion(nil)
             }
@@ -213,7 +242,12 @@ class BackupManager {
                     sourceOptions: nil,
                     ofType: NSSQLiteStoreType
                 )
+
                 try PersistentStoreManager.initalisePersistentStore {
+                    // Clear out temporary files - the current-store backup, and the backup unzip directory
+                    try? FileManager.default.removeItem(at: currentStoreBackupDir)
+                    try? FileManager.default.removeItem(at: backupDataArchiveUnzipped)
+
                     // Remember that this does not represent success - we have succeeded in putting the backup back, but failed overall.
                     completion(error)
                 }
@@ -221,6 +255,11 @@ class BackupManager {
                 // This is a serious failure, and it's not clear what this means. The existing store may be OK, or it may be broken.
                 // We can try to hope that the app remains functional.
                 os_log("Error while attempting store recovery during backup restoration. The persistent store is now in an unknown state. %{public}s", type: .error, error.localizedDescription)
+
+                // Clear out temporary files - the current-store backup, and the backup unzip directory
+                try? FileManager.default.removeItem(at: currentStoreBackupDir)
+                try? FileManager.default.removeItem(at: backupDataArchiveUnzipped)
+
                 completion(error)
             }
         }
@@ -236,14 +275,18 @@ class BackupManager {
         guard let deviceIdentifier = UIDevice.current.identifierForVendor else { throw BackupError.noDeviceIdentifierAvailable }
 
         // Get the target data directory
-        let dataDirectory = URL(fileURLWithPath: backupDataDirectoryName, isDirectory: true, relativeTo: currentInstallBackupDirectory)
-        os_log("Writing backup to %{public}s", dataDirectory.path)
+        let dataArchivePath = URL(fileURLWithPath: backupDataArchiveName, isDirectory: true, relativeTo: currentInstallBackupDirectory)
+        os_log("Writing backup to %{public}s", dataArchivePath.path)
 
         // Ensure the backup directory exists
-        try? FileManager.default.createDirectory(at: dataDirectory, withIntermediateDirectories: true, attributes: nil)
+        try? FileManager.default.createDirectory(at: dataArchivePath, withIntermediateDirectories: true, attributes: nil)
 
         // Perform the backup
-        try PersistentStoreManager.container.copyPersistentStores(to: dataDirectory, overwriting: true)
+        let backupTemporaryLocation = FileManager.default.createTemporaryDirectory()
+        try PersistentStoreManager.container.copyPersistentStores(to: backupTemporaryLocation, overwriting: false)
+        try? FileManager.default.removeItem(at: dataArchivePath)
+        try FileManager.default.zipItem(at: backupTemporaryLocation, to: dataArchivePath, shouldKeepParent: false)
+        try? FileManager.default.removeItem(at: backupTemporaryLocation)
 
         // Now gather the data for the backup marker file
         let backupInfoURL = URL(fileURLWithPath: backupInfoFileName, relativeTo: currentInstallBackupDirectory)
@@ -253,7 +296,13 @@ class BackupManager {
 
         let backupSize: UInt64
         do {
-            backupSize = try FileManager.default.calculateDirectorySize(dataDirectory)
+            let attributes = try FileManager.default.attributesOfItem(atPath: dataArchivePath.path)
+            if let sizeAttribute = attributes[.size] as? UInt64 {
+                backupSize = sizeAttribute
+            } else {
+                os_log("Unexpected missing or non UInt64 size attribute", type: .error)
+                backupSize = 0
+            }
         } catch {
             os_log("Error calculating backup size on disk: %{public}s", type: .error, error.localizedDescription)
             backupSize = 0
@@ -264,6 +313,23 @@ class BackupManager {
         let markerFileData = try JSONEncoder().encode(markerFileInfo)
         try markerFileData.write(to: backupInfoURL)
 
-        return BackupInfo(markerFileInfo: markerFileInfo, url: currentInstallBackupDirectory)
+        let isUploaded = (try? dataArchivePath.isUbiquitous()) ?? false
+        return BackupInfo(markerFileInfo: markerFileInfo, url: currentInstallBackupDirectory, isDownloaded: true, isUploaded: isUploaded)
+    }
+}
+
+extension URL {
+    func isUbiquitous() throws -> Bool {
+        var isUploadedResourceValue: AnyObject?
+        try (self as NSURL).getResourceValue(&isUploadedResourceValue, forKey: URLResourceKey.isUbiquitousItemKey)
+        guard let isUploadedResourceBoolean = isUploadedResourceValue as? NSNumber else { return false }
+        return isUploadedResourceBoolean.boolValue
+    }
+
+    func isDownloaded() throws -> Bool {
+        var isDownloadedResourceValue: AnyObject?
+        try (self as NSURL).getResourceValue(&isDownloadedResourceValue, forKey: URLResourceKey.ubiquitousItemDownloadingStatusKey)
+        guard let isDownloadedResourceString = isDownloadedResourceValue as? String else { return false }
+        return isDownloadedResourceString == NSMetadataUbiquitousItemDownloadingStatusCurrent
     }
 }

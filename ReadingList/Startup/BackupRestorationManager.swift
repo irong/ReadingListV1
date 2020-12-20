@@ -38,7 +38,7 @@ class BackupRestorationManager {
             do {
                 backups = try self.backupManager.readBackups()
             } catch {
-                os_log("Error reading backups: {public}s", type: .error, error.localizedDescription)
+                os_log("Error reading backups: %{public}s", type: .error, error.localizedDescription)
                 return
             }
 
@@ -52,12 +52,8 @@ class BackupRestorationManager {
             // one device to the same device (after a reinstall) or its replacement.
             if let backup = backups.filter({ $0.markerFileInfo.deviceIdiom == UIDevice.current.userInterfaceIdiom })
                 .min(by: { left, right in
-                let leftIsFromDevice = (left.markerFileInfo.deviceIdentifier == UIDevice.current.identifierForVendor)
-                let rightIsFromDevice = (right.markerFileInfo.deviceIdentifier == UIDevice.current.identifierForVendor)
-                if leftIsFromDevice && !rightIsFromDevice { return true }
-                if !leftIsFromDevice && rightIsFromDevice { return false }
-                return left.markerFileInfo.created < right.markerFileInfo.created
-            }) {
+                    return left.markerFileInfo.isPreferableTo(right.markerFileInfo)
+                }) {
                 os_log("Found candidate backup to propose restoration")
                 completion(backup)
             } else {
