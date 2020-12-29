@@ -24,8 +24,8 @@ final class BackupRestoreProgress: UIViewController {
 
     /// The backup to restore from.
     var backupInfo: BackupInfo!
-    
-    /// An  action to take when the backup restoration is finished.
+
+    /// An action to take when the backup restoration is finished.
     var completion: ((BackupRestoreResult) -> Void)!
 
     private var restoringLabel: UILabel!

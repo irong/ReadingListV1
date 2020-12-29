@@ -51,11 +51,10 @@ class LaunchManager {
         // Determine whether we ought to backup now
         guard AutoBackupManager.shared.backupIsDue() else { return }
 
-        os_log("Running background task to perform data backup")
         let taskIdentifier = UIApplication.shared.beginBackgroundTask()
-        guard taskIdentifier != .invalid else { return }
+        os_log("Running background task to perform data backup. %d seconds background time available.", UIApplication.shared.backgroundTimeRemaining)
 
-        // Run the backup in the background
+        // Run the backup in the background. Use `.utility` rather than `.background` to help us finish the backup slightly faster.
         DispatchQueue.global(qos: .utility).async {
             do {
                 try BackupManager().performBackup()
@@ -63,10 +62,9 @@ class LaunchManager {
             } catch {
                 os_log("Backup failed: %{public}s", type: .error, error.localizedDescription)
             }
-            DispatchQueue.main.async {
-                UIApplication.shared.endBackgroundTask(taskIdentifier)
-                AutoBackupManager.shared.lastBackupCompletion = Date()
-            }
+
+            AutoBackupManager.shared.lastBackupCompletion = Date()
+            UIApplication.shared.endBackgroundTask(taskIdentifier)
         }
     }
 

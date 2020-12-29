@@ -143,12 +143,9 @@ public extension URL {
         return URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(fileName)
     }
 
+    /// A temporary file path, with name equal to a newly generated UUID.
     static func temporary() -> URL {
         return URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true).appendingPathComponent(UUID().uuidString)
-    }
-
-    static func temporaryDir() -> URL {
-        return URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true).appendingPathComponent(UUID().uuidString, isDirectory: true)
     }
 
     static var documents: URL {
@@ -196,9 +193,16 @@ public extension FileManager {
     }
 
     func createTemporaryDirectory() -> URL {
-        let directory = URL.temporaryDir()
+        let directory = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true).appendingPathComponent(UUID().uuidString, isDirectory: true)
         try! FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false, attributes: nil)
         return directory
+    }
+
+    func pathsWithinDirectory(_ directory: URL) throws -> [URL] {
+        let contents = try contentsOfDirectory(atPath: directory.path)
+        return contents.map {
+            URL(fileURLWithPath: $0, relativeTo: directory)
+        }
     }
 }
 

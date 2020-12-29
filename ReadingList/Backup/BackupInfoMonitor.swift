@@ -45,7 +45,7 @@ final class BackupInfoMonitor {
      */
     func start() {
         os_log("Starting backup info cloud change observations")
-        
+
         dispatchQueue.async {
             // "In iOS, you must call this method at least once before trying to search for cloud-based files in the ubiquity container."
             FileManager.default.url(forUbiquityContainerIdentifier: nil)
