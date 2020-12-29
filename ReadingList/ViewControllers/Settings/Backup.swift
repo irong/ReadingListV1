@@ -8,11 +8,9 @@ final class Backup: UITableViewController {
     private let backupManager = BackupManager()
     private var backupsInfo = [BackupInfo]()
     private var backupCreatedByThisController: BackupInfo?
-    private var isWatchingForCloudChanges = false
-    
-    // TODO: Consider iCloud storage? Alert if full, etc?
-    // TODO: Alert if repeated auto-backup failures?
-    // TODO: Restructure backup manager so we don't download the whole backup before it is used?
+
+    // FUTURE: Consider iCloud storage? Alert if full, etc?
+    // FUTURE: Alert if repeated auto-backup failures?
     // FUTURE: Expose a mechanism to backup and restore to/from a zip file
 
     override func viewDidLoad() {
@@ -22,25 +20,14 @@ final class Backup: UITableViewController {
         refreshControl.addTarget(self, action: #selector(self.didPullToRefresh), for: .valueChanged)
 
         // This is an indication of whether the user is logged in to iCloud
-        if FileManager.default.ubiquityIdentityToken != nil {
-            DispatchQueue.global(qos: .userInitiated).async {
-                self.backupManager.watchForCloudChanges()
-                self.isWatchingForCloudChanges = true
-
-                self.reloadBackupInfo()
-            }
+        DispatchQueue.global(qos: .userInitiated).async {
+            self.reloadBackupInfo()
         }
     }
 
     @objc func didPullToRefresh() {
         tableView.isUserInteractionEnabled = false
-        DispatchQueue.global(qos: .userInteractive).async {
-            // If the user is logged in to iCloud but we are not watching for cloud changes yet, start doing so
-            if FileManager.default.ubiquityIdentityToken != nil && !self.isWatchingForCloudChanges {
-                self.backupManager.watchForCloudChanges()
-                self.isWatchingForCloudChanges = true
-            }
-
+        DispatchQueue.global(qos: .userInitiated).async {
             self.reloadBackupInfo()
         }
     }
@@ -135,7 +122,7 @@ final class Backup: UITableViewController {
         guard let textLabel = cell.textLabel else { fatalError("Missing text label on cell") }
         if let backupCreatedByThisController = backupCreatedByThisController {
             cell.isEnabled = false
-            textLabel.text = "Backup Created at \(dateFormatter.string(from: backupCreatedByThisController.markerFileInfo.created))"
+            textLabel.text = "Created at \(dateFormatter.string(from: backupCreatedByThisController.markerFileInfo.created))"
             if #available(iOS 13.0, *) {
                 textLabel.textColor = .secondaryLabel
             }
@@ -170,6 +157,14 @@ final class Backup: UITableViewController {
         let backup = backupsInfo[indexPath.row]
         textLabel.text = "\(backup.markerFileInfo.deviceName) (\(byteFormatter.string(fromByteCount: Int64(backup.markerFileInfo.sizeBytes))))"
         subtitleLabel.text = dateFormatter.string(from: backup.markerFileInfo.created)
+        if #available(iOS 13.0, *) {
+            let isDownloaded = try? backup.backupDataFilePath.isDownloaded()
+            if isDownloaded != true {
+                cell.accessoryView = UIImageView(image: UIImage(systemName: "icloud.and.arrow.down"))
+            } else {
+                cell.accessoryView = nil
+            }
+        }
         return cell
     }
 
@@ -185,42 +180,72 @@ final class Backup: UITableViewController {
     override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         guard indexPath.section == 1 else { return nil }
         if self.backupsInfo.isEmpty { return nil }
-        return UISwipeActionsConfiguration(actions: [
-            UIContextualAction(style: .destructive, title: "Delete") { _, _, completion in
-                let confirmation = UIAlertController(title: "Confirm Deletion", message: "This action will delete the backup from iCloud, which will remove it as a backup option from all devices. Deleting this backup is irreversible. Are you sure you wish to delete this backup?", preferredStyle: .actionSheet)
-                confirmation.addAction(UIAlertAction(title: "Delete iCloud Backup", style: .destructive) { _ in
-                    do {
-                        try FileManager.default.removeItem(at: self.backupsInfo[indexPath.row].url)
-                    } catch {
-                        // The most likely error is due to the file already being deleted; let's just act as if it was deleted,
-                        // and it may come back when next refreshed...
-                        os_log("Error deleting backup: %{public}s", type: .error, error.localizedDescription)
-                    }
 
-                    // Update the model then then table
-                    let deletedBackup = self.backupsInfo.remove(at: indexPath.row)
-
-                    // Restore the backup button if the user deleted the backup created by this view controller
-                    if deletedBackup == self.backupCreatedByThisController {
-                        self.backupCreatedByThisController = nil
-                        tableView.reloadRows(at: [IndexPath(row: 0, section: 0)], with: .automatic)
-                    }
-
-                    if self.backupsInfo.isEmpty {
-                        // Deleting the last row takes us from 1 row to 1 "No Backups" row, so just reload it
-                        // rather than removing it.
-                        tableView.reloadRows(at: [indexPath], with: .automatic)
-                    } else {
-                        tableView.deleteRows(at: [indexPath], with: .automatic)
-                    }
-
+        let backupInfo = self.backupsInfo[indexPath.row]
+        // We always provide a delete action, which deletes the backup from iCloud + local disk, but
+        // we only provide a "remove" action if the data archive is present on the local device.
+        var swipeActions = [UIContextualAction(style: .destructive, title: "Delete") { _, _, completion in
+            let confirmation = UIAlertController(title: "Confirm Deletion", message: "This action will delete the backup from iCloud, which will remove it as a backup option from all devices. Deleting this backup is irreversible. Are you sure you wish to delete this backup?", preferredStyle: .actionSheet)
+            confirmation.addAction(UIAlertAction(title: "Delete iCloud Backup", style: .destructive) { _ in
+                do {
+                    try FileManager.default.removeItem(at: backupInfo.backupDirectory)
                     completion(true)
+                } catch {
+                    // The most likely error is due to the file already being deleted; let's just act as if it was deleted,
+                    // and it may come back when next refreshed...
+                    os_log("Error deleting backup: %{public}s", type: .error, error.localizedDescription)
+                    completion(false)
+                }
+
+                // Update the model then then table
+                let deletedBackup = self.backupsInfo.remove(at: indexPath.row)
+
+                // Restore the backup button if the user deleted the backup created by this view controller
+                if deletedBackup == self.backupCreatedByThisController {
+                    self.backupCreatedByThisController = nil
+                    tableView.reloadRows(at: [IndexPath(row: 0, section: 0)], with: .automatic)
+                }
+
+                if self.backupsInfo.isEmpty {
+                    // Deleting the last row takes us from 1 row to 1 "No Backups" row, so just reload it
+                    // rather than removing it.
+                    tableView.reloadRows(at: [indexPath], with: .automatic)
+                } else {
+                    tableView.deleteRows(at: [indexPath], with: .automatic)
+                }
+            })
+            confirmation.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
+                completion(false)
+            })
+            confirmation.popoverPresentationController?.setSourceCell(atIndexPath: indexPath, inTable: tableView)
+            self.present(confirmation, animated: true)
+        }]
+
+        if (try? backupInfo.backupDataFilePath.isDownloaded()) ?? false {
+            swipeActions.append(UIContextualAction(style: .normal, title: "Remove") { _, _, completion in
+                let confirmation = UIAlertController(title: "Confirm Removal", message: "The will remove the local copy of the backup from this device, but the backup will remain on iCloud. In order to restore from this backup, it will need to be downloaded again.", preferredStyle: .actionSheet)
+                confirmation.addAction(UIAlertAction(title: "Remove Local Backup", style: .default) { _ in
+                    do {
+                        try FileManager.default.evictUbiquitousItem(at: backupInfo.backupDataFilePath)
+                        completion(true)
+                    } catch {
+                        os_log("Error evicting ubiquitous item: %{public}s", type: .error, error.localizedDescription)
+                        completion(false)
+                    }
+
+                    // Reload the row, since we may add an iCloud icon once evicted
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        tableView.reloadRows(at: [indexPath], with: .none)
+                    }
                 })
-                confirmation.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-                confirmation.popoverPresentationController?.setSourceCell(atIndexPath: indexPath, inTable: tableView)
+                confirmation.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
+                    completion(false)
+                })
                 self.present(confirmation, animated: true)
-            }
-        ])
+            })
+        }
+
+        return UISwipeActionsConfiguration(actions: swipeActions)
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -243,6 +268,8 @@ final class Backup: UITableViewController {
 
     private func didSelectBackupNowCell() {
         guard FileManager.default.ubiquityIdentityToken != nil && backupCreatedByThisController == nil else { return }
+        SVProgressHUD.show(withStatus: "Backing Up...")
+        tableView.deselectRow(at: backupNowCellIndexPath, animated: true)
         DispatchQueue.global(qos: .userInitiated).async {
             do {
                 self.backupCreatedByThisController = try self.backupManager.performBackup()
@@ -255,18 +282,15 @@ final class Backup: UITableViewController {
                 }
             }
 
+            DispatchQueue.main.async {
+                SVProgressHUD.dismiss()
+            }
             self.reloadBackupInfo()
         }
     }
 
     private func reloadBackupInfo() {
-        let backups: [BackupInfo]
-        do {
-            backups = try self.backupManager.readBackups()
-        } catch {
-            os_log("Error reading backups: %{public}s", type: .error, error.localizedDescription)
-            backups = []
-        }
+        let backups = self.backupManager.readBackups()
 
         DispatchQueue.main.async {
             self.backupsInfo = backups
@@ -283,12 +307,9 @@ final class Backup: UITableViewController {
 
     private func restore(from backup: BackupInfo) {
         // This is a powerful function. We need to hot-replace the entire persistent store which is holding the app's data, while the app is running!
-        // To do this, we use the restoration provider, which deallocates all objects which are using managed objects or managed object contexts.
-        guard let backupRestorationProvider = AppDelegate.shared.launchManager.backupRestorationManager else {
-            fatalError("No backup restoration provider available")
-        }
-
-        backupRestorationProvider.performRestore(from: backup)
+        // To do this, we use the restoration manager, which reassigns the app's window's root view controller, which will result in the deallocation
+        // all loaded view controllers (including this one) and all objects which are using managed objects or managed object contexts.
+        BackupRestorationManager.shared.performRestore(from: backup)
     }
 
     private func restoreTabBarControllers() {

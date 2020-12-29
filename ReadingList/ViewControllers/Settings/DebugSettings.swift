@@ -9,6 +9,11 @@ public struct DebugSettings: View {
         set: { Debug.showSortNumber = $0 }
     )
 
+    let stayOnBackupRestorationDownloadScreen = Binding(
+        get: { Debug.stayOnBackupRestorationDownloadScreen },
+        set: { Debug.stayOnBackupRestorationDownloadScreen = $0 }
+    )
+
     private func writeToTempFile(data: [SharedBookData]) -> URL {
         let encoded = try! JSONEncoder().encode(data)
         let temporaryFilePath = URL.temporary(fileWithName: "shared_books.json")
@@ -50,6 +55,9 @@ public struct DebugSettings: View {
                 Section(header: Text("Debug Controls")) {
                     Toggle(isOn: showSortNumber) {
                         Text("Show sort number")
+                    }
+                    Toggle(isOn: stayOnBackupRestorationDownloadScreen) {
+                        Text("Spoof long backup download")
                     }
                 }
                 Section(header: Text("Error Reporting")) {

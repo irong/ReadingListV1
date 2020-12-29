@@ -51,43 +51,13 @@ struct FirstOpenScreenProvider {
             title: "Learn more",
             action: .website(url: "https://readinglist.app/about")
         )
+        config.completionButton = WhatsNewViewController.CompletionButton(
+            title: "Continue",
+            action: .custom { controller in
+                controller.dismiss(animated: true, completion: onDismiss)
+            }
+        )
 
-        let whatsNewController = WhatsNewViewController(whatsNew: whatsNew, configuration: config)
-        return buildContainerViewController(for: whatsNewController, onDisappear: onDismiss)
-    }
-
-    /// To allow us to detect when the view controller was dismissed, we wrap the WhatsNew view controller in a another view controller which permits
-    /// a provided onDisappear closure.
-    func buildContainerViewController(for viewController: UIViewController, onDisappear: (() -> Void)?) -> UIViewController {
-        // Implementing "Container View" in code. See https://stackoverflow.com/a/27278985/5513562
-        let container = WhatsNewKitWrapperViewController(onDisappear: onDisappear)
-        container.addChild(viewController)
-        viewController.view.translatesAutoresizingMaskIntoConstraints = false
-        container.view.translatesAutoresizingMaskIntoConstraints = false
-        container.view.addSubview(viewController.view)
-        viewController.didMove(toParent: container)
-
-        // Pin the WhatsNew view frame onto the container view frame
-        NSLayoutConstraint.activate([
-            container.view.topAnchor.constraint(equalTo: viewController.view.topAnchor),
-            container.view.rightAnchor.constraint(equalTo: viewController.view.rightAnchor),
-            container.view.bottomAnchor.constraint(equalTo: viewController.view.bottomAnchor),
-            container.view.leftAnchor.constraint(equalTo: viewController.view.leftAnchor)
-        ])
-        return container
-    }
-}
-
-class WhatsNewKitWrapperViewController: UIViewController {
-    var onDisappear: (() -> Void)?
-
-    convenience init(onDisappear: (() -> Void)?) {
-        self.init()
-        self.onDisappear = onDisappear
-    }
-
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-        onDisappear?()
+        return WhatsNewViewController(whatsNew: whatsNew, configuration: config)
     }
 }

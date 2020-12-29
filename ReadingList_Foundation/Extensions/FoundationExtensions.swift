@@ -146,7 +146,7 @@ public extension URL {
     static func temporary() -> URL {
         return URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true).appendingPathComponent(UUID().uuidString)
     }
-    
+
     static func temporaryDir() -> URL {
         return URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true).appendingPathComponent(UUID().uuidString, isDirectory: true)
     }
@@ -157,6 +157,13 @@ public extension URL {
 
     static var applicationSupport: URL {
         return try! FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+    }
+
+    func isDownloaded() throws -> Bool {
+        var isDownloadedResourceValue: AnyObject?
+        try (self as NSURL).getResourceValue(&isDownloadedResourceValue, forKey: .ubiquitousItemDownloadingStatusKey)
+        guard let isDownloadedResourceString = isDownloadedResourceValue as? String else { return false }
+        return URLUbiquitousItemDownloadingStatus(rawValue: isDownloadedResourceString) == .current
     }
 }
 

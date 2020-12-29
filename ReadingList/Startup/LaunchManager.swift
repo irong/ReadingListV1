@@ -10,19 +10,11 @@ class LaunchManager {
 
     init(window: UIWindow?) {
         self.window = window
-        if let window = window {
-            backupRestorationManager = BackupRestorationManager(window: window)
-        } else {
-            backupRestorationManager = nil
-        }
     }
 
     let window: UIWindow?
     var storeMigrationFailed = false
     var isFirstLaunch = false
-
-    /// For restoration after first launch, if necessary.
-    let backupRestorationManager: BackupRestorationManager?
 
     /**
      Performs any required initialisation immediately post after the app has launched.
@@ -36,6 +28,7 @@ class LaunchManager {
         UserEngagement.initialiseUserAnalytics()
         SVProgressHUD.setDefaults()
         SwiftyStoreKit.completeTransactions()
+        BackupInfoMonitor.shared.start()
         if #available(iOS 13.0, *) {
             AutoBackupManager.shared.registerBackgroundTasks()
             AutoBackupManager.shared.scheduleBackup()
@@ -203,9 +196,9 @@ class LaunchManager {
 
         if presentFirstLaunchOrChangeLog {
             if isFirstLaunch {
-                guard let backupRestorationManager = backupRestorationManager else { fatalError("No backup restoration provider") }
-                backupRestorationManager.startDownloadingBackupInfo()
-                let firstOpenScreen = FirstOpenScreenProvider().build(onDismiss: backupRestorationManager.presentRestorePromptIfSuitableBackupFound)
+                let firstOpenScreen = FirstOpenScreenProvider().build {
+                    FirstLaunchRestorationManager.shared.presentRestorePromptIfSuitableBackupFound()
+                }
                 rootViewController.present(firstOpenScreen, animated: true)
             } else if let lastLaunchedVersion = AppLaunchHistory.lastLaunchedBuildInfo?.version {
                 if let changeList = ChangeListProvider().changeListController(after: lastLaunchedVersion) {
