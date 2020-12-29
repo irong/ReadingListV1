@@ -236,6 +236,7 @@ final class Backup: UITableViewController {
                 confirmation.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
                     completion(false)
                 })
+                confirmation.popoverPresentationController?.setSourceCell(atIndexPath: indexPath, inTable: tableView)
                 self.present(confirmation, animated: true)
             })
         }
