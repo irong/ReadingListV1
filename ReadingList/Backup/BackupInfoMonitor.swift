@@ -82,45 +82,21 @@ final class BackupInfoMonitor {
         dispatchQueue.async {
             os_log("Metadata query returned %d items", type: .info, self.infoFilesQuery.resultCount)
 
-            // If there are no info files at all, then we clear out our download state dictionary, and set the initial info files
-            // array to empty (if it hasn't been set).
-            if self.infoFilesQuery.resultCount == 0 {
-                self.infoFilesDownloadState = [:]
-
-                if isInitialGatheringCompletion {
-                    os_log("Initial metadata query completed with 0 results; sending didDownloadInitialBackupInfoFiles notification")
-                    self.initialInfoFiles = []
-
-                    // Nothing to download, so we're done!
-                    self.hasDownloadedAllInitialInfoFiles = true
-                    NotificationCenter.default.post(name: .didDownloadInitialBackupInfoFiles, object: nil)
-                }
-
-                return
-            }
-
-            // If there are some results, enumerate through the indices.
-            // We need to remember what files we saw, so we can remove anything else from the download state dictionary.
-            var seenInfoFilePaths = Set<URL>()
+            // Run through the indices of the results, firing off download of any non-downlaoded
+            var seenDownloadStates = [URL: Bool]()
             for resultIndex in 0..<self.infoFilesQuery.resultCount {
                 guard let resultItemMetadata = self.infoFilesQuery.result(at: resultIndex) as? NSMetadataItem,
                       let fileItemURL = resultItemMetadata.value(forAttribute: NSMetadataItemURLKey) as? URL else {
                     os_log("Unexpected query result type, or missing item URL", type: .error)
                     continue
                 }
-                seenInfoFilePaths.insert(fileItemURL)
 
                 if let downloadStatus = resultItemMetadata.value(forAttribute: NSMetadataUbiquitousItemDownloadingStatusKey) as? String,
                    downloadStatus == NSMetadataUbiquitousItemDownloadingStatusCurrent {
-
-                    // If the file is newly downloaded, send a notification
-                    if let existingDownloadState = self.infoFilesDownloadState[fileItemURL], !existingDownloadState {
-                        os_log("File %{public}s is newly downloaded; posting notification", type: .info, fileItemURL.path)
-                        NotificationCenter.default.post(name: .didDownloadNewBackupInfoFile, object: nil)
-                    }
-                    self.infoFilesDownloadState[fileItemURL] = true
+                    seenDownloadStates[fileItemURL] = true
                     continue
                 }
+                seenDownloadStates[fileItemURL] = false
 
                 do {
                     os_log("Requesting download of query result %{public}s", type: .info, fileItemURL.path)
@@ -134,9 +110,19 @@ final class BackupInfoMonitor {
             // used to track when all of the initial present files are downloaded, upon which event a notification will be pushed.
             if isInitialGatheringCompletion {
                 assert(self.initialInfoFiles == nil)
-                self.initialInfoFiles = seenInfoFilePaths
+                self.initialInfoFiles = Set(seenDownloadStates.map(\.key))
                 os_log("Initial metadata query completed with %d results", self.infoFilesQuery.resultCount)
             }
+
+            // Check for differences in the set of files which are downloaded.
+            let downloadedFiles = Set(seenDownloadStates.filter { $0.value }.map(\.key))
+            let previousDownloadedFiles = Set(self.infoFilesDownloadState.filter { $0.value }.map(\.key))
+            if downloadedFiles != previousDownloadedFiles {
+                self.infoFilesDownloadState = seenDownloadStates
+                os_log("Set of downloaded backup info files changed; posting notification", type: .info)
+                NotificationCenter.default.post(name: .backupInfoFilesChanged, object: nil)
+            }
+            self.infoFilesDownloadState = seenDownloadStates
 
             // If we've got a record of the initial set of files, and we haven't yet recorded that we've downloaded the initial
             // set of files, but we can see now that they are all downloaded, then flip the toggle and post a notification saying so.
@@ -145,13 +131,7 @@ final class BackupInfoMonitor {
                initialInfoFiles.allSatisfy({ self.infoFilesDownloadState[$0] ?? false }) {
                 os_log("Initial set of info files are all downloaded; posting didDownloadInitialBackupInfoFiles notification")
                 self.hasDownloadedAllInitialInfoFiles = true
-                NotificationCenter.default.post(name: .didDownloadInitialBackupInfoFiles, object: nil)
-            }
-
-            // Clear out unseen files from our dictionary
-            let unseenFilePaths = self.infoFilesDownloadState.filter { !seenInfoFilePaths.contains($0.key) }.map(\.key)
-            for unseenFilePath in unseenFilePaths {
-                self.infoFilesDownloadState.removeValue(forKey: unseenFilePath)
+                NotificationCenter.default.post(name: .initialBackupInfoFilesDownloaded, object: nil)
             }
         }
     }
@@ -159,8 +139,8 @@ final class BackupInfoMonitor {
 
 extension Notification.Name {
     /// Posted when the initially present backup.info files are all downloaded.
-    static let didDownloadInitialBackupInfoFiles = Notification.Name(rawValue: "didDownloadInitialBackupInfoFiles")
+    static let initialBackupInfoFilesDownloaded = Notification.Name(rawValue: "initialBackupInfoFilesDownloaded")
 
-    /// Posted when any new backup.info file is downloaded.
-    static let didDownloadNewBackupInfoFile = Notification.Name(rawValue: "didDownloadNewBackupInfoFile")
+    /// Posted when the set of downloaded backup.info files has downloaded.
+    static let backupInfoFilesChanged = Notification.Name(rawValue: "backupInfoFilesChanged")
 }

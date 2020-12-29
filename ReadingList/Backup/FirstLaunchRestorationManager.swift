@@ -27,11 +27,11 @@ final class FirstLaunchRestorationManager {
             // Register an observer for this notification now, to avoid timing issues between checking `hasDownloadedAllInitialInfoFiles` and, if it's false,
             // registering an observer. The backup files may have been downloaded between those two operations in this object. So register the observer first,
             // and then remove it if its not needed.
-            NotificationCenter.default.addObserver(self, selector: #selector(self.initialBackupInfoFilesDownloaded), name: .didDownloadInitialBackupInfoFiles, object: nil)
+            NotificationCenter.default.addObserver(self, selector: #selector(self.initialBackupInfoFilesDownloaded), name: .initialBackupInfoFilesDownloaded, object: nil)
 
             if BackupInfoMonitor.shared.hasDownloadedAllInitialInfoFiles {
                 self.hasStartedLookingForEligibleBackups = true
-                NotificationCenter.default.removeObserver(self, name: .didDownloadInitialBackupInfoFiles, object: nil)
+                NotificationCenter.default.removeObserver(self, name: .initialBackupInfoFilesDownloaded, object: nil)
 
                 os_log("Initial info files are all downloaded; will present a backup restore prompt if eligible")
                 self.findEligibleBackupsAndPresentRestorationPrompt()
@@ -40,7 +40,7 @@ final class FirstLaunchRestorationManager {
 
                 // But don't wait longer than 10 seconds! It could give a weird experience if the prompt randomly appears while using the app.
                 self.dispatchQueue.asyncAfter(deadline: .now() + 10) {
-                    NotificationCenter.default.removeObserver(self, name: .didDownloadInitialBackupInfoFiles, object: nil)
+                    NotificationCenter.default.removeObserver(self, name: .initialBackupInfoFilesDownloaded, object: nil)
                 }
             }
         }
@@ -53,7 +53,7 @@ final class FirstLaunchRestorationManager {
         }
 
         hasStartedLookingForEligibleBackups = true
-        NotificationCenter.default.removeObserver(self, name: .didDownloadInitialBackupInfoFiles, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .initialBackupInfoFilesDownloaded, object: nil)
 
         findEligibleBackupsAndPresentRestorationPrompt()
     }

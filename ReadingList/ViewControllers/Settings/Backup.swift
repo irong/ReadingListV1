@@ -16,17 +16,12 @@ final class Backup: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        guard let refreshControl = self.refreshControl else { preconditionFailure("Missing refresh control") }
-        refreshControl.addTarget(self, action: #selector(self.didPullToRefresh), for: .valueChanged)
-
-        // This is an indication of whether the user is logged in to iCloud
-        DispatchQueue.global(qos: .userInitiated).async {
-            self.reloadBackupInfo()
-        }
+        reloadBackupInfoInBackground()
+        NotificationCenter.default.addObserver(self, selector: #selector(reloadBackupInfoInBackground), name: .initialBackupInfoFilesDownloaded, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(reloadBackupInfoInBackground), name: .backupInfoFilesChanged, object: nil)
     }
 
-    @objc func didPullToRefresh() {
-        tableView.isUserInteractionEnabled = false
+    @objc func reloadBackupInfoInBackground() {
         DispatchQueue.global(qos: .userInitiated).async {
             self.reloadBackupInfo()
         }
@@ -292,16 +287,14 @@ final class Backup: UITableViewController {
     private func reloadBackupInfo() {
         let backups = self.backupManager.readBackups()
 
+        // If the backup made by this controller is deleted, remove our local variable
+        if let backupCreatedByThisController = backupCreatedByThisController, !backups.contains(backupCreatedByThisController) {
+            self.backupCreatedByThisController = nil
+        }
+
         DispatchQueue.main.async {
             self.backupsInfo = backups
             self.tableView.reloadData()
-
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                // Ensure that any refresh control is ended, and the table is interactable. Wait half a second so the spinner doesn't vanish
-                // before it is fully spinning
-                self.refreshControl?.endRefreshing()
-                self.tableView.isUserInteractionEnabled = true
-            }
         }
     }
 
