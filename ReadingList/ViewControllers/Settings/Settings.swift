@@ -9,6 +9,7 @@ final class Settings: UITableViewController {
     static let appStoreAddress = "itunes.apple.com/gb/app/reading-list-book-tracker/id1217139955"
     static let feedbackEmailAddress = "feedback@readinglist.app"
     static let importExportIndexPath = IndexPath(row: 2, section: 1)
+    static let backupIndexPath = IndexPath(row: 3, section: 1)
 
     @IBOutlet private var headerLabels: [UILabel]!
     @IBOutlet private weak var versionLabel: UILabel!

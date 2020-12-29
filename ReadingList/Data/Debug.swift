@@ -9,6 +9,9 @@ class Debug {
     @Persisted("showSortNumber", defaultValue: false)
     static var showSortNumber: Bool
 
+    @Persisted("backupRestoreStayDownloading", defaultValue: false)
+    static var stayOnBackupRestorationDownloadScreen: Bool
+
     private static let screenshotsCommand = "--UITests_Screenshots"
 
     static func initialiseSettings() {

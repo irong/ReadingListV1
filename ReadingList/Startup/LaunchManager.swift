@@ -8,7 +8,11 @@ import PersistedPropertyWrapper
 
 class LaunchManager {
 
-    var window: UIWindow!
+    init(window: UIWindow?) {
+        self.window = window
+    }
+
+    let window: UIWindow?
     var storeMigrationFailed = false
     var isFirstLaunch = false
 
@@ -16,9 +20,7 @@ class LaunchManager {
      Performs any required initialisation immediately post after the app has launched.
      This must be called prior to any other initialisation actions.
     */
-    func initialise(window: UIWindow) {
-        self.window = window
-
+    func initialise() {
         isFirstLaunch = AppLaunchHistory.appOpenedCount == 0
         #if DEBUG
         Debug.initialiseSettings()
@@ -26,6 +28,11 @@ class LaunchManager {
         UserEngagement.initialiseUserAnalytics()
         SVProgressHUD.setDefaults()
         SwiftyStoreKit.completeTransactions()
+        BackupInfoMonitor.shared.start()
+        if #available(iOS 13.0, *) {
+            AutoBackupManager.shared.registerBackgroundTasks()
+            AutoBackupManager.shared.scheduleBackup()
+        }
     }
 
     func handleApplicationDidBecomeActive() {
@@ -33,6 +40,31 @@ class LaunchManager {
 
         if storeMigrationFailed {
             presentIncompatibleDataAlert()
+        }
+    }
+
+    func handleApplicationDidEnterBackground() {
+        // The only use of this lifecycle method is to run background backups, on iOS 12 where we don't have access
+        // to the newer background task scheduling functionality.
+        if #available(iOS 13.0, *) { return }
+
+        // Determine whether we ought to backup now
+        guard AutoBackupManager.shared.backupIsDue() else { return }
+
+        let taskIdentifier = UIApplication.shared.beginBackgroundTask()
+        os_log("Running background task to perform data backup. %d seconds background time available.", UIApplication.shared.backgroundTimeRemaining)
+
+        // Run the backup in the background. Use `.utility` rather than `.background` to help us finish the backup slightly faster.
+        DispatchQueue.global(qos: .utility).async {
+            do {
+                try BackupManager().performBackup()
+                os_log("Background backup task completed")
+            } catch {
+                os_log("Backup failed: %{public}s", type: .error, error.localizedDescription)
+            }
+
+            AutoBackupManager.shared.lastBackupCompletion = Date()
+            UIApplication.shared.endBackgroundTask(taskIdentifier)
         }
     }
 
@@ -77,6 +109,7 @@ class LaunchManager {
     }
 
     private func handleLaunchOptions(_ options: LaunchOptions) {
+        guard let window = window else { return }
         guard let tabBarController = window.rootViewController as? TabBarController else {
             assertionFailure()
             return
@@ -93,6 +126,7 @@ class LaunchManager {
      Returns whether the provided URL could be handled.
     */
     @discardableResult func handleOpenUrl(_ url: URL) -> Bool {
+        guard let window = window else { return false }
         if url.isFileURL && url.pathExtension == "csv" {
             return openCsvFileInApp(url: url)
         } else if url.scheme == ProprietaryURLManager.scheme {
@@ -111,54 +145,17 @@ class LaunchManager {
     private func openCsvFileInApp(url: URL) -> Bool {
         os_log("Opening CSV file URL: %{public}s", type: .default, url.absoluteString)
 
-        guard let tabBarController = window.rootViewController as? TabBarController else {
-            assertionFailure()
-            return false
+        guard let tabBarController = window?.rootViewController as? TabBarController else {
+            fatalError("Missing root tab bar controller")
         }
         UserEngagement.logEvent(.openCsvInApp)
-
-        // First select the correct tab (Settings)
-        tabBarController.selectedTab = .settings
-        let settingsSplitVC = tabBarController.selectedSplitViewController!
-
-        // Dismiss any existing navigation stack (implementation depends on whether the views are split or not)
-        if let detailNav = settingsSplitVC.detailNavigationController {
-            detailNav.popToRootViewController(animated: false)
-        } else {
-            settingsSplitVC.masterNavigationController.popToRootViewController(animated: false)
-        }
-
-        // Select the Import Export row to ensure it is highlighted
-        guard let settingsVC = settingsSplitVC.masterNavigationController.viewControllers.first as? Settings else {
-            assertionFailure()
-            return false
-        }
-        settingsVC.tableView.selectRow(at: Settings.importExportIndexPath, animated: false, scrollPosition: .none)
-
-        // Instantiate the destination view controller
-        guard let importVC = UIStoryboard.ImportExport.instantiateViewController(withIdentifier: "Import") as? Import else {
-            assertionFailure()
-            return false
-        }
-        importVC.preProvidedImportFile = url
-
-        // Instantiate the stack of view controllers leading up to the Import view controller
-        guard let navigation = UIStoryboard.ImportExport.instantiateViewController(withIdentifier: "Navigation") as? UINavigationController else {
-            preconditionFailure()
-        }
-        navigation.setViewControllers([
-            UIStoryboard.ImportExport.instantiateViewController(withIdentifier: "ImportExport"),
-            importVC
-        ], animated: false)
-
-        // Put them on the screen
-        settingsSplitVC.showDetailViewController(navigation, sender: self)
+        tabBarController.presentImportView(url: url)
         return true
     }
 
     func handleQuickAction(_ shortcutItem: UIApplicationShortcutItem) -> Bool {
         guard let quickAction = QuickAction(rawValue: shortcutItem.type) else { return false }
-        guard let tabBarController = window.rootViewController as? TabBarController else { return false }
+        guard let tabBarController = window?.rootViewController as? TabBarController else { return false }
         quickAction.perform(from: tabBarController)
         return true
     }
@@ -175,23 +172,15 @@ class LaunchManager {
         #if DEBUG
         Debug.initialiseData()
         #endif
-        window.rootViewController = TabBarController()
+
+        guard let window = window else { return }
+        let rootViewController = TabBarController()
+        window.rootViewController = rootViewController
 
         // Initialise app-level theme, and monitor the set theme, if < iOS 13
         if #available(iOS 13.0, *) { } else {
             initialiseTheme()
             NotificationCenter.default.addObserver(self, selector: #selector(self.initialiseTheme), name: .ThemeSettingChanged, object: nil)
-        }
-
-        if presentFirstLaunchOrChangeLog {
-            if isFirstLaunch {
-                let firstOpenScreen = FirstOpenScreenProvider().build()
-                window.rootViewController!.present(firstOpenScreen, animated: true)
-            } else if let lastLaunchedVersion = AppLaunchHistory.lastLaunchedBuildInfo?.version {
-                if let changeList = ChangeListProvider().changeListController(after: lastLaunchedVersion) {
-                    window.rootViewController!.present(changeList, animated: true)
-                }
-            }
         }
 
         if #available(iOS 14.0, *) {
@@ -203,6 +192,19 @@ class LaunchManager {
             }
         }
 
+        if presentFirstLaunchOrChangeLog {
+            if isFirstLaunch {
+                let firstOpenScreen = FirstOpenScreenProvider().build {
+                    FirstLaunchRestorationManager.shared.presentRestorePromptIfSuitableBackupFound()
+                }
+                rootViewController.present(firstOpenScreen, animated: true)
+            } else if let lastLaunchedVersion = AppLaunchHistory.lastLaunchedBuildInfo?.version {
+                if let changeList = ChangeListProvider().changeListController(after: lastLaunchedVersion) {
+                    rootViewController.present(changeList, animated: true)
+                }
+            }
+        }
+
         AppLaunchHistory.lastLaunchedBuildInfo = BuildInfo.thisBuild
     }
 
@@ -211,10 +213,12 @@ class LaunchManager {
         if #available(iOS 13.0, *) { return }
         let theme = GeneralSettings.theme
         theme.configureForms()
-        window.tintColor = theme.tint
+        window?.tintColor = theme.tint
     }
 
     private func presentIncompatibleDataAlert() {
+        guard let window = window else { fatalError("No window present when attempting to present an incompatible data alert") }
+
         #if RELEASE
         // This is a common error during development, but shouldn't occur in production
         guard AppLaunchHistory.lastLaunchedBuildInfo?.version != BuildInfo.thisBuild.version else {

@@ -6,7 +6,7 @@ class PersistentStoreManager {
 
     private(set) static var container: NSPersistentContainer!
 
-    private static let storeName = "books"
+    static let storeName = "books"
     static var storeFileName: String { return "\(storeName).sqlite" }
     static var storeLocation: URL { return URL.applicationSupport.appendingPathComponent(storeFileName) }
 

@@ -47,6 +47,9 @@ packages:
   SVProgressHUD:
     url: https://github.com/sereivoanyong/SVProgressHUD.git # Fork with SPM support
     branch: master
+  ZIPFoundation:
+    url: https://github.com/weichsel/ZIPFoundation.git
+    minorVersion: 0.9.0
 
 fileGroups:
   - Debug/
@@ -92,6 +95,7 @@ targets:
       - package: Promises
       - package: CHCSVParser
       - package: SVProgressHUD
+      - package: ZIPFoundation
       - package: Firebase
         product: FirebaseCrashlytics
       - package: Firebase

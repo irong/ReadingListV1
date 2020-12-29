@@ -19,7 +19,8 @@ final class Attributions: UITableViewController {
         Attribution("Regex", url: "https://github.com/sharplet/Regex", copyright: "2015 Adam Sharp", license: .mit),
         Attribution("SwiftyStoreKit", url: "https://github.com/bizz84/SwiftyStoreKit", copyright: "2015-2017 Andrea Bizzotto", license: .mit),
         Attribution("SVProgressHUD", url: "https://github.com/SVProgressHUD/SVProgressHUD", copyright: "2011-2018 Sam Vermette, Tobias Tiemerding and contributors", license: .mit),
-        Attribution("WhatsNewKit", url: "https://github.com/SvenTiigi/WhatsNewKit", copyright: "2020 Sven Tiigi", license: .mit)
+        Attribution("WhatsNewKit", url: "https://github.com/SvenTiigi/WhatsNewKit", copyright: "2020 Sven Tiigi", license: .mit),
+        Attribution("ZIPFoundation", url: "https://github.com/weichsel/ZIPFoundation", copyright: "2017-2020 Thomas Zoechling", license: .mit)
     ]
 
     override func numberOfSections(in tableView: UITableView) -> Int { return 2 }

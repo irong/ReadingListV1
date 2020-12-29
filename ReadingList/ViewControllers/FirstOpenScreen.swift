@@ -4,7 +4,7 @@ import WhatsNewKit
 import ReadingList_Foundation
 
 struct FirstOpenScreenProvider {
-    func build() -> UIViewController {
+    func build(onDismiss: (() -> Void)? = nil) -> UIViewController {
         let readingList = "Reading List"
         let title = "Welcome to \(readingList)"
         let whatsNew = WhatsNew(title: title, items: [
@@ -30,7 +30,7 @@ struct FirstOpenScreenProvider {
             ),
             WhatsNew.Item(
                 title: "Free & Open Source",
-                subtitle: "No ads, subscriptions or limits, and fully private.",
+                subtitle: "No ads, subscriptions or limits, and fully private",
                 image: UIImage(largeSystemImageNamed: "lock.open")
             )
         ])
@@ -50,6 +50,12 @@ struct FirstOpenScreenProvider {
         config.detailButton = WhatsNewViewController.DetailButton(
             title: "Learn more",
             action: .website(url: "https://readinglist.app/about")
+        )
+        config.completionButton = WhatsNewViewController.CompletionButton(
+            title: "Continue",
+            action: .custom { controller in
+                controller.dismiss(animated: true, completion: onDismiss)
+            }
         )
 
         return WhatsNewViewController(whatsNew: whatsNew, configuration: config)
