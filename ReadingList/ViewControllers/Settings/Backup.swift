@@ -263,6 +263,7 @@ final class Backup: UITableViewController {
 
     private func didSelectBackupNowCell() {
         guard FileManager.default.ubiquityIdentityToken != nil && backupCreatedByThisController == nil else { return }
+        UserEngagement.logEvent(.createBackup)
         SVProgressHUD.show(withStatus: "Backing Up...")
         tableView.deselectRow(at: backupNowCellIndexPath, animated: true)
         DispatchQueue.global(qos: .userInitiated).async {
@@ -302,6 +303,7 @@ final class Backup: UITableViewController {
         // This is a powerful function. We need to hot-replace the entire persistent store which is holding the app's data, while the app is running!
         // To do this, we use the restoration manager, which reassigns the app's window's root view controller, which will result in the deallocation
         // all loaded view controllers (including this one) and all objects which are using managed objects or managed object contexts.
+        UserEngagement.logEvent(.restoreFromBackup)
         BackupRestorationManager.shared.performRestore(from: backup)
     }
 

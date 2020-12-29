@@ -101,6 +101,7 @@ final class FirstLaunchRestorationManager {
             preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: "Restore", style: .destructive) { _ in
+            UserEngagement.logEvent(.restoreFromBackupOnFirstLaunch)
             BackupRestorationManager.shared.performRestore(from: backupInfo)
         })
         alert.addAction(UIAlertAction(title: "More Info", style: .default) { _ in

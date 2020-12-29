@@ -47,6 +47,11 @@ class AutoBackupManager {
     }
 
     @available(iOS 13.0, *)
+    func cancelScheduledBackup() {
+        BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: backgroundTaskIdentifier)
+    }
+
+    @available(iOS 13.0, *)
     func scheduleBackup(startingAfter earliestBeginDate: Date? = nil) {
         guard let backupInterval = backupFrequency.duration else { return }
 
@@ -60,7 +65,9 @@ class AutoBackupManager {
         do {
             try BGTaskScheduler.shared.submit(request)
         } catch {
-            os_log("Could not schedule app refresh: %{public}s", type: .error, error.localizedDescription)
+            // We don't expect any error here, since the function is documented as throwing if we try to schedule too many
+            // different types of background task, and we only ever schedule one type.
+            fatalError("Error scheduling background task: \(error.localizedDescription)")
         }
     }
 

@@ -22,10 +22,19 @@ class BackupFrequency: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        AutoBackupManager.shared.backupFrequency = BackupFrequencyPeriod.allCases[indexPath.row]
+        let newBackupFrequency = BackupFrequencyPeriod.allCases[indexPath.row]
+        if AutoBackupManager.shared.backupFrequency == newBackupFrequency { return }
+        AutoBackupManager.shared.backupFrequency = newBackupFrequency
+
         if #available(iOS 13.0, *) {
-            AutoBackupManager.shared.scheduleBackup()
+            if newBackupFrequency == .off {
+                AutoBackupManager.shared.cancelScheduledBackup()
+            } else {
+                AutoBackupManager.shared.scheduleBackup()
+            }
         }
+        UserEngagement.logEvent(newBackupFrequency == .off ? .disableAutoBackup : .changeAutoBackupFrequency)
+
         tableView.reloadData()
         navigationController?.popViewController(animated: true)
     }
