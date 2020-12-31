@@ -7,7 +7,6 @@ import SVProgressHUD
 final class Backup: UITableViewController {
     private let backupManager = BackupManager()
     private var backupsInfo = [BackupInfo]()
-    private var backupCreatedByThisController: BackupInfo?
 
     // FUTURE: Consider iCloud storage? Alert if full, etc?
     // FUTURE: Alert if repeated auto-backup failures?
@@ -19,6 +18,7 @@ final class Backup: UITableViewController {
         reloadBackupInfoInBackground()
         NotificationCenter.default.addObserver(self, selector: #selector(reloadBackupInfoInBackground), name: .initialBackupInfoFilesDownloaded, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(reloadBackupInfoInBackground), name: .backupInfoFilesChanged, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(respondToUploadStateChange), name: .backupArchiveUploadStateChanges, object: nil)
     }
 
     @objc func reloadBackupInfoInBackground() {
@@ -27,13 +27,11 @@ final class Backup: UITableViewController {
         }
     }
 
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        guard FileManager.default.ubiquityIdentityToken != nil else { return }
-
-        // Ensure we use the latest backup frequency whenever this view appears (e.g. when the BackupFrequency view controller
-        // pops back to this view).
-        tableView.reloadRows(at: [IndexPath(row: 0, section: 2)], with: .none)
+    @objc func respondToUploadStateChange() {
+        DispatchQueue.main.async {
+            os_log("Backup archive upload state change notification received; reloading table")
+            self.tableView.reloadData()
+        }
     }
 
     override func numberOfSections(in tableView: UITableView) -> Int {
@@ -65,15 +63,28 @@ final class Backup: UITableViewController {
             if FileManager.default.ubiquityIdentityToken == nil {
                 return "App backup data is stored in iCloud. Ensure you are logged in to iCloud in order to back up or restore your data."
             } else {
-                return "Tap to backup the Reading List data on this device to iCloud. Note that it can take some time for the backup to upload to iCloud after it has been made."
+                let mostRecentBackupOnThisDevice = backupsInfo
+                    .filter { $0.markerFileInfo.deviceVendorIdentifier == UIDevice.current.identifierForVendor }
+                    .max(by: { $0.markerFileInfo.created < $1.markerFileInfo.created })
+                if let mostRecentBackupOnThisDevice = mostRecentBackupOnThisDevice {
+                    return "Last backup: \(dateFormatter.string(from: mostRecentBackupOnThisDevice.markerFileInfo.created))"
+                }
+                return "Tap to perform a backup of the Reading List data on this device."
             }
         case 1:
             if backupsInfo.isEmpty {
-                return "App data backups will be listed here once they have been made. Note that it can take some time for backups made on other devices to sync with iCloud and appear here."
+                return "App data backups will be listed here once they have been made. Note that it can take some time for backups to sync with iCloud."
             } else {
-                return "Tap a specific backup to restore the data on this device from a backup. Note that it can take some time for backups made on other devices to sync with iCloud and appear here."
+                return "Tap a specific backup to restore the data on this device from a backup. Note that it can take some time for backups to sync with iCloud; backups not yet uploaded to iCloud are indicated with a dashed cloud icon."
             }
-        case 2: return "Select the frequency that Reading List automatically backs up your data."
+        case 2:
+            var backupFrequencyText = "Select the frequency that Reading List automatically backs up your data."
+            if #available(iOS 13.0, *) {
+                // The use of the background operation for backups is only on iOS 13 and up; only include
+                // this note on iOS 13 therefore.
+                backupFrequencyText += " Backups are made in the background, when your device is locked and connected to power."
+            }
+            return backupFrequencyText
         default: return nil
         }
     }
@@ -115,13 +126,7 @@ final class Backup: UITableViewController {
     private func backupNowCell(_ indexPath: IndexPath) -> UITableViewCell {
         let cell = dequeueCell(withIdentifier: basicCellIdentifier, for: indexPath)
         guard let textLabel = cell.textLabel else { fatalError("Missing text label on cell") }
-        if let backupCreatedByThisController = backupCreatedByThisController {
-            cell.isEnabled = false
-            textLabel.text = "Created at \(dateFormatter.string(from: backupCreatedByThisController.markerFileInfo.created))"
-            if #available(iOS 13.0, *) {
-                textLabel.textColor = .secondaryLabel
-            }
-        } else if FileManager.default.ubiquityIdentityToken == nil {
+        if FileManager.default.ubiquityIdentityToken == nil {
             cell.isEnabled = false
             textLabel.text = "Log in to iCloud to Back Up"
             if #available(iOS 13.0, *) {
@@ -152,13 +157,18 @@ final class Backup: UITableViewController {
         let backup = backupsInfo[indexPath.row]
         textLabel.text = "\(backup.markerFileInfo.deviceName) (\(byteFormatter.string(fromByteCount: Int64(backup.markerFileInfo.sizeBytes))))"
         subtitleLabel.text = dateFormatter.string(from: backup.markerFileInfo.created)
-        if #available(iOS 13.0, *) {
-            let isDownloaded = try? backup.backupDataFilePath.isDownloaded()
-            if isDownloaded != true {
-                cell.accessoryView = UIImageView(image: UIImage(systemName: "icloud.and.arrow.down"))
-            } else {
-                cell.accessoryView = nil
-            }
+
+        // Indicate the backups which are not uploaded yet with a dashed cloud icon
+        let isUploaded = (try? backup.backupDataFilePath.isUploaded()) ?? false
+        if !isUploaded {
+            let dashedCloud = UIImage(imageLiteralResourceName: "DashedCloud")
+                .withRenderingMode(.alwaysTemplate)
+            let dashedCloudImageView = UIImageView(image: dashedCloud)
+            dashedCloudImageView.tintColor = view.tintColor
+            dashedCloudImageView.frame.size = CGSize(width: 26, height: 26)
+            cell.accessoryView = dashedCloudImageView
+        } else {
+            cell.accessoryView = nil
         }
         return cell
     }
@@ -193,13 +203,7 @@ final class Backup: UITableViewController {
                 }
 
                 // Update the model then then table
-                let deletedBackup = self.backupsInfo.remove(at: indexPath.row)
-
-                // Restore the backup button if the user deleted the backup created by this view controller
-                if deletedBackup == self.backupCreatedByThisController {
-                    self.backupCreatedByThisController = nil
-                    tableView.reloadRows(at: [IndexPath(row: 0, section: 0)], with: .automatic)
-                }
+                self.backupsInfo.remove(at: indexPath.row)
 
                 if self.backupsInfo.isEmpty {
                     // Deleting the last row takes us from 1 row to 1 "No Backups" row, so just reload it
@@ -262,14 +266,20 @@ final class Backup: UITableViewController {
         }
     }
 
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        // Attach self to the destination Backup Frequency view controller as a delegate, to update the displayed frequency here
+        guard let backupFrequency = segue.destination as? BackupFrequency else { return }
+        backupFrequency.delegate = self
+    }
+
     private func didSelectBackupNowCell() {
-        guard FileManager.default.ubiquityIdentityToken != nil && backupCreatedByThisController == nil else { return }
+        guard FileManager.default.ubiquityIdentityToken != nil else { return }
         UserEngagement.logEvent(.createBackup)
         SVProgressHUD.show(withStatus: "Backing Up...")
         tableView.deselectRow(at: backupNowCellIndexPath, animated: true)
         DispatchQueue.global(qos: .userInitiated).async {
             do {
-                self.backupCreatedByThisController = try self.backupManager.performBackup()
+                try self.backupManager.performBackup()
             } catch {
                 os_log("Error backing up: %{public}s", type: .error, error.localizedDescription)
                 DispatchQueue.main.async {
@@ -288,11 +298,6 @@ final class Backup: UITableViewController {
 
     private func reloadBackupInfo() {
         let backups = self.backupManager.readBackups()
-
-        // If the backup made by this controller is deleted, remove our local variable
-        if let backupCreatedByThisController = backupCreatedByThisController, !backups.contains(backupCreatedByThisController) {
-            self.backupCreatedByThisController = nil
-        }
 
         DispatchQueue.main.async {
             self.backupsInfo = backups
@@ -319,5 +324,19 @@ final class Backup: UITableViewController {
         reinstantiatedViewControllers.append(lastVc)
         tabBarController.viewControllers = reinstantiatedViewControllers
         tabBarController.configureTabIcons()
+    }
+}
+
+extension Backup: BackupFrequencyDelegate {
+    func backupFrequencyDidChange() {
+        // There is no backup frequency row when not logged in to iCloud, so just exit is this is the case.
+        // We don't expect this to actually happen, though, as we don't allow access to the Backup Frequency view
+        // when not logged in to iCloud.
+        guard FileManager.default.ubiquityIdentityToken != nil else { return }
+
+        DispatchQueue.main.async {
+            // Ensure we use the latest backup frequency when the backup frequency changes.
+            self.tableView.reloadRows(at: [IndexPath(row: 0, section: 2)], with: .none)
+        }
     }
 }

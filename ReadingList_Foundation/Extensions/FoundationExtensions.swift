@@ -162,6 +162,13 @@ public extension URL {
         guard let isDownloadedResourceString = isDownloadedResourceValue as? String else { return false }
         return URLUbiquitousItemDownloadingStatus(rawValue: isDownloadedResourceString) == .current
     }
+
+    func isUploaded() throws -> Bool {
+        var isUploadedResourceValue: AnyObject?
+        try (self as NSURL).getResourceValue(&isUploadedResourceValue, forKey: .ubiquitousItemIsUploadedKey)
+        guard let isUploadedResourceNumber = isUploadedResourceValue as? NSNumber else { return false }
+        return isUploadedResourceNumber.boolValue
+    }
 }
 
 public extension String.SubSequence {

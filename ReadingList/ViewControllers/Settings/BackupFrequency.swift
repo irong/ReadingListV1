@@ -2,6 +2,7 @@ import UIKit
 import PersistedPropertyWrapper
 
 class BackupFrequency: UITableViewController {
+    weak var delegate: BackupFrequencyDelegate?
 
     override func numberOfSections(in tableView: UITableView) -> Int {
         return 1
@@ -36,8 +37,13 @@ class BackupFrequency: UITableViewController {
         UserEngagement.logEvent(newBackupFrequency == .off ? .disableAutoBackup : .changeAutoBackupFrequency)
 
         tableView.reloadData()
+        delegate?.backupFrequencyDidChange()
         navigationController?.popViewController(animated: true)
     }
+}
+
+protocol BackupFrequencyDelegate: class {
+    func backupFrequencyDidChange()
 }
 
 extension BackupFrequencyPeriod: CustomStringConvertible {
