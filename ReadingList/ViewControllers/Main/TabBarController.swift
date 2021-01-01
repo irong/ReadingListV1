@@ -96,7 +96,7 @@ final class TabBarController: UITabBarController {
         }
     }
 
-    func presentImportView(url: URL) {
+    func presentImportExportView(importUrl: URL?) {
         // First select the correct tab (Settings)
         selectedTab = .settings
         guard let settingsSplitVC = selectedSplitViewController else { fatalError("Unexpected missing selected view controller") }
@@ -110,20 +110,26 @@ final class TabBarController: UITabBarController {
         }
         settingsVC.tableView.selectRow(at: Settings.importExportIndexPath, animated: false, scrollPosition: .none)
 
-        // Instantiate the destination view controller
-        guard let importVC = UIStoryboard.ImportExport.instantiateViewController(withIdentifier: "Import") as? Import else {
-            fatalError("Missing Import view controller")
-        }
-        importVC.preProvidedImportFile = url
-
         // Instantiate the stack of view controllers leading up to the Import view controller
         guard let navigation = UIStoryboard.ImportExport.instantiateViewController(withIdentifier: "Navigation") as? UINavigationController else {
             fatalError("Missing Navigation view controller")
         }
-        navigation.setViewControllers([
-            UIStoryboard.ImportExport.instantiateViewController(withIdentifier: "ImportExport"),
-            importVC
-        ], animated: false)
+        let navigationViewControllers: [UIViewController]
+        let importExportVC = UIStoryboard.ImportExport.instantiateViewController(withIdentifier: "ImportExport")
+
+        // Instantiate the Import view controller, if an Import url is provided
+        if let importUrl = importUrl {
+            guard let importVC = UIStoryboard.ImportExport.instantiateViewController(withIdentifier: "Import") as? Import else {
+                fatalError("Missing Import view controller")
+            }
+            importVC.preProvidedImportFile = importUrl
+            navigationViewControllers = [importExportVC, importVC]
+        } else {
+            navigationViewControllers = [importExportVC]
+        }
+
+        // Set the navigation controller's the array of view controllers
+        navigation.setViewControllers(navigationViewControllers, animated: false)
 
         // Put them on the screen
         settingsSplitVC.showDetailViewController(navigation, sender: self)

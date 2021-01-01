@@ -25,7 +25,7 @@ final class Settings: UITableViewController {
 
         DispatchQueue.main.async {
             // isSplit does not work correctly before the view is loaded; run this later
-            if self.splitViewController!.isSplit {
+            if self.splitViewController!.isSplit && self.tableView.indexPathForSelectedRow == nil {
                 self.tableView.selectRow(at: IndexPath(row: 0, section: 0), animated: false, scrollPosition: .none)
             }
         }

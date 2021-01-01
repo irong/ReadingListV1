@@ -66,13 +66,4 @@ class PersistentStoreManager {
         NSManagedObjectContext.mergeChanges(fromRemoteContextSave: [NSDeletedObjectsKey: deletedObjectIds],
                                             into: [PersistentStoreManager.container.viewContext])
     }
-
-    /**
-     Deletes all data from the persistent store.
-    */
-    static func deleteAll() {
-        delete(type: List.self)
-        delete(type: Subject.self)
-        delete(type: Book.self)
-    }
 }

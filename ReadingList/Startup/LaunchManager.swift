@@ -149,7 +149,7 @@ class LaunchManager {
             fatalError("Missing root tab bar controller")
         }
         UserEngagement.logEvent(.openCsvInApp)
-        tabBarController.presentImportView(url: url)
+        tabBarController.presentImportExportView(importUrl: url)
         return true
     }
 

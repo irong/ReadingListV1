@@ -17,7 +17,7 @@ class Debug {
     static func initialiseSettings() {
         if CommandLine.arguments.contains("--reset") {
             UserDefaults.standard.removePersistentDomain(forName: Bundle.main.bundleIdentifier!)
-            NSPersistentStoreCoordinator().destroyAndDeleteStore(at: URL.applicationSupport.appendingPathComponent(PersistentStoreManager.storeFileName))
+            NSPersistentStoreCoordinator().destroyAndDeleteStore(at: PersistentStoreManager.storeLocation)
         }
     }
 
