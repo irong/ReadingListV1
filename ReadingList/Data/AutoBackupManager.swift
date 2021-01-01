@@ -65,9 +65,17 @@ class AutoBackupManager {
         do {
             try BGTaskScheduler.shared.submit(request)
         } catch {
-            // We don't expect any error here, since the function is documented as throwing if we try to schedule too many
-            // different types of background task, and we only ever schedule one type.
-            fatalError("Error scheduling background task: \(error.localizedDescription)")
+            guard let bgTaskError = error as? BGTaskScheduler.Error else {
+                fatalError("Unexpected scheduling background task: \(error.localizedDescription)")
+            }
+            switch bgTaskError.code {
+            case .tooManyPendingTaskRequests: fatalError("Unexpected 'tooManyPendingTaskRequests' error when scheduling background task")
+            case .notPermitted: fatalError("Unexpected 'notPermitted' error when scheduling background task")
+            case .unavailable:
+                os_log("Background task scheduling is unavailable", type: .error)
+            @unknown default:
+                os_log("Unknown background task scheduling error with code %d", type: .error, bgTaskError.code.rawValue)
+            }
         }
     }
 
