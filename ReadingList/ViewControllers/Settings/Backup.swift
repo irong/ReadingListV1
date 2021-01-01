@@ -14,6 +14,8 @@ final class Backup: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        guard let refreshControl = self.refreshControl else { preconditionFailure("Missing refresh control") }
+        refreshControl.addTarget(self, action: #selector(self.didPullToRefresh), for: .valueChanged)
 
         reloadBackupInfoInBackground()
         NotificationCenter.default.addObserver(self, selector: #selector(reloadBackupInfoInBackground), name: .initialBackupInfoFilesDownloaded, object: nil)
@@ -21,16 +23,25 @@ final class Backup: UITableViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(respondToUploadStateChange), name: .backupArchiveUploadStateChanges, object: nil)
     }
 
-    @objc func reloadBackupInfoInBackground() {
+    @objc private func reloadBackupInfoInBackground() {
         DispatchQueue.global(qos: .userInitiated).async {
             self.reloadBackupInfo()
         }
     }
 
-    @objc func respondToUploadStateChange() {
+    @objc private func respondToUploadStateChange() {
         DispatchQueue.main.async {
             os_log("Backup archive upload state change notification received; reloading table")
             self.tableView.reloadData()
+        }
+    }
+
+    @objc private func didPullToRefresh() {
+        guard let refreshControl = self.refreshControl else { preconditionFailure("Missing refresh control") }
+        DispatchQueue.global(qos: .userInitiated).async {
+            self.reloadBackupInfo {
+                refreshControl.endRefreshing()
+            }
         }
     }
 
@@ -231,11 +242,6 @@ final class Backup: UITableViewController {
                         os_log("Error evicting ubiquitous item: %{public}s", type: .error, error.localizedDescription)
                         completion(false)
                     }
-
-                    // Reload the row, since we may add an iCloud icon once evicted
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        tableView.reloadRows(at: [indexPath], with: .none)
-                    }
                 })
                 confirmation.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
                     completion(false)
@@ -296,12 +302,14 @@ final class Backup: UITableViewController {
         }
     }
 
-    private func reloadBackupInfo() {
+    /// Completion, if provided, is run on the main thread
+    private func reloadBackupInfo(completion: (() -> Void)? = nil) {
         let backups = self.backupManager.readBackups()
 
         DispatchQueue.main.async {
             self.backupsInfo = backups
             self.tableView.reloadData()
+            completion?()
         }
     }
 
