@@ -78,7 +78,7 @@ final class FirstLaunchRestorationManager {
         // to be used as a means to transfer data between iPhone and iPad, rather as a means to restore data from
         // one device to the same device (after a reinstall) or its replacement.
         if let backup = backups.filter({ $0.markerFileInfo.deviceIdiom == UIDevice.current.userInterfaceIdiom })
-            .min(by: { $0.markerFileInfo.isPreferableTo($1.markerFileInfo) }) {
+            .max(by: { $0.markerFileInfo.isPreferableTo($1.markerFileInfo) }) {
             os_log("Found candidate backup to propose restoration")
             return backup
         } else {
