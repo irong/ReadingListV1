@@ -35,6 +35,7 @@ final class BackupRestorationManager {
 
     private func errorMessage(for error: BackupManager.RestorationFailure) -> String {
         switch error {
+        case .archiveDownloadTimeout: return "The backup data could not be downloaded. Please ensure your device is connected to the Internet and try again."
         case .unsupportedVersion: return "The backup was made on a newer version of this app. Please update Reading List and try again."
         case .missingDataArchive: return "The backup data could not found on iCloud."
         case .backupCreationFailure: return "An attempt to temporarily back up the current data failed, so the restore process was aborted."

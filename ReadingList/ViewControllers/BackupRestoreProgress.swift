@@ -28,6 +28,8 @@ final class BackupRestoreProgress: FullScreenProgress {
     /// An action to take when the backup restoration is finished.
     var completion: ((BackupRestoreResult) -> Void)!
 
+    private let startTime = Date()
+    private let maximumDownloadDuration: TimeInterval = 30
     private var mode = Mode.restoring
 
     override func viewDidLoad() {
@@ -85,7 +87,7 @@ final class BackupRestoreProgress: FullScreenProgress {
         self.backupDataFileQuery = nil
     }
 
-    @objc private func checkDownloadProgress(_ notification: Notification) {
+    @objc private func checkDownloadProgress() {
         guard let backupDataFileQuery = backupDataFileQuery else { return }
         let results = backupDataFileQuery.results
         guard results.count == 1, let metadataItem = results[0] as? NSMetadataItem else {
@@ -105,8 +107,10 @@ final class BackupRestoreProgress: FullScreenProgress {
 
             #if DEBUG
             // For development ease, allow us to enter a mode where the downloading screen is held in place for a long time
-            os_log("Debug setting stayOnBackupRestorationDownloadScreen is true; remaining on download view")
-            if Debug.stayOnBackupRestorationDownloadScreen { return }
+            if Debug.stayOnBackupRestorationDownloadScreen {
+                os_log("Debug setting stayOnBackupRestorationDownloadScreen is true; remaining on download view")
+                return
+            }
             #endif
 
             mode = .restoring
@@ -119,14 +123,16 @@ final class BackupRestoreProgress: FullScreenProgress {
         }
     }
 
+    var periodicDownloadStatusCheck: DispatchWorkItem?
+
     private func downloadThenRestore(backup: BackupInfo) {
         // A metadata query is used to watch the data archive file and detect when the file is locally available
         let downloadProgressQuery = NSMetadataQuery()
         downloadProgressQuery.searchScopes = [NSMetadataQueryUbiquitousDataScope]
         downloadProgressQuery.predicate = NSPredicate(format: "%K == %@", NSMetadataItemPathKey, backup.backupDataFilePath.path)
-        NotificationCenter.default.addObserver(self, selector: #selector(checkDownloadProgress(_:)), name: .NSMetadataQueryDidFinishGathering, object: downloadProgressQuery)
-        NotificationCenter.default.addObserver(self, selector: #selector(checkDownloadProgress(_:)), name: .NSMetadataQueryDidUpdate, object: downloadProgressQuery)
-        NotificationCenter.default.addObserver(self, selector: #selector(checkDownloadProgress(_:)), name: .NSMetadataQueryGatheringProgress, object: downloadProgressQuery)
+        NotificationCenter.default.addObserver(self, selector: #selector(checkDownloadProgress), name: .NSMetadataQueryDidFinishGathering, object: downloadProgressQuery)
+        NotificationCenter.default.addObserver(self, selector: #selector(checkDownloadProgress), name: .NSMetadataQueryDidUpdate, object: downloadProgressQuery)
+        NotificationCenter.default.addObserver(self, selector: #selector(checkDownloadProgress), name: .NSMetadataQueryGatheringProgress, object: downloadProgressQuery)
         downloadProgressQuery.operationQueue = downloadOperationQueue
         downloadProgressQuery.start()
 
@@ -139,11 +145,37 @@ final class BackupRestoreProgress: FullScreenProgress {
         } catch {
             self.completion(.failure(.missingDataArchive))
         }
+
+        // We are not meant to poll to check download state, but the notifications sent when a download is compelete seems to be
+        // unreliable. Schedule a download status check every 5 seconds, and if enough time passes without the download completing,
+        // we will cancel and return a failure.
+        scheduleNextPeriodicDownloadCheck()
+    }
+
+    private func scheduleNextPeriodicDownloadCheck() {
+        let workItem = DispatchWorkItem {
+            if Date(timeInterval: self.maximumDownloadDuration, since: self.startTime) < Date() {
+                os_log("Maximum download duration has elapsed; returning timeout error", type: .error)
+                self.stopAndRemoveQuery()
+                self.completion(.failure(.archiveDownloadTimeout))
+                return
+            }
+            os_log("Periodic download status check running", type: .info)
+            self.checkDownloadProgress()
+            if self.mode == .downloading {
+                os_log("Backup archive is still downloading after periodic download status check; scheduling next check", type: .info)
+                self.scheduleNextPeriodicDownloadCheck()
+            }
+        }
+        periodicDownloadStatusCheck = workItem
+        os_log("Scheduling periodic download check to run 5 seconds from now", type: .info)
+        downloadQueryDispatchQueue.asyncAfter(deadline: .now() + 5, execute: workItem)
     }
 
     private func restoreData(using backup: BackupInfo) {
         // Restore on a background thread
         downloadQueryDispatchQueue.async {
+            self.periodicDownloadStatusCheck?.cancel()
             BackupManager().restore(from: backup) { error in
                 if let error = error {
                     os_log("Error restoring backup: %{public}s", type: .error, error.localizedDescription)

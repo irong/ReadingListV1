@@ -59,6 +59,7 @@ final class BackupManager {
     enum RestorationFailure: Error {
         case unsupportedVersion
         case missingDataArchive
+        case archiveDownloadTimeout
         case backupCreationFailure(Error)
         case unpackArchiveFailure(Error)
         case replaceStoreFailure(Error)
