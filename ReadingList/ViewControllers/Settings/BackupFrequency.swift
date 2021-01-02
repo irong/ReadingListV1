@@ -4,6 +4,11 @@ import PersistedPropertyWrapper
 class BackupFrequency: UITableViewController {
     weak var delegate: BackupFrequencyDelegate?
 
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        monitorThemeSetting()
+    }
+
     override func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
@@ -25,20 +30,9 @@ class BackupFrequency: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let newBackupFrequency = BackupFrequencyPeriod.allCases[indexPath.row]
         if AutoBackupManager.shared.backupFrequency == newBackupFrequency { return }
-        AutoBackupManager.shared.backupFrequency = newBackupFrequency
-
-        if #available(iOS 13.0, *) {
-            if newBackupFrequency == .off {
-                AutoBackupManager.shared.cancelScheduledBackup()
-            } else {
-                AutoBackupManager.shared.scheduleBackup()
-            }
-        }
-        UserEngagement.logEvent(newBackupFrequency == .off ? .disableAutoBackup : .changeAutoBackupFrequency)
-
+        AutoBackupManager.shared.setBackupFrequency(newBackupFrequency)
         tableView.reloadData()
         delegate?.backupFrequencyDidChange()
-        navigationController?.popViewController(animated: true)
     }
 }
 

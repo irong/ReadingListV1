@@ -19,6 +19,11 @@ final class Settings: UITableViewController {
         versionLabel.text = "v\(BuildInfo.thisBuild.versionAndConfiguration)"
         monitorThemeSetting()
 
+        // For either auto-backup enable/disabled state change, or background app refresh being enabled or disabled,
+        // reload the Backup cell to ensure the red badge is disabled/not-displayed as appropriate.
+        NotificationCenter.default.addObserver(self, selector: #selector(autobackupRelatedChange), name: .autoBackupEnabledOrDisabled, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(autobackupRelatedChange), name: UIApplication.backgroundRefreshStatusDidChangeNotification, object: nil)
+
         #if DEBUG
         tableView.tableHeaderView!.addGestureRecognizer(UILongPressGestureRecognizer(target: self, action: #selector(onLongPressHeader(_:))))
         #endif
@@ -29,6 +34,10 @@ final class Settings: UITableViewController {
                 self.tableView.selectRow(at: IndexPath(row: 0, section: 0), animated: false, scrollPosition: .none)
             }
         }
+    }
+
+    @objc private func autobackupRelatedChange() {
+        tableView.reloadRows(at: [Self.backupIndexPath], with: .none)
     }
 
     #if DEBUG
@@ -80,6 +89,11 @@ final class Settings: UITableViewController {
             cell.selectedBackgroundView = UIView(backgroundColor: UIColor(.splitViewCellSelection))
             cell.textLabel!.highlightedTextColor = .white
             cell.accessoryType = .none
+        }
+        if indexPath == Self.backupIndexPath && AutoBackupManager.shared.cannotRunScheduledAutoBackups {
+            cell.accessoryView = UILabel.tableCellBadge()
+        } else {
+            cell.accessoryView = nil
         }
         return cell
     }

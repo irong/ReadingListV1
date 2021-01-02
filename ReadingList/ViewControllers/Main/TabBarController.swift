@@ -29,6 +29,10 @@ final class TabBarController: UITabBarController {
         viewControllers = getRootViewControllers()
         configureTabIcons()
         monitorThemeSetting()
+
+        // Update the settings badge if we stop or start being able to run auto backup
+        NotificationCenter.default.addObserver(self, selector: #selector(configureTabIcons), name: .autoBackupEnabledOrDisabled, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(configureTabIcons), name: UIApplication.backgroundRefreshStatusDidChangeNotification, object: nil)
     }
 
     func getRootViewControllers() -> [UIViewController] {
@@ -43,7 +47,7 @@ final class TabBarController: UITabBarController {
         return [toRead, finished, UIStoryboard.Organize.instantiateRoot(), UIStoryboard.Settings.instantiateRoot()]
     }
 
-    func configureTabIcons() {
+    @objc func configureTabIcons() {
         guard let items = tabBar.items else { preconditionFailure("Missing tab bar items") }
         // Tabs 3 and 4 are usually configured by the Organise and Settings storyboards, but configure them anyway (there is a use
         // case - when restoring from a backup we may have switched out the view controllers temporarily).
@@ -51,6 +55,11 @@ final class TabBarController: UITabBarController {
         items[1].configure(tag: TabOption.finished.rawValue, title: "Finished", image: #imageLiteral(resourceName: "to-do"), selectedImage: #imageLiteral(resourceName: "to-do-filled"))
         items[2].configure(tag: TabOption.organise.rawValue, title: NSLocalizedString("OrganizeTabText", comment: ""), image: #imageLiteral(resourceName: "organise"), selectedImage: #imageLiteral(resourceName: "organise-filled"))
         items[3].configure(tag: TabOption.settings.rawValue, title: "Settings", image: #imageLiteral(resourceName: "settings"), selectedImage: #imageLiteral(resourceName: "settings-filled"))
+        if AutoBackupManager.shared.cannotRunScheduledAutoBackups {
+            items[3].badgeValue = "1"
+        } else {
+            items[3].badgeValue = nil
+        }
     }
 
     var selectedTab: TabOption {

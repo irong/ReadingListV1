@@ -1,6 +1,7 @@
 import Foundation
 import PersistedPropertyWrapper
 import BackgroundTasks
+import UIKit
 import os.log
 
 enum BackupFrequencyPeriod: Int, CaseIterable {
@@ -19,16 +20,65 @@ extension BackupFrequencyPeriod {
     }
 }
 
+extension Notification.Name {
+    static let autoBackupEnabledOrDisabled = Notification.Name("autoBackupEnabledOrDisabled")
+}
+
 class AutoBackupManager {
     static let shared = AutoBackupManager()
 
-    private init() { }
+    private init() {
+        if #available(iOS 13.0, *) {
+            NotificationCenter.default.addObserver(self, selector: #selector(backgroundRefreshStatusChanged), name: UIApplication.backgroundRefreshStatusDidChangeNotification, object: nil)
+        }
+    }
+
+    @objc private func backgroundRefreshStatusChanged() {
+        guard #available(iOS 13.0, *) else {
+            os_log("Unexpected call to backgroundRefreshStatusChanged", type: .error)
+            return
+        }
+        // If background app refresh has become available, schedule one now.
+        if UIApplication.shared.backgroundRefreshStatus == .available {
+            self.scheduleBackup()
+        } else {
+            self.nextBackupEarliestStartDate = nil
+        }
+    }
+
+    var cannotRunScheduledAutoBackups: Bool {
+        guard #available(iOS 13.0, *) else { return false }
+        return UIApplication.shared.backgroundRefreshStatus != .available && backupFrequency != .off
+    }
 
     @Persisted("backup-frequency-period", defaultValue: .daily)
-    var backupFrequency: BackupFrequencyPeriod
+    private(set) var backupFrequency: BackupFrequencyPeriod
+
+    /// Sets the new backup frequency, cancelling or re-scheduling an auto-backup if appropriate. If auto-backups have been disabled or enabled by this call,
+    /// posts a `.autoBackupEnabledOrDisabled` notification.
+    func setBackupFrequency(_ newBackupFrequency: BackupFrequencyPeriod) {
+        if backupFrequency == newBackupFrequency { return }
+        let isEnableOrDisableChange = backupFrequency == .off || newBackupFrequency == .off
+        backupFrequency = newBackupFrequency
+
+        if #available(iOS 13.0, *) {
+            if newBackupFrequency == .off {
+                cancelScheduledBackup()
+            } else {
+                scheduleBackup()
+            }
+        }
+        if isEnableOrDisableChange {
+            NotificationCenter.default.post(name: .autoBackupEnabledOrDisabled, object: nil)
+        }
+        UserEngagement.logEvent(newBackupFrequency == .off ? .disableAutoBackup : .changeAutoBackupFrequency)
+    }
 
     @Persisted("last-backup-completion-date")
     var lastBackupCompletion: Date?
+
+    @Persisted("next-backup-earliest-start-date")
+    var nextBackupEarliestStartDate: Date?
 
     private let backgroundTaskIdentifier = "com.andrewbennet.books.backup"
 
@@ -49,6 +99,7 @@ class AutoBackupManager {
     @available(iOS 13.0, *)
     func cancelScheduledBackup() {
         BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: backgroundTaskIdentifier)
+        nextBackupEarliestStartDate = nil
     }
 
     @available(iOS 13.0, *)
@@ -61,6 +112,7 @@ class AutoBackupManager {
         } else if let lastBackup = lastBackupCompletion {
             request.earliestBeginDate = lastBackup.advanced(by: backupInterval)
         }
+        nextBackupEarliestStartDate = request.earliestBeginDate ?? Date()
 
         do {
             try BGTaskScheduler.shared.submit(request)

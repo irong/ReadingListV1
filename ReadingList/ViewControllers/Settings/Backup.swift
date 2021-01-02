@@ -21,6 +21,12 @@ final class Backup: UITableViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(reloadBackupInfoInBackground), name: .initialBackupInfoFilesDownloaded, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(reloadBackupInfoInBackground), name: .backupInfoFilesChanged, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(respondToUploadStateChange), name: .backupArchiveUploadStateChanges, object: nil)
+
+        // Watch for changes in the ability to run background tasks
+        NotificationCenter.default.addObserver(self, selector: #selector(backgroundRefreshStatusDidChange),
+                                               name: UIApplication.backgroundRefreshStatusDidChangeNotification, object: nil)
+
+        monitorThemeSetting()
     }
 
     @objc private func reloadBackupInfoInBackground() {
@@ -42,6 +48,14 @@ final class Backup: UITableViewController {
             self.reloadBackupInfo {
                 refreshControl.endRefreshing()
             }
+        }
+    }
+
+    @objc private func backgroundRefreshStatusDidChange() {
+        if tableView.numberOfSections == 3 {
+            tableView.reloadSections(IndexSet(arrayLiteral: 2), with: .automatic)
+        } else {
+            os_log("Detected background refresh status change, but no row at (2, 0) to be refreshed")
         }
     }
 
@@ -89,11 +103,18 @@ final class Backup: UITableViewController {
                 return "Tap a specific backup to restore the data on this device from a backup. Note that it can take some time for backups to sync with iCloud; backups not yet uploaded to iCloud are indicated with a dashed cloud icon."
             }
         case 2:
+            if #available(iOS 13.0, *), UIApplication.shared.backgroundRefreshStatus != .available {
+                var notAvailableText = "Automatic backups are not available as 'Background App Refresh' is not enabled."
+                if UIApplication.shared.backgroundRefreshStatus == .denied {
+                    notAvailableText += " Enable 'Background App Refresh' in Settings > General > Background App Refresh to enable automatic backups."
+                }
+                return notAvailableText
+            }
             var backupFrequencyText = "Select the frequency that Reading List automatically backs up your data."
             if #available(iOS 13.0, *) {
                 // The use of the background operation for backups is only on iOS 13 and up; only include
                 // this note on iOS 13 therefore.
-                backupFrequencyText += " Backups are made in the background, when your device is locked and connected to power."
+                backupFrequencyText += " Backups will made in the background, when your device is locked and connected to power."
             }
             return backupFrequencyText
         default: return nil
@@ -187,9 +208,18 @@ final class Backup: UITableViewController {
     private func backupFrequencyCell(_ indexPath: IndexPath) -> UITableViewCell {
         let cell = dequeueCell(withIdentifier: rightDetailCellIdentifier, for: indexPath)
         guard let textLabel = cell.textLabel, let rightDetailLabel = cell.detailTextLabel else { fatalError("Missing text label on cell") }
+        if #available(iOS 13.0, *) {
+            rightDetailLabel.textColor = .secondaryLabel
+        }
         textLabel.text = "Backup Frequency"
-        rightDetailLabel.text = AutoBackupManager.shared.backupFrequency.description
-        cell.accessoryType = .disclosureIndicator
+        if AutoBackupManager.shared.cannotRunScheduledAutoBackups {
+            rightDetailLabel.text = nil
+            cell.accessoryView = UILabel.tableCellBadge()
+        } else {
+            rightDetailLabel.text = AutoBackupManager.shared.backupFrequency.description
+            cell.accessoryType = .disclosureIndicator
+            cell.accessoryView = nil
+        }
         return cell
     }
 
@@ -268,7 +298,40 @@ final class Backup: UITableViewController {
             present(alert, animated: true)
             tableView.deselectRow(at: indexPath, animated: true)
         } else if indexPath.section == 2 && indexPath.row == 0 {
-            performSegue(withIdentifier: "presentBackupFrequency", sender: self)
+            // On pre-iOS 13 devices, we don't use background app refresh at all, so never present a warning alert about that.
+            guard #available(iOS 13.0, *) else {
+                performSegue(withIdentifier: "presentBackupFrequency", sender: self)
+                return
+            }
+            if UIApplication.shared.backgroundRefreshStatus == .available {
+                performSegue(withIdentifier: "presentBackupFrequency", sender: self)
+            } else {
+                // If background app refresh isn't enabled, present an alert explaining how to enable it
+                var messageText = "Automatic Backup requires 'Background App Refresh' to be enabled to perform backups periodically in the background."
+                if UIApplication.shared.backgroundRefreshStatus == .denied {
+                    messageText += "\n\nEnable 'Background App Refresh' in the Settings app under General > Background App Refresh, and ensure that it is enabled for Reading List."
+                }
+                if AutoBackupManager.shared.backupFrequency != .off {
+                    messageText += "\n\nDisable Automatic Backup to hide this notification."
+                }
+                let alert = UIAlertController(title: "Automatic Backup Not Available", message: messageText, preferredStyle: .alert)
+                let openSettingsURL = URL(string: UIApplication.openSettingsURLString)!
+                if UIApplication.shared.backgroundRefreshStatus == .denied && UIApplication.shared.canOpenURL(openSettingsURL) {
+                    alert.addAction(UIAlertAction(title: "Open Settings", style: .default) { _ in
+                        UIApplication.shared.open(openSettingsURL, options: [:], completionHandler: nil)
+                    })
+                }
+                if AutoBackupManager.shared.backupFrequency != .off {
+                    alert.addAction(UIAlertAction(title: "Disable Automatic Backup", style: .destructive) { _ in
+                        AutoBackupManager.shared.setBackupFrequency(.off)
+                        self.tableView.reloadSections(IndexSet(arrayLiteral: 2), with: .automatic)
+                    })
+                }
+                alert.addAction(UIAlertAction(title: "Dismiss", style: .cancel, handler: nil))
+                present(alert, animated: true) {
+                    self.tableView.deselectRow(at: indexPath, animated: true)
+                }
+            }
         }
     }
 
@@ -293,6 +356,12 @@ final class Backup: UITableViewController {
                     alert.addAction(UIAlertAction(title: "OK", style: .default))
                     self.present(alert, animated: true)
                 }
+            }
+
+            // Reschedule the next backup; there may currently be a due background backup - we just need to schedule the next one
+            // for a day/week from now.
+            if #available(iOS 13.0, *) {
+                AutoBackupManager.shared.scheduleBackup()
             }
 
             DispatchQueue.main.async {
