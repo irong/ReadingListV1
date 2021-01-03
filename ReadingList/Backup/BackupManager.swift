@@ -72,11 +72,11 @@ final class BackupManager {
             case .unsupportedVersion: return 0
             case .missingDataArchive: return 1
             case .archiveDownloadTimeout: return 2
-            case .backupCreationFailure(_): return 3
-            case .unpackArchiveFailure(_): return 4
-            case .replaceStoreFailure(_): return 5
-            case .initialisationFailure(_): return 6
-            case .errorRecoveryFailure(_): return 7
+            case .backupCreationFailure: return 3
+            case .unpackArchiveFailure: return 4
+            case .replaceStoreFailure: return 5
+            case .initialisationFailure: return 6
+            case .errorRecoveryFailure: return 7
             }
         }
 
@@ -195,8 +195,11 @@ final class BackupManager {
 
     /// Enumerates some errors which may occur when performing a backup.
     enum BackupError: Int, Error {
-        case noContainerUrl
-        case noDeviceIdentifierAvailable
+        #if DEBUG
+        case simulatedError = -1
+        #endif
+        case noContainerUrl = 0
+        case noDeviceIdentifierAvailable = 1
     }
 
     /**
@@ -207,6 +210,9 @@ final class BackupManager {
     func performBackup() throws -> BackupInfo {
         guard let currentInstallBackupDirectory = currentInstallBackupDirectory else { throw BackupError.noContainerUrl }
         guard UIDevice.current.identifierForVendor != nil else { throw BackupError.noDeviceIdentifierAvailable }
+        #if DEBUG
+        guard !Debug.simulateBackupFailure else { throw BackupError.simulatedError }
+        #endif
 
         // Get the target data directory
         let dataArchivePath = URL(fileURLWithPath: BackupConstants.backupDataArchiveName, isDirectory: false, relativeTo: currentInstallBackupDirectory)

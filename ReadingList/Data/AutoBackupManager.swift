@@ -89,6 +89,9 @@ class AutoBackupManager {
     @Persisted("next-backup-earliest-start-date")
     var nextBackupEarliestStartDate: Date?
 
+    @Persisted("last-auto-backup-failed", defaultValue: false)
+    var lastAutoBackupFailed: Bool
+
     private let backgroundTaskIdentifier = "com.andrewbennet.books.backup"
 
     @available(iOS 13.0, *)
@@ -123,14 +126,16 @@ class AutoBackupManager {
         let request = BGProcessingTaskRequest(identifier: backgroundTaskIdentifier)
         if let earliestBeginDate = earliestBeginDate {
             request.earliestBeginDate = earliestBeginDate
+            os_log("Scheduled iCloud backup to start after %{public}s", earliestBeginDate.string(withDateFormat: "yyyy-MM-dd HH:mm:ss"))
         } else if let lastBackup = lastBackupCompletion {
-            request.earliestBeginDate = lastBackup.advanced(by: backupInterval)
+            let nextBackupStartDate = lastBackup.advanced(by: backupInterval)
+            request.earliestBeginDate = nextBackupStartDate
+            os_log("Scheduled iCloud backup to start %d seconds after last backup, at %{public}s", backupInterval, nextBackupStartDate.string(withDateFormat: "yyyy-MM-dd HH:mm:ss"))
         }
-        nextBackupEarliestStartDate = request.earliestBeginDate ?? Date()
-        os_log("Scheduled iCloud backup to start after %{public}s", nextBackupEarliestStartDate!.string(withDateFormat: "yyyy-MM-dd HH:mm:ss"))
 
         do {
             try BGTaskScheduler.shared.submit(request)
+            nextBackupEarliestStartDate = request.earliestBeginDate ?? Date()
         } catch {
             guard let bgTaskError = error as? BGTaskScheduler.Error else {
                 fatalError("Unexpected scheduling background task: \(error.localizedDescription)")
@@ -156,9 +161,11 @@ class AutoBackupManager {
         let backupManager = BackupManager()
         do {
             try backupManager.performBackup()
+            lastAutoBackupFailed = false
             task.setTaskCompleted(success: true)
         } catch {
             os_log("Background backup task failed: %{public}s", type: .error, error.localizedDescription)
+            lastAutoBackupFailed = true
             UserEngagement.logError(error)
             task.setTaskCompleted(success: false)
         }

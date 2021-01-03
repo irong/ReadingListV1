@@ -4,6 +4,8 @@ import SVProgressHUD
 
 @available(iOS 13.0, *)
 public struct DebugSettings: View {
+
+    // FUTURE: Use some proper SwiftUI stuff for these: ObservableObject, or AppStorage?
     let showSortNumber = Binding(
         get: { Debug.showSortNumber },
         set: { Debug.showSortNumber = $0 }
@@ -12,6 +14,11 @@ public struct DebugSettings: View {
     let stayOnBackupRestorationDownloadScreen = Binding(
         get: { Debug.stayOnBackupRestorationDownloadScreen },
         set: { Debug.stayOnBackupRestorationDownloadScreen = $0 }
+    )
+
+    let simulateBackupFailed = Binding(
+        get: { Debug.simulateBackupFailure },
+        set: { Debug.simulateBackupFailure = $0 }
     )
 
     private func writeToTempFile(data: [SharedBookData]) -> URL {
@@ -60,7 +67,36 @@ public struct DebugSettings: View {
                         Text("Spoof long backup download")
                     }
                 }
+
+                Section(header: Text("Backup")) {
+                    Button("Schedule Backup") {
+                        AutoBackupManager.shared.lastBackupCompletion = nil
+                        AutoBackupManager.shared.scheduleBackup()
+                    }
+                    if let lastBackup =
+                        AutoBackupManager.shared.lastBackupCompletion {
+                        HStack {
+                            Text("Last Backup")
+                            Spacer()
+                            Text(lastBackup.formatted(dateStyle: .medium, timeStyle: .short))
+                            if AutoBackupManager.shared.lastAutoBackupFailed {
+                                Text("(Failed)")
+                            }
+                        }
+                    }
+                    if let nextBackupStart =
+                        AutoBackupManager.shared.nextBackupEarliestStartDate {
+                        HStack {
+                            Text("Next Backup")
+                            Spacer()
+                            Text(nextBackupStart.formatted(dateStyle: .medium, timeStyle: .short))
+                        }
+                    }
+                }
                 Section(header: Text("Error Reporting")) {
+                    Toggle(isOn: simulateBackupFailed) {
+                        Text("Simulate Failed Backup")
+                    }
                     Button("Crash") {
                         fatalError("Test Crash")
                     }.foregroundColor(.red)
@@ -89,6 +125,15 @@ struct ActivityViewController: UIViewControllerRepresentable {
 struct DebugSettings_Previews: PreviewProvider {
     static var previews: some View {
         DebugSettings { }
+    }
+}
+
+extension Date {
+    func formatted(dateStyle: DateFormatter.Style, timeStyle: DateFormatter.Style) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateStyle = dateStyle
+        dateFormatter.timeStyle = timeStyle
+        return dateFormatter.string(from: self)
     }
 }
 #endif

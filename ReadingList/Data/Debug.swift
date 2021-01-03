@@ -12,6 +12,9 @@ class Debug {
     @Persisted("backupRestoreStayDownloading", defaultValue: false)
     static var stayOnBackupRestorationDownloadScreen: Bool
 
+    @Persisted("simulateBackupFailure", defaultValue: false)
+    static var simulateBackupFailure: Bool
+
     private static let screenshotsCommand = "--UITests_Screenshots"
 
     static func initialiseSettings() {
