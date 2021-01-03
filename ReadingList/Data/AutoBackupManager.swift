@@ -29,17 +29,24 @@ class AutoBackupManager {
 
     private init() {
         if #available(iOS 13.0, *) {
-            NotificationCenter.default.addObserver(self, selector: #selector(backgroundRefreshStatusChanged), name: UIApplication.backgroundRefreshStatusDidChangeNotification, object: nil)
+            NotificationCenter.default.addObserver(self, selector: #selector(autoBackupCapabilityDidChange), name: UIApplication.backgroundRefreshStatusDidChangeNotification, object: nil)
+            NotificationCenter.default.addObserver(self, selector: #selector(ubiquityIdentityDidChange), name: .NSUbiquityIdentityDidChange, object: nil)
         }
     }
 
-    @objc private func backgroundRefreshStatusChanged() {
+    @objc private func ubiquityIdentityDidChange() {
+        // If the ubiquity identity changes (i.e. the user logs in or out of iCloud), post this notification to have it be handled
+        // in the same was as if they turned on or off auto backup.
+        NotificationCenter.default.post(name: .autoBackupEnabledOrDisabled, object: nil)
+    }
+
+    @objc private func autoBackupCapabilityDidChange() {
         guard #available(iOS 13.0, *) else {
             os_log("Unexpected call to backgroundRefreshStatusChanged", type: .error)
             return
         }
         // If background app refresh has become available, schedule one now.
-        if UIApplication.shared.backgroundRefreshStatus == .available {
+        if FileManager.default.ubiquityIdentityToken != nil && UIApplication.shared.backgroundRefreshStatus == .available {
             self.scheduleBackup()
         } else {
             self.nextBackupEarliestStartDate = nil
@@ -48,7 +55,9 @@ class AutoBackupManager {
 
     var cannotRunScheduledAutoBackups: Bool {
         guard #available(iOS 13.0, *) else { return false }
-        return UIApplication.shared.backgroundRefreshStatus != .available && backupFrequency != .off
+        return FileManager.default.ubiquityIdentityToken != nil
+            && UIApplication.shared.backgroundRefreshStatus != .available
+            && backupFrequency != .off
     }
 
     @Persisted("backup-frequency-period", defaultValue: .daily)
@@ -91,6 +100,7 @@ class AutoBackupManager {
     }
 
     func backupIsDue() -> Bool {
+        guard FileManager.default.ubiquityIdentityToken != nil else { return false }
         guard let backupFrequencyDuration = backupFrequency.duration else { return false }
         guard let lastBackupCompletion = lastBackupCompletion else { return true }
         return lastBackupCompletion.addingTimeInterval(backupFrequencyDuration) < Date()
@@ -105,6 +115,10 @@ class AutoBackupManager {
     @available(iOS 13.0, *)
     func scheduleBackup(startingAfter earliestBeginDate: Date? = nil) {
         guard let backupInterval = backupFrequency.duration else { return }
+        guard FileManager.default.ubiquityIdentityToken != nil else {
+            os_log("No iCloud user logged in; not scheduling background backup.")
+            return
+        }
 
         let request = BGProcessingTaskRequest(identifier: backgroundTaskIdentifier)
         if let earliestBeginDate = earliestBeginDate {
@@ -113,6 +127,7 @@ class AutoBackupManager {
             request.earliestBeginDate = lastBackup.advanced(by: backupInterval)
         }
         nextBackupEarliestStartDate = request.earliestBeginDate ?? Date()
+        os_log("Scheduled iCloud backup to start after %{public}s", nextBackupEarliestStartDate!.string(withDateFormat: "yyyy-MM-dd HH:mm:ss"))
 
         do {
             try BGTaskScheduler.shared.submit(request)
@@ -123,9 +138,9 @@ class AutoBackupManager {
             switch bgTaskError.code {
             case .tooManyPendingTaskRequests: fatalError("Unexpected 'tooManyPendingTaskRequests' error when scheduling background task")
             case .notPermitted: fatalError("Unexpected 'notPermitted' error when scheduling background task")
-            case .unavailable:
-                os_log("Background task scheduling is unavailable", type: .error)
+            case .unavailable: os_log("Background task scheduling is unavailable", type: .error)
             @unknown default:
+                UserEngagement.logError(error)
                 os_log("Unknown background task scheduling error with code %d", type: .error, bgTaskError.code.rawValue)
             }
         }
