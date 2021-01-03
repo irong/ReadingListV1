@@ -85,6 +85,8 @@ final class BackupRestoreProgress: FullScreenProgress {
         NotificationCenter.default.removeObserver(self, name: .NSMetadataQueryGatheringProgress, object: backupDataFileQuery)
         self.backupDataFileQuery?.stop()
         self.backupDataFileQuery = nil
+        self.periodicDownloadStatusCheck?.cancel()
+        self.periodicDownloadStatusCheck = nil
     }
 
     @objc private func checkDownloadProgress() {
@@ -143,7 +145,9 @@ final class BackupRestoreProgress: FullScreenProgress {
         do {
             try FileManager.default.startDownloadingUbiquitousItem(at: backup.backupDataFilePath)
         } catch {
+            stopAndRemoveQuery()
             self.completion(.failure(.missingDataArchive))
+            return
         }
 
         // We are not meant to poll to check download state, but the notifications sent when a download is compelete seems to be
