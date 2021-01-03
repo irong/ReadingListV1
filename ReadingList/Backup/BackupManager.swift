@@ -56,7 +56,7 @@ final class BackupManager {
     }
 
     /// Enumerates the possible failures whicih may occur when performing a restoration.
-    enum RestorationFailure: Error {
+    enum RestorationFailure: Error, CustomNSError {
         case unsupportedVersion
         case missingDataArchive
         case archiveDownloadTimeout
@@ -65,6 +65,31 @@ final class BackupManager {
         case replaceStoreFailure(Error)
         case initialisationFailure(Error)
         indirect case errorRecoveryFailure(RestorationFailure)
+
+        // Custom bridging to NSError to make reported errors a bit more intelligible. Just use sequential codes and the contained user infos.
+        var errorCode: Int {
+            switch self {
+            case .unsupportedVersion: return 0
+            case .missingDataArchive: return 1
+            case .archiveDownloadTimeout: return 2
+            case .backupCreationFailure(_): return 3
+            case .unpackArchiveFailure(_): return 4
+            case .replaceStoreFailure(_): return 5
+            case .initialisationFailure(_): return 6
+            case .errorRecoveryFailure(_): return 7
+            }
+        }
+
+        var errorUserInfo: [String: Any] {
+            switch self {
+            case .backupCreationFailure(let error): return (error as NSError).userInfo
+            case .unpackArchiveFailure(let error): return (error as NSError).userInfo
+            case .replaceStoreFailure(let error): return (error as NSError).userInfo
+            case .initialisationFailure(let error): return (error as NSError).userInfo
+            case .errorRecoveryFailure(let error): return (error as NSError).userInfo
+            default: return [:]
+            }
+        }
     }
 
     /**
@@ -169,7 +194,7 @@ final class BackupManager {
     }
 
     /// Enumerates some errors which may occur when performing a backup.
-    enum BackupError: Error {
+    enum BackupError: Int, Error {
         case noContainerUrl
         case noDeviceIdentifierAvailable
     }

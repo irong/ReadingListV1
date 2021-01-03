@@ -14,6 +14,9 @@ final class BackupRestorationManager {
     func performRestore(from backup: BackupInfo) {
         guard let window = AppDelegate.shared.window else { fatalError("No window available when attempting to restore") }
         window.rootViewController = BackupRestoreProgress(backupInfo: backup) { result in
+            if case let BackupRestoreResult.failure(error) = result {
+                UserEngagement.logError(error)
+            }
             DispatchQueue.main.async {
                 let newTabBarController = TabBarController()
                 window.rootViewController = newTabBarController

@@ -285,13 +285,14 @@ final class Backup: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let backupInfo = self.backupsInfo[indexPath.row]
         if indexPath == backupNowCellIndexPath {
             didSelectBackupNowCell()
         } else if indexPath.section == 1 {
             guard !self.backupsInfo.isEmpty else { return }
             let alert = UIAlertController(title: "Restore from Backup?", message: "Restoring from a backup will replace all current data with the data from the backup. Are you sure you wish to continue?", preferredStyle: .actionSheet)
             alert.addAction(UIAlertAction(title: "Restore", style: .destructive) { _ in
-                self.restore(from: self.backupsInfo[indexPath.row])
+                self.restore(from: backupInfo)
             })
             alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
             alert.popoverPresentationController?.setSourceCell(atIndexPath: indexPath, inTable: tableView)
@@ -351,6 +352,7 @@ final class Backup: UITableViewController {
                 try self.backupManager.performBackup()
             } catch {
                 os_log("Error backing up: %{public}s", type: .error, error.localizedDescription)
+                UserEngagement.logError(error)
                 DispatchQueue.main.async {
                     let alert = UIAlertController(title: "Error", message: "The backup could not be made. Please try again later.", preferredStyle: .alert)
                     alert.addAction(UIAlertAction(title: "OK", style: .default))

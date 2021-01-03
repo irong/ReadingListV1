@@ -54,13 +54,14 @@ class LaunchManager {
         let taskIdentifier = UIApplication.shared.beginBackgroundTask()
         os_log("Running background task to perform data backup. %d seconds background time available.", UIApplication.shared.backgroundTimeRemaining)
 
-        // Run the backup in the background. Use `.utility` rather than `.background` to help us finish the backup slightly faster.
-        DispatchQueue.global(qos: .utility).async {
+        // Run the backup in the background. Use `.userInitiated` to help us finish the backup slightly faster.
+        DispatchQueue.global(qos: .userInitiated).async {
             do {
                 try BackupManager().performBackup()
                 os_log("Background backup task completed")
             } catch {
                 os_log("Backup failed: %{public}s", type: .error, error.localizedDescription)
+                UserEngagement.logError(error)
             }
 
             AutoBackupManager.shared.lastBackupCompletion = Date()
@@ -222,11 +223,7 @@ class LaunchManager {
         #if RELEASE
         // This is a common error during development, but shouldn't occur in production
         guard AppLaunchHistory.lastLaunchedBuildInfo?.version != BuildInfo.thisBuild.version else {
-            UserEngagement.logError(
-                NSError(code: .invalidMigration,
-                        userInfo: ["mostRecentWorkingVersion": AppLaunchHistory.lastLaunchedBuildInfo?.fullDescription ?? "unknown"])
-            )
-            preconditionFailure("Migration error thrown for store of same version.")
+            fatalError("Migration error thrown for store of same version. Most recent working version: \(AppLaunchHistory.lastLaunchedBuildInfo?.fullDescription ?? "unknown")")
         }
         #endif
 
@@ -240,7 +237,6 @@ class LaunchManager {
             \(mostRecentWorkingVersion) again to be able to access your data.
             """
         } else {
-            UserEngagement.logError(NSError(code: .noPreviousStoreVersionRecorded))
             compatibilityVersionMessage = nil
             assertionFailure("No recorded previously working version")
         }

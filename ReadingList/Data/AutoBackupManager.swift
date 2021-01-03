@@ -144,6 +144,7 @@ class AutoBackupManager {
             task.setTaskCompleted(success: true)
         } catch {
             os_log("Background backup task failed: %{public}s", type: .error, error.localizedDescription)
+            UserEngagement.logError(error)
             task.setTaskCompleted(success: false)
         }
         lastBackupCompletion = Date()
