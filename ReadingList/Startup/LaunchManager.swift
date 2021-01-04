@@ -42,6 +42,10 @@ class LaunchManager {
             presentIncompatibleDataAlert()
         }
     }
+    
+    enum LegacyBackupError: Int, Error {
+        case timeoutExpired = 0
+    }
 
     func handleApplicationDidEnterBackground() {
         // The only use of this lifecycle method is to run background backups, on iOS 12 where we don't have access
@@ -51,14 +55,22 @@ class LaunchManager {
         // Determine whether we ought to backup now
         guard AutoBackupManager.shared.backupIsDue() else { return }
 
-        let taskIdentifier = UIApplication.shared.beginBackgroundTask()
+        let taskIdentifier = UIApplication.shared.beginBackgroundTask {
+            // Expiration handler: if we didn't get enough time to complete the backup, log an error
+            UserEngagement.logError(LegacyBackupError.timeoutExpired)
+            os_log("Expiration Handler called for background backup task", type: .error)
+            AutoBackupManager.shared.lastAutoBackupFailed = true
+        }
         os_log("Running background task to perform data backup. %d seconds background time available.", UIApplication.shared.backgroundTimeRemaining)
 
         // Run the backup in the background. Use `.userInitiated` to help us finish the backup slightly faster.
         DispatchQueue.global(qos: .userInitiated).async {
             do {
                 try BackupManager().performBackup()
+
                 os_log("Background backup task completed")
+                UserEngagement.logEvent(.autoBackup)
+                AutoBackupManager.shared.lastAutoBackupFailed = false
             } catch {
                 os_log("Backup failed: %{public}s", type: .error, error.localizedDescription)
                 UserEngagement.logError(error)

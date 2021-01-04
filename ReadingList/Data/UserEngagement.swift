@@ -68,6 +68,7 @@ class UserEngagement {
 
         // Backup
         case createBackup = "Create_Backup"
+        case autoBackup = "Auto_Backup"
         case disableAutoBackup = "Disable_Auto_Backup"
         case changeAutoBackupFrequency = "Change_Backup_Frequency"
         case restoreFromBackup = "Restore_From_Backup"
