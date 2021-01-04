@@ -42,7 +42,7 @@ class LaunchManager {
             presentIncompatibleDataAlert()
         }
     }
-    
+
     enum LegacyBackupError: Int, Error {
         case timeoutExpired = 0
     }

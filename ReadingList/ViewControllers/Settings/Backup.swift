@@ -88,19 +88,21 @@ final class Backup: UITableViewController {
             if FileManager.default.ubiquityIdentityToken == nil {
                 return "App backup data is stored in iCloud. Ensure you are logged in to iCloud in order to back up or restore your data."
             } else {
+                var title = "Back up to iCloud to keep your data safe in case you lose your \(UIDevice.current.model) or switch to a new one."
+
                 let mostRecentBackupOnThisDevice = backupsInfo
                     .filter { $0.markerFileInfo.deviceVendorIdentifier == UIDevice.current.identifierForVendor }
                     .max(by: { $0.markerFileInfo.created < $1.markerFileInfo.created })
                 if let mostRecentBackupOnThisDevice = mostRecentBackupOnThisDevice {
-                    return "Last backup: \(dateFormatter.string(from: mostRecentBackupOnThisDevice.markerFileInfo.created))"
+                    title += "\nLast backed up: \(dateFormatter.string(from: mostRecentBackupOnThisDevice.markerFileInfo.created))"
                 }
-                return "Tap to perform a backup of the Reading List data on this device."
+                return title
             }
         case 1:
             if backupsInfo.isEmpty {
                 return "App data backups will be listed here once they have been made. Note that it can take some time for backups to sync with iCloud."
             } else {
-                return "Tap a specific backup to restore the data on this device from a backup. Note that it can take some time for backups to sync with iCloud; backups not yet uploaded to iCloud are indicated with a dashed cloud icon."
+                return "Tap a specific backup to overwrite the data on this \(UIDevice.current.model) with the data from a backup. Note that it can take some time for backups to sync with iCloud. Backups not yet uploaded to iCloud are indicated with a dashed cloud icon."
             }
         case 2:
             if #available(iOS 13.0, *), UIApplication.shared.backgroundRefreshStatus != .available {
@@ -114,7 +116,7 @@ final class Backup: UITableViewController {
             if #available(iOS 13.0, *) {
                 // The use of the background operation for backups is only on iOS 13 and up; only include
                 // this note on iOS 13 therefore.
-                backupFrequencyText += " Backups will made in the background, when your device is locked and connected to power."
+                backupFrequencyText += " Backups will made in the background, when your \(UIDevice.current.model) is locked and connected to power, and uploaded to iCloud when connected to the Internet."
             }
             return backupFrequencyText
         default: return nil
