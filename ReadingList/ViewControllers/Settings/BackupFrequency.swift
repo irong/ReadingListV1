@@ -4,11 +4,6 @@ import PersistedPropertyWrapper
 class BackupFrequency: UITableViewController {
     weak var delegate: BackupFrequencyDelegate?
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        monitorThemeSetting()
-    }
-
     override func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
@@ -19,7 +14,6 @@ class BackupFrequency: UITableViewController {
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "BasicCell", for: indexPath)
-        cell.defaultInitialise(withTheme: GeneralSettings.theme)
         guard let label = cell.textLabel else { preconditionFailure("Missing cell text label") }
         let backupFrequencyPeriod = BackupFrequencyPeriod.allCases[indexPath.row]
         label.text = backupFrequencyPeriod.description

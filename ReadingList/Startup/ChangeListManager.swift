@@ -49,7 +49,7 @@ struct ChangeListProvider {
         ]
     ]
 
-    func thisVersionChangeList() -> UIViewController? {
+    func thisVersionChangeList() -> WhatsNewViewController? {
         let thisVersion = BuildInfo.thisBuild.version
         let itemsToPresent = changeLog[thisVersion] ?? changeLog.filter {
             // Get the versions which match this major and minor version...

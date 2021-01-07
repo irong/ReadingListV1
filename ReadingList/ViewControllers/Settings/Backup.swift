@@ -25,8 +25,6 @@ final class Backup: UITableViewController {
         // Watch for changes in the ability to run background tasks
         NotificationCenter.default.addObserver(self, selector: #selector(backgroundRefreshStatusDidChange),
                                                name: UIApplication.backgroundRefreshStatusDidChangeNotification, object: nil)
-
-        monitorThemeSetting()
     }
 
     @objc private func reloadBackupInfoInBackground() {
@@ -131,14 +129,6 @@ final class Backup: UITableViewController {
     }()
 
     private let byteFormatter = ByteCountFormatter()
-
-    /// Dequeues and initialises a table view cell and initialises it with the current theme, if on earlier than iOS 13
-    private func dequeueCell(withIdentifier identifier: String, for indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: identifier, for: indexPath)
-        cell.defaultInitialise(withTheme: GeneralSettings.theme)
-        return cell
-    }
-
     private let basicCellIdentifier = "BasicCell"
     private let subtitleCellIdentifier = "SubtitleCell"
     private let rightDetailCellIdentifier = "RightDetailCell"
@@ -158,7 +148,7 @@ final class Backup: UITableViewController {
     }
 
     private func backupNowCell(_ indexPath: IndexPath) -> UITableViewCell {
-        let cell = dequeueCell(withIdentifier: basicCellIdentifier, for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: basicCellIdentifier, for: indexPath)
         guard let textLabel = cell.textLabel else { fatalError("Missing text label on cell") }
         if FileManager.default.ubiquityIdentityToken == nil {
             cell.isEnabled = false
@@ -175,7 +165,7 @@ final class Backup: UITableViewController {
     }
 
     private func noBackupsAvailableCell(_ indexPath: IndexPath) -> UITableViewCell {
-        let cell = dequeueCell(withIdentifier: basicCellIdentifier, for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: basicCellIdentifier, for: indexPath)
         guard let textLabel = cell.textLabel else { fatalError("Missing text label on cell") }
         textLabel.text = "No Backups Available"
         if #available(iOS 13.0, *) {
@@ -186,7 +176,7 @@ final class Backup: UITableViewController {
     }
 
     private func backupInfoCell(at indexPath: IndexPath) -> UITableViewCell {
-        let cell = dequeueCell(withIdentifier: subtitleCellIdentifier, for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: subtitleCellIdentifier, for: indexPath)
         guard let textLabel = cell.textLabel, let subtitleLabel = cell.detailTextLabel else { fatalError("Missing text label on cell") }
         let backup = backupsInfo[indexPath.row]
         textLabel.text = "\(backup.markerFileInfo.deviceName) (\(byteFormatter.string(fromByteCount: Int64(backup.markerFileInfo.sizeBytes))))"
@@ -208,7 +198,7 @@ final class Backup: UITableViewController {
     }
 
     private func backupFrequencyCell(_ indexPath: IndexPath) -> UITableViewCell {
-        let cell = dequeueCell(withIdentifier: rightDetailCellIdentifier, for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: rightDetailCellIdentifier, for: indexPath)
         guard let textLabel = cell.textLabel, let rightDetailLabel = cell.detailTextLabel else { fatalError("Missing text label on cell") }
         if #available(iOS 13.0, *) {
             rightDetailLabel.textColor = .secondaryLabel

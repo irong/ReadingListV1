@@ -28,7 +28,6 @@ final class TabBarController: UITabBarController {
     func initialise() {
         viewControllers = getRootViewControllers()
         configureTabIcons()
-        monitorThemeSetting()
 
         // Update the settings badge if we stop or start being able to run auto backup
         NotificationCenter.default.addObserver(self, selector: #selector(configureTabIcons), name: .autoBackupEnabledOrDisabled, object: nil)
