@@ -1,6 +1,7 @@
 import UIKit
 import CoreSpotlight
 import Eureka
+import SwiftUI
 
 final class TabBarController: UITabBarController {
 
@@ -43,7 +44,13 @@ final class TabBarController: UITabBarController {
         let finished = UIStoryboard.BookTable.instantiateRoot() as! UISplitViewController
         (finished.masterNavigationRoot as! BookTable).readStates = [.finished]
 
-        return [toRead, finished, UIStoryboard.Organize.instantiateRoot(), UIStoryboard.Settings.instantiateRoot()]
+        let settings = UISplitViewController()
+        settings.viewControllers = [
+            UIHostingController(rootView: SettingsNew()).inNavigationController(),
+            UIHostingController(rootView: AboutNew()).inNavigationController()
+        ]
+        
+        return [toRead, finished, UIStoryboard.Organize.instantiateRoot(), settings]
     }
 
     @objc func configureTabIcons() {
