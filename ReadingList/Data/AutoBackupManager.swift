@@ -93,6 +93,7 @@ class AutoBackupManager {
     var lastAutoBackupFailed: Bool
 
     private let backgroundTaskIdentifier = "com.andrewbennet.books.backup"
+    private let dispatchQueue = DispatchQueue(label: "com.andrewbennet.books.backup", qos: .background)
 
     @available(iOS 13.0, *)
     func registerBackgroundTasks() {
@@ -158,6 +159,48 @@ class AutoBackupManager {
             scheduleBackup(startingAfter: Date(timeIntervalSinceNow: backupInterval))
         }
 
+        // First, the more likely event: the persistent store container exists. Just perform the backup.
+        if PersistentStoreManager.container != nil {
+            self.performBackupFromTask(task)
+            return
+        }
+
+        // Use a dispatch queue to ensure synchronised access to hasRunBackup
+        os_log("Persistent container was not initialised when handling backup task: registering a notification observer")
+        dispatchQueue.async {
+            var hasRunBackup = false
+            var observer: NSObjectProtocol?
+            observer = NotificationCenter.default.addObserver(forName: .didCompletePersistentStoreInitialisation, object: nil, queue: nil) { _ in
+                guard let observer = observer else { fatalError("Unexpected nil observer object") }
+                NotificationCenter.default.removeObserver(observer)
+
+                // Have the observation block switch back onto the same dispatch queue so that the following code is synchronised with
+                // another check of persistent store manager container just afterwards.
+                self.dispatchQueue.async {
+                    guard !hasRunBackup else {
+                        os_log("Backup has already been run; exiting")
+                        return
+                    }
+                    os_log("Running backup in response to initialisationCompletion notification")
+                    self.performBackupFromTask(task)
+                }
+            }
+
+            // We have to be careful here that the initialisation did not complete between our first check, and when we registered
+            // the notification observers. If that happened, we will never observe the notification (we missed it) so we need to
+            // check the initialisation of the container again.
+            if PersistentStoreManager.container != nil {
+                os_log("Persistent store container is non-nil straight after registering initialisation completion notification observer")
+                guard let observer = observer else { fatalError("Unexpected nil observer object") }
+                NotificationCenter.default.removeObserver(observer)
+                self.performBackupFromTask(task)
+                hasRunBackup = true
+            }
+        }
+    }
+
+    @available(iOS 13.0, *)
+    func performBackupFromTask(_ task: BGProcessingTask) {
         let backupManager = BackupManager()
         do {
             try backupManager.performBackup()

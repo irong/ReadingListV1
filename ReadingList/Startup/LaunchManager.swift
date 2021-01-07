@@ -108,6 +108,10 @@ class LaunchManager {
                             self.handleLaunchOptions(options)
                         }
                     }
+
+                    // Notify any other parts of the app which may be waiting on an initialised persistent container (specifically,
+                    // background backup tasks).
+                    NotificationCenter.default.post(name: .didCompletePersistentStoreInitialisation, object: nil)
                 }
             } catch MigrationError.incompatibleStore {
                 DispatchQueue.main.async {
@@ -268,6 +272,10 @@ class LaunchManager {
         alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
         window.rootViewController!.present(alert, animated: true)
     }
+}
+
+extension Notification.Name {
+    static let didCompletePersistentStoreInitialisation = Notification.Name("didCompletePersistentStoreInitialisation")
 }
 
 struct LaunchOptions {
