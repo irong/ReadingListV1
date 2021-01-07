@@ -28,10 +28,8 @@ class AutoBackupManager {
     static let shared = AutoBackupManager()
 
     private init() {
-        if #available(iOS 13.0, *) {
-            NotificationCenter.default.addObserver(self, selector: #selector(autoBackupCapabilityDidChange), name: UIApplication.backgroundRefreshStatusDidChangeNotification, object: nil)
-            NotificationCenter.default.addObserver(self, selector: #selector(ubiquityIdentityDidChange), name: .NSUbiquityIdentityDidChange, object: nil)
-        }
+        NotificationCenter.default.addObserver(self, selector: #selector(autoBackupCapabilityDidChange), name: UIApplication.backgroundRefreshStatusDidChangeNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(ubiquityIdentityDidChange), name: .NSUbiquityIdentityDidChange, object: nil)
     }
 
     @objc private func ubiquityIdentityDidChange() {
@@ -41,10 +39,6 @@ class AutoBackupManager {
     }
 
     @objc private func autoBackupCapabilityDidChange() {
-        guard #available(iOS 13.0, *) else {
-            os_log("Unexpected call to backgroundRefreshStatusChanged", type: .error)
-            return
-        }
         // If background app refresh has become available, schedule one now.
         if FileManager.default.ubiquityIdentityToken != nil && UIApplication.shared.backgroundRefreshStatus == .available {
             self.scheduleBackup()
@@ -54,7 +48,6 @@ class AutoBackupManager {
     }
 
     var cannotRunScheduledAutoBackups: Bool {
-        guard #available(iOS 13.0, *) else { return false }
         return FileManager.default.ubiquityIdentityToken != nil
             && UIApplication.shared.backgroundRefreshStatus != .available
             && backupFrequency != .off
@@ -70,12 +63,10 @@ class AutoBackupManager {
         let isEnableOrDisableChange = backupFrequency == .off || newBackupFrequency == .off
         backupFrequency = newBackupFrequency
 
-        if #available(iOS 13.0, *) {
-            if newBackupFrequency == .off {
-                cancelScheduledBackup()
-            } else {
-                scheduleBackup()
-            }
+        if newBackupFrequency == .off {
+            cancelScheduledBackup()
+        } else {
+            scheduleBackup()
         }
         if isEnableOrDisableChange {
             NotificationCenter.default.post(name: .autoBackupEnabledOrDisabled, object: nil)
@@ -95,7 +86,6 @@ class AutoBackupManager {
     private let backgroundTaskIdentifier = "com.andrewbennet.books.backup"
     private let dispatchQueue = DispatchQueue(label: "com.andrewbennet.books.backup", qos: .background)
 
-    @available(iOS 13.0, *)
     func registerBackgroundTasks() {
         BGTaskScheduler.shared.register(forTaskWithIdentifier: backgroundTaskIdentifier, using: nil) { task in
             guard let processingTask = task as? BGProcessingTask else { preconditionFailure("Unexpected task type") }
@@ -103,20 +93,11 @@ class AutoBackupManager {
         }
     }
 
-    func backupIsDue() -> Bool {
-        guard FileManager.default.ubiquityIdentityToken != nil else { return false }
-        guard let backupFrequencyDuration = backupFrequency.duration else { return false }
-        guard let lastBackupCompletion = lastBackupCompletion else { return true }
-        return lastBackupCompletion.addingTimeInterval(backupFrequencyDuration) < Date()
-    }
-
-    @available(iOS 13.0, *)
     func cancelScheduledBackup() {
         BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: backgroundTaskIdentifier)
         nextBackupEarliestStartDate = nil
     }
 
-    @available(iOS 13.0, *)
     func scheduleBackup(startingAfter earliestBeginDate: Date? = nil) {
         guard let backupInterval = backupFrequency.duration else { return }
         guard FileManager.default.ubiquityIdentityToken != nil else {
@@ -152,7 +133,6 @@ class AutoBackupManager {
         }
     }
 
-    @available(iOS 13.0, *)
     func handleBackupTask(_ task: BGProcessingTask) {
         // Schedule a new backup task
         if let backupInterval = backupFrequency.duration {
@@ -199,7 +179,6 @@ class AutoBackupManager {
         }
     }
 
-    @available(iOS 13.0, *)
     func performBackupFromTask(_ task: BGProcessingTask) {
         let backupManager = BackupManager()
         do {
