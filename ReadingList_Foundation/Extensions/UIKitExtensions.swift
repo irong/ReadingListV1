@@ -152,6 +152,14 @@ public extension UISplitViewController {
         // The controller is not present
         return nil
     }
+
+    func popDetailOrMasterToRoot(animated: Bool) {
+        if let detailNav = detailNavigationController {
+            detailNav.popToRootViewController(animated: animated)
+        } else {
+            masterNavigationController.popToRootViewController(animated: animated)
+        }
+    }
 }
 
 public extension UINavigationController {

@@ -9,6 +9,7 @@ final class Settings: UITableViewController {
     static let appStoreAddress = "itunes.apple.com/gb/app/reading-list-book-tracker/id1217139955"
     static let feedbackEmailAddress = "feedback@readinglist.app"
     static let importExportIndexPath = IndexPath(row: 2, section: 1)
+    static let backupIndexPath = IndexPath(row: 3, section: 1)
 
     @IBOutlet private var headerLabels: [UILabel]!
     @IBOutlet private weak var versionLabel: UILabel!
@@ -17,16 +18,25 @@ final class Settings: UITableViewController {
         super.viewDidLoad()
         versionLabel.text = "v\(BuildInfo.thisBuild.versionAndConfiguration)"
 
+        // For either auto-backup enable/disabled state change, or background app refresh being enabled or disabled,
+        // reload the Backup cell to ensure the red badge is disabled/not-displayed as appropriate.
+        NotificationCenter.default.addObserver(self, selector: #selector(autobackupRelatedChange), name: .autoBackupEnabledOrDisabled, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(autobackupRelatedChange), name: UIApplication.backgroundRefreshStatusDidChangeNotification, object: nil)
+
         #if DEBUG
         tableView.tableHeaderView!.addGestureRecognizer(UILongPressGestureRecognizer(target: self, action: #selector(onLongPressHeader(_:))))
         #endif
 
         DispatchQueue.main.async {
             // isSplit does not work correctly before the view is loaded; run this later
-            if self.splitViewController!.isSplit {
+            if self.splitViewController!.isSplit && self.tableView.indexPathForSelectedRow == nil {
                 self.tableView.selectRow(at: IndexPath(row: 0, section: 0), animated: false, scrollPosition: .none)
             }
         }
+    }
+
+    @objc private func autobackupRelatedChange() {
+        tableView.reloadRows(at: [Self.backupIndexPath], with: .none)
     }
 
     #if DEBUG
@@ -67,6 +77,11 @@ final class Settings: UITableViewController {
             cell.selectedBackgroundView = UIView(backgroundColor: UIColor(named: "SplitViewCellSelection")!)
             cell.textLabel!.highlightedTextColor = .white
             cell.accessoryType = .none
+        }
+        if indexPath == Self.backupIndexPath && AutoBackupManager.shared.cannotRunScheduledAutoBackups {
+            cell.accessoryView = UILabel.tableCellBadge()
+        } else {
+            cell.accessoryView = nil
         }
         return cell
     }
