@@ -44,9 +44,19 @@ final class TabBarController: UITabBarController {
         let finished = UIStoryboard.BookTable.instantiateRoot() as! UISplitViewController
         (finished.masterNavigationRoot as! BookTable).readStates = [.finished]
 
-        let settings = UISplitViewController()
+        let settings = SplitViewController()
         settings.viewControllers = [
-            UIHostingController(rootView: SettingsNew()).inNavigationController(),
+            UIHostingController(rootView: SettingsNew(showDetail: { type in
+                let destination: UIViewController
+                switch type {
+                case .about: destination = UIHostingController(rootView: AboutNew())
+                case .general: destination = UIHostingController(rootView: GeneralNew())
+                case .sort: destination = UIHostingController(rootView: GeneralNew()) // TODO
+                case .tip: destination = UIHostingController(rootView: TipNew())
+                case .importExport: destination = UIHostingController(rootView: GeneralNew()) // TODO
+                }
+                settings.showDetailViewController(destination.inNavigationController(), sender: settings)
+            })).inNavigationController(),
             UIHostingController(rootView: AboutNew()).inNavigationController()
         ]
         

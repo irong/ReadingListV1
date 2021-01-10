@@ -26,7 +26,7 @@ struct SettingsCell<T>: View where T: View {
                     .font(.system(size: 14.0, weight: .semibold, design: .rounded))
                     .foregroundColor(Color(.tertiaryLabel))
             }
-        }
+        }.contentShape(Rectangle())
     }
 }
 

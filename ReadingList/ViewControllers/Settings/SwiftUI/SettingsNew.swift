@@ -1,7 +1,27 @@
 import SwiftUI
 
+enum SettingsSelection {
+    case about
+    case general
+    case tip
+    case sort
+    case importExport
+}
+
 struct SettingsNew: View {
     let writeReviewUrl = URL(string: "itms-apps://\(Settings.appStoreAddress)?action=write-review")!
+    let showDetail: (SettingsSelection) -> Void
+    @State var selectedRow: SettingsSelection? = .about
+
+    func background(_ row: SettingsSelection) -> some View {
+        if row != selectedRow { return Color.clear }
+        return Color(.systemGray4)
+    }
+    
+    func onCellSelect(_ selection: SettingsSelection) {
+        showDetail(selection)
+        selectedRow = selection
+    }
 
     var body: some View {
         //NavigationView {
@@ -10,20 +30,31 @@ struct SettingsNew: View {
                     SettingsHeader()
                 }.listRowBackground(Color(.groupTableViewBackground))
                 Section {
-                    SettingsCell("About", imageName: "info", color: .blue)
-                        .navigating(to: AboutNew())
+                    SettingsCell("About", imageName: "info", color: .blue).onTapGesture {
+                        onCellSelect(.about)
+                    }.listRowBackground(background(.about))
                     SettingsCell("Rate", imageName: "star.fill", color: .orange)
                         .buttonWithTap {
                             UIApplication.shared.open(writeReviewUrl, options: [:])
+                            selectedRow = nil
                         }
                     SettingsCell("Leave Tip", imageName: "heart.fill", color: .pink)
-                        .navigating(to: TipNew())
+                        .onTapGesture {
+                            onCellSelect(.tip)
+                        }.listRowBackground(background(.tip))
                 }
                 Section {
                     SettingsCell("General", imageName: "gearshape.fill", color: .gray)
-                        .navigating(to: GeneralNew())
+                        .onTapGesture {
+                            onCellSelect(.general)
+                        }.listRowBackground(background(.general))
                     SettingsCell("Sort", imageName: "chevron.up.chevron.down", color: .blue)
-                    SettingsCell("Import / Export", imageName: "doc.fill", color: .green)
+                        .onTapGesture {
+                            onCellSelect(.sort)
+                        }.listRowBackground(background(.sort))
+                    SettingsCell("Import / Export", imageName: "doc.fill", color: .green).onTapGesture {
+                        onCellSelect(.importExport)
+                    }.listRowBackground(background(.importExport))
                 }
             }
         //.navigationBarTitle("Settings", displayMode: .inline)
@@ -50,6 +81,6 @@ struct SettingsHeader: View {
 
 struct SettingsNew_Previews: PreviewProvider {
     static var previews: some View {
-        SettingsNew()
+        SettingsNew(showDetail: { _ in })
     }
 }
