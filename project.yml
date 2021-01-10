@@ -37,7 +37,7 @@ packages:
     minorVersion: 2.1.1
   Firebase:
     url: https://github.com/firebase/firebase-ios-sdk.git
-    minorVersion: 7.0.0
+    minorVersion: 7.2.0
   Promises:
     url: https://github.com/google/promises.git
     minorVersion: 1.2.0
@@ -130,8 +130,6 @@ targets:
         OTHER_LDFLAGS: -ObjC
       configs:
         Debug:
-          # Stupid build errors from Firebase without this line
-          EXCLUDED_ARCHS[sdk=iphonesimulator*]: arm64
           PROVISIONING_PROFILE_SPECIFIER: match Development com.andrewbennet.books
           OTHER_SWIFT_FLAGS: $(inherited) "-D" "DEBUG"
         Release:
