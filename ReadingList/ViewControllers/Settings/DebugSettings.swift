@@ -27,7 +27,7 @@ public struct DebugSettings: View {
         return temporaryFilePath
     }
 
-    let onDismiss: () -> Void
+    @Binding var isPresented: Bool
 
     @State private var currentBookDataPresented = false
     @State private var currentBookDataFile: URL?
@@ -102,7 +102,7 @@ public struct DebugSettings: View {
                 }
             }.navigationBarTitle("Debug Settings", displayMode: .inline)
             .navigationBarItems(trailing: Button("Dismiss") {
-                onDismiss()
+                isPresented = false
             })
         }
     }
@@ -121,7 +121,7 @@ struct ActivityViewController: UIViewControllerRepresentable {
 
 struct DebugSettings_Previews: PreviewProvider {
     static var previews: some View {
-        DebugSettings { }
+        DebugSettings(isPresented: .constant(true))
     }
 }
 

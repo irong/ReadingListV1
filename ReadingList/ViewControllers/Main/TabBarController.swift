@@ -45,21 +45,25 @@ final class TabBarController: UITabBarController {
         (finished.masterNavigationRoot as! BookTable).readStates = [.finished]
 
         let settings = SplitViewController()
+        let hostingSplitView = HostingSplitView()
+        settings.hostingSplitView = hostingSplitView
         settings.viewControllers = [
-            UIHostingController(rootView: SettingsNew(showDetail: { type in
+            UIHostingController(rootView: Settings { type in
                 let destination: UIViewController
                 switch type {
-                case .about: destination = UIHostingController(rootView: AboutNew())
-                case .general: destination = UIHostingController(rootView: GeneralNew())
-                case .sort: destination = UIHostingController(rootView: GeneralNew()) // TODO
-                case .tip: destination = UIHostingController(rootView: TipNew())
-                case .importExport: destination = UIHostingController(rootView: GeneralNew()) // TODO
+                case .about: destination = UIHostingController(rootView: About().environmentObject(hostingSplitView)).inNavigationController()
+                case .general: destination = UIHostingController(rootView: General().environmentObject(hostingSplitView)).inNavigationController()
+                case .sort: destination = UIHostingController(rootView: Sort().environmentObject(hostingSplitView)).inNavigationController()
+                case .tip: destination = UIHostingController(rootView: Tip().environmentObject(hostingSplitView)).inNavigationController()
+                case .importExport: destination = UIStoryboard.ImportExport.instantiateRoot()
+                case .backup: destination = UIStoryboard.Backup.instantiateRoot()
                 }
-                settings.showDetailViewController(destination.inNavigationController(), sender: settings)
-            })).inNavigationController(),
-            UIHostingController(rootView: AboutNew()).inNavigationController()
+                settings.showDetailViewController(destination, sender: settings)
+            }.environmentObject(hostingSplitView)).inNavigationController()
         ]
-        
+        settings.showDetailViewController(UIHostingController(rootView: About()).inNavigationController(), sender: self)
+        hostingSplitView.isSplit = !settings.isCollapsed
+
         return [toRead, finished, UIStoryboard.Organize.instantiateRoot(), settings]
     }
 
@@ -130,34 +134,34 @@ final class TabBarController: UITabBarController {
         settingsSplitVC.popDetailOrMasterToRoot(animated: false)
 
         // Select the Import Export row to ensure it is highlighted
-        guard let settingsVC = settingsSplitVC.masterNavigationController.viewControllers.first as? Settings else {
-            fatalError("Missing Settings view controller")
-        }
-        settingsVC.tableView.selectRow(at: Settings.importExportIndexPath, animated: false, scrollPosition: .none)
-
-        // Instantiate the stack of view controllers leading up to the Import view controller
-        guard let navigation = UIStoryboard.ImportExport.instantiateViewController(withIdentifier: "Navigation") as? UINavigationController else {
-            fatalError("Missing Navigation view controller")
-        }
-        let navigationViewControllers: [UIViewController]
-        let importExportVC = UIStoryboard.ImportExport.instantiateViewController(withIdentifier: "ImportExport")
-
-        // Instantiate the Import view controller, if an Import url is provided
-        if let importUrl = importUrl {
-            guard let importVC = UIStoryboard.ImportExport.instantiateViewController(withIdentifier: "Import") as? Import else {
-                fatalError("Missing Import view controller")
-            }
-            importVC.preProvidedImportFile = importUrl
-            navigationViewControllers = [importExportVC, importVC]
-        } else {
-            navigationViewControllers = [importExportVC]
-        }
-
-        // Set the navigation controller's the array of view controllers
-        navigation.setViewControllers(navigationViewControllers, animated: false)
-
-        // Put them on the screen
-        settingsSplitVC.showDetailViewController(navigation, sender: self)
+//        guard let settingsVC = settingsSplitVC.masterNavigationController.viewControllers.first as? Settings else {
+//            fatalError("Missing Settings view controller")
+//        }
+//        settingsVC.tableView.selectRow(at: Settings.importExportIndexPath, animated: false, scrollPosition: .none)
+//
+//        // Instantiate the stack of view controllers leading up to the Import view controller
+//        guard let navigation = UIStoryboard.ImportExport.instantiateViewController(withIdentifier: "Navigation") as? UINavigationController else {
+//            fatalError("Missing Navigation view controller")
+//        }
+//        let navigationViewControllers: [UIViewController]
+//        let importExportVC = UIStoryboard.ImportExport.instantiateViewController(withIdentifier: "ImportExport")
+//
+//        // Instantiate the Import view controller, if an Import url is provided
+//        if let importUrl = importUrl {
+//            guard let importVC = UIStoryboard.ImportExport.instantiateViewController(withIdentifier: "Import") as? Import else {
+//                fatalError("Missing Import view controller")
+//            }
+//            importVC.preProvidedImportFile = importUrl
+//            navigationViewControllers = [importExportVC, importVC]
+//        } else {
+//            navigationViewControllers = [importExportVC]
+//        }
+//
+//        // Set the navigation controller's the array of view controllers
+//        navigation.setViewControllers(navigationViewControllers, animated: false)
+//
+//        // Put them on the screen
+//        settingsSplitVC.showDetailViewController(navigation, sender: self)
     }
 
     func presentBackupView() {
@@ -169,23 +173,23 @@ final class TabBarController: UITabBarController {
         settingsSplitVC.popDetailOrMasterToRoot(animated: false)
 
         // Select the Backup row to ensure it is highlighted
-        guard let settingsVC = settingsSplitVC.masterNavigationController.viewControllers.first as? Settings else {
-            fatalError("Unexpected view controller type in settings master navigation controller")
-        }
-        settingsVC.tableView.selectRow(at: Settings.backupIndexPath, animated: false, scrollPosition: .none)
-
-        // Instantiate the destination view controller
-        guard let backupVC = UIStoryboard.Backup.instantiateViewController(withIdentifier: "Backup") as? Backup else {
-            fatalError("Missing Backup view controller")
-        }
-
-        // Instantiate the navigation view controller leading up to the Backup view controller
-        guard let navigation = UIStoryboard.Backup.instantiateViewController(withIdentifier: "Navigation") as? UINavigationController else {
-            fatalError("Missing Navigation view controller")
-        }
-        navigation.setViewControllers([backupVC], animated: false)
-
-        // Put them on the screen
-        settingsSplitVC.showDetailViewController(navigation, sender: self)
+//        guard let settingsVC = settingsSplitVC.masterNavigationController.viewControllers.first as? Settings else {
+//            fatalError("Unexpected view controller type in settings master navigation controller")
+//        }
+//        settingsVC.tableView.selectRow(at: Settings.backupIndexPath, animated: false, scrollPosition: .none)
+//
+//        // Instantiate the destination view controller
+//        guard let backupVC = UIStoryboard.Backup.instantiateViewController(withIdentifier: "Backup") as? Backup else {
+//            fatalError("Missing Backup view controller")
+//        }
+//
+//        // Instantiate the navigation view controller leading up to the Backup view controller
+//        guard let navigation = UIStoryboard.Backup.instantiateViewController(withIdentifier: "Navigation") as? UINavigationController else {
+//            fatalError("Missing Navigation view controller")
+//        }
+//        navigation.setViewControllers([backupVC], animated: false)
+//
+//        // Put them on the screen
+//        settingsSplitVC.showDetailViewController(navigation, sender: self)
     }
 }

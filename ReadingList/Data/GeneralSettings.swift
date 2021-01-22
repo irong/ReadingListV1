@@ -1,5 +1,6 @@
 import ReadingList_Foundation
 import PersistedPropertyWrapper
+import SwiftUI
 
 struct GeneralSettings {
     private init() { }

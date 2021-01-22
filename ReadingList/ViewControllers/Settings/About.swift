@@ -1,116 +1,180 @@
-import Foundation
+import SwiftUI
 import UIKit
-import MessageUI
+import WhatsNewKit
 import SafariServices
+import MessageUI
 
-final class About: UITableViewController {
+struct About: View {
+    let changeListProvider = ChangeListProvider()
+    @State var isShowingMailAlert = false
+    @State var isShowingMailView = false
+    @State var isShowingFaq = false
+    @EnvironmentObject var hostingSplitView: HostingSplitView
 
-    let thisVersionChangeList = ChangeListProvider().thisVersionChangeList()
-    let changeListRowIndex = 6
+    var body: some View {
+        SwiftUI.List {
+            Section(footer: AboutFooter()) {
+                IconCell("Website",
+                         imageName: "house.fill",
+                         backgroundColor: .blue,
+                         withChevron: true
+                ).presentingSafari(URL(string: "https://readinglist.app")!)
 
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        let rowCount = super.tableView(tableView, numberOfRowsInSection: section)
-        // We hide this (bottom) cell if we aren't showing a change list
-        if thisVersionChangeList == nil {
-            return rowCount - 1
-        } else {
-            return rowCount
-        }
-    }
+                IconCell("Share",
+                         imageName: "paperplane.fill",
+                         backgroundColor: .orange
+                ).modal(ActivityView(activityItems: [URL(string: "https://\(Settings.appStoreAddress)")!], applicationActivities: nil))
 
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = super.tableView(tableView, cellForRowAt: indexPath)
-        if indexPath.section == 0 && indexPath.row == changeListRowIndex && thisVersionChangeList == nil {
-            cell.isHidden = true
-        }
-        return cell
-    }
+                IconCell("Twitter",
+                         image: TwitterIcon(),
+                         withChevron: true
+                ).presentingSafari(URL(string: "https://twitter.com/ReadingListApp")!)
 
-    override func tableView(_ tableView: UITableView, willDisplayFooterView view: UIView, forSection section: Int) {
-        guard let footer = view as? UITableViewHeaderFooterView else { assertionFailure("Unexpected footer view type"); return }
-        guard let textLabel = footer.textLabel else { assertionFailure("Missing text label"); return }
-        textLabel.textAlignment = .center
-        textLabel.font = .systemFont(ofSize: 11.0)
-        textLabel.text = "v\(BuildInfo.thisBuild.version) (\(BuildInfo.thisBuild.buildNumber))"
-    }
+                IconCell("Email",
+                         imageName: "envelope.fill",
+                         backgroundColor: .paleEmailBlue
+                ).onTapGesture {
+                    isShowingMailAlert.toggle()
+                }.actionSheet(isPresented: $isShowingMailAlert) {
+                    mailAlert
+                }.sheet(isPresented: $isShowingMailView) {
+                    mailView
+                }
 
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        guard indexPath.section == 0 else { return }
-        switch indexPath.row {
-        case 0: present(SFSafariViewController(url: URL(string: "https://www.readinglist.app")!), animated: true)
-        case 1: share(indexPath)
-        case 2: present(SFSafariViewController(url: URL(string: "https://twitter.com/ReadingListApp")!), animated: true)
-        case 3: contact(indexPath)
-        case 4: present(SFSafariViewController(url: URL(string: "https://github.com/AndrewBennet/readinglist")!), animated: true)
-        case changeListRowIndex:
-            if let thisVersionChangeList = thisVersionChangeList {
-                present(thisVersionChangeList, animated: true)
+                IconCell("Source Code",
+                         image: GitHubIcon(),
+                         withChevron: true
+                ).presentingSafari(URL(string: "https://github.com/AndrewBennet/ReadingList")!)
+
+                IconCell("Attributions",
+                         imageName: "heart.fill",
+                         backgroundColor: .green
+                ).navigating(to: Attributions())
+
+                if changeListProvider.thisVersionChangeList() != nil {
+                    IconCell("Recent Changes",
+                             imageName: "wrench.fill",
+                             backgroundColor: .blue,
+                             withChevron: true
+                    ).modal(ChangeListWrapper())
+                }
             }
-        default: return
         }
-        tableView.deselectRow(at: indexPath, animated: true)
+        .possiblyInsetGroupedListStyle(inset: hostingSplitView.isSplit)
+        .navigationBarTitle("About")
     }
 
-    private func share(_ indexPath: IndexPath) {
-        let appStoreUrl = URL(string: "https://\(Settings.appStoreAddress)")!
-        let activityViewController = UIActivityViewController(activityItems: [appStoreUrl], applicationActivities: nil)
-        activityViewController.popoverPresentationController?.setSourceCell(atIndexPath: indexPath, inTable: tableView)
-        present(activityViewController, animated: true)
-    }
-
-    private func contact(_ indexPath: IndexPath) {
-        let canSendEmail = MFMailComposeViewController.canSendMail()
-
-        let controller = UIAlertController(title: "", message: """
-            Hi there 👋
-
-            To suggest features or report bugs, please email me. I try my best to \
-            reply to every email I receive, but this app is a one-person project, so \
-            please be patient if it takes a little time for my reply!
-
-            If you do have a specific question, I would suggest first looking on the FAQ \
-            in case your answer is there.
-            """, preferredStyle: .alert)
-        if canSendEmail {
-            controller.addAction(UIAlertAction(title: "Email", style: .default) { _ in
-                self.presentContactMailComposeWindow()
+    var mailAlert: ActionSheet {
+        let emailButton: ActionSheet.Button
+        if MFMailComposeViewController.canSendMail() {
+            emailButton = .default(Text("Email"), action: {
+                isShowingMailView = true
             })
         } else {
-            controller.addAction(UIAlertAction(title: "Copy Email Address", style: .default) { _ in
+            emailButton = .default(Text("Copy Email Address"), action: {
                 UIPasteboard.general.string = "feedback@readinglist.app"
             })
         }
-        controller.addAction(UIAlertAction(title: "Open FAQ", style: .default) { _ in
-            self.present(SFSafariViewController(url: URL(string: "https://www.readinglist.app/faqs/")!), animated: true)
-        })
-        controller.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        return ActionSheet(
+            title: Text(""),
+            message: Text("""
+         Hi there!
 
-        present(controller, animated: true)
+         To suggest features or report bugs, please email me. I try my best to \
+         reply to every email I receive, but this app is a one-person project, so \
+         please be patient if it takes a little time for my reply!
+
+         If you do have a specific question, I would suggest first looking on the FAQ \
+         in case your answer is there.
+         """),
+            buttons: [
+            emailButton,
+            .default(Text("Open FAQ"), action: {
+                isShowingFaq = true
+            }),
+            .cancel(Text("Dismiss"), action: {})
+            ]
+        )
     }
 
-    private func presentContactMailComposeWindow() {
-        let mailComposer = MFMailComposeViewController()
-        mailComposer.mailComposeDelegate = self
-        mailComposer.setToRecipients(["Reading List Developer <\(Settings.feedbackEmailAddress)>"])
-        mailComposer.setSubject("Reading List Feedback")
-        let messageBody = """
-        Your Message Here:
+    var mailView: MailView {
+        MailView(
+            isShowing: $isShowingMailView,
+            receipients: [
+                "Reading List Developer <\(Settings.feedbackEmailAddress)>"
+            ],
+            messageBody: """
+            Your Message Here:
 
 
 
 
-        Extra Info:
-        App Version: \(BuildInfo.thisBuild.fullDescription)
-        iOS Version: \(UIDevice.current.systemVersion)
-        Device: \(UIDevice.current.modelName)
-        """
-        mailComposer.setMessageBody(messageBody, isHTML: false)
-        present(mailComposer, animated: true)
+            Extra Info:
+            App Version: \(BuildInfo.thisBuild.fullDescription)
+            iOS Version: \(UIDevice.current.systemVersion)
+            Device: \(UIDevice.current.modelName)
+            """,
+            subject: "Reading List Feedback"
+        )
     }
 }
 
-extension About: MFMailComposeViewControllerDelegate {
-    func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult, error: Error?) {
-        dismiss(animated: true)
+struct AboutFooter: View {
+    var body: some View {
+        Text("v\(BuildInfo.thisBuild.version.description) (\(BuildInfo.thisBuild.buildNumber))")
+            .frame(maxWidth: .infinity, alignment: .center)
+            .font(.caption)
+    }
+}
+
+extension Color {
+    static let twitterBlue = Color(
+        .sRGB,
+        red: 76 / 255,
+        green: 160 / 255,
+        blue: 235 / 255,
+        opacity: 1
+    )
+
+    static let paleEmailBlue = Color(
+        .sRGB,
+        red: 94 / 255,
+        green: 191 / 255,
+        blue: 244 / 255,
+        opacity: 1
+    )
+}
+
+fileprivate extension Image {
+    func iconTemplate() -> some View {
+        self.resizable()
+            .renderingMode(.template)
+            .foregroundColor(.white)
+    }
+}
+
+struct TwitterIcon: View {
+    var body: some View {
+        SettingsIcon(color: .twitterBlue) {
+            Image("twitter")
+                .iconTemplate()
+                .frame(width: 18, height: 18, alignment: .center)
+        }
+    }
+}
+
+struct GitHubIcon: View {
+    var body: some View {
+        SettingsIcon(color: .black) {
+            Image("github")
+                .iconTemplate()
+                .frame(width: 22, height: 22, alignment: .center)
+        }
+    }
+}
+
+struct AboutNew_Previews: PreviewProvider {
+    static var previews: some View {
+        About()
     }
 }

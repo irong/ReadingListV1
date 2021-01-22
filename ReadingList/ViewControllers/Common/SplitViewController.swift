@@ -1,4 +1,5 @@
 import UIKit
+import SwiftUI
 import os.log
 
 class SplitViewController: UISplitViewController, UISplitViewControllerDelegate {
@@ -7,6 +8,7 @@ class SplitViewController: UISplitViewController, UISplitViewControllerDelegate 
         Whether the view has yet appeared. Set to true when viewDidAppear is called.
      */
     var hasAppeared = false
+    var hostingSplitView: HostingSplitView?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -17,6 +19,7 @@ class SplitViewController: UISplitViewController, UISplitViewControllerDelegate 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         hasAppeared = true
+        hostingSplitView?.isSplit = !isCollapsed
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -41,8 +44,20 @@ class SplitViewController: UISplitViewController, UISplitViewControllerDelegate 
             self.masterNavigationController.popViewController(animated: false)
         }
     }
+    
+    func splitViewControllerDidExpand(_ svc: UISplitViewController) {
+        hostingSplitView?.isSplit = !isCollapsed
+    }
+    
+    func splitViewControllerDidCollapse(_ svc: UISplitViewController) {
+        hostingSplitView?.isSplit = !isCollapsed
+    }
 
     func splitViewController(_ splitViewController: UISplitViewController, collapseSecondary secondaryViewController: UIViewController, onto primaryViewController: UIViewController) -> Bool {
         return true
     }
+}
+
+class HostingSplitView: ObservableObject {
+    @Published var isSplit = false
 }
