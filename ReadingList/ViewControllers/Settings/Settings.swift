@@ -1,65 +1,23 @@
 import SwiftUI
 
-enum SettingsSelection {
-    case about
-    case general
-    case tip
-    case sort
-    case importExport
-    case backup
-}
-
 struct Settings: View {
     static let appStoreAddress = "itunes.apple.com/gb/app/reading-list-book-tracker/id1217139955"
     static let feedbackEmailAddress = "feedback@readinglist.app"
     let writeReviewUrl = URL(string: "itms-apps://\(Settings.appStoreAddress)?action=write-review")!
-    
-    @EnvironmentObject var hostingSplitView: HostingSplitView
-    let showDetail: (SettingsSelection) -> Void
 
-    @State var selectedRow: SettingsSelection? = .about
+    @EnvironmentObject var hostingSplitView: HostingSettingsSplitView
     @State var badgeOnBackupRow = AutoBackupManager.shared.cannotRunScheduledAutoBackups
 
     func background(_ row: SettingsSelection) -> some View {
-        if row != selectedRow { return Color.clear }
+        if row != hostingSplitView.selectedCell { return Color.clear }
         return Color(.systemGray4)
-    }
-
-    func onCellSelect(_ selection: SettingsSelection) {
-        showDetail(selection)
-        selectedRow = selection
     }
 
     var backgroundColor: some View {
         Color(.systemGroupedBackground)
             .edgesIgnoringSafeArea([.leading, .trailing])
     }
-    
-    var selectedColor: Color {
-        if hostingSplitView.isSplit {
-            return Color(UIColor(named: "SplitViewCellSelection")!)
-        } else {
-            return .clear
-        }
-    }
-    
-    func cell(_ cell: SettingsSelection, title: String, imageName: String, color: Color, badge: Bool = false) -> some View {
-        let isSelected = selectedRow == cell
-        let cellBackground = isSelected ? selectedColor : Color.clear
-        return IconCell(
-            title,
-            imageName: imageName,
-            backgroundColor: color,
-            withChevron: !hostingSplitView.isSplit,
-            withBadge: badge ? "1" : nil
-        )
-        .onTapGesture {
-            onCellSelect(cell)
-        }
-        .foregroundColor(isSelected && hostingSplitView.isSplit ? .white : Color(.label))
-        .listRowBackground(cellBackground.edgesIgnoringSafeArea([.horizontal]))
-    }
-    
+
     var header: some View {
         HStack {
             Spacer()
@@ -75,20 +33,19 @@ struct Settings: View {
     var body: some View {
         SwiftUI.List {
             Section(header: header) {
-                cell(.about, title: "About", imageName: "info", color: .blue)
+                SettingsCell(.about, title: "About", imageName: "info", color: .blue)
                 IconCell("Rate", imageName: "star.fill", backgroundColor: .orange)
                     .onTapGesture {
                         UIApplication.shared.open(writeReviewUrl, options: [:])
-                        selectedRow = nil
                     }
                     .foregroundColor(Color(.label))
-                cell(.tip, title: "Leave Tip", imageName: "heart.fill", color: .pink)
+                SettingsCell(.tip, title: "Leave Tip", imageName: "heart.fill", color: .pink)
             }
             Section {
-                cell(.general, title: "General", imageName: "gear", color: .gray)
-                cell(.sort, title: "Sort", imageName: "chevron.up.chevron.down", color: .blue)
-                cell(.importExport, title: "Import / Export", imageName: "doc.fill", color: .green)
-                cell(.backup, title: "Backup & Restore", imageName: "icloud.fill", color: .blue, badge: badgeOnBackupRow)
+                SettingsCell(.general, title: "General", imageName: "gear", color: .gray)
+                SettingsCell(.sort, title: "Sort", imageName: "chevron.up.chevron.down", color: .blue)
+                SettingsCell(.importExport, title: "Import / Export", imageName: "doc.fill", color: .green)
+                SettingsCell(.backup, title: "Backup & Restore", imageName: "icloud.fill", color: .blue, badge: badgeOnBackupRow)
                     .onReceive(NotificationCenter.default.publisher(for: .autoBackupEnabledOrDisabled)) { _ in
                         badgeOnBackupRow = AutoBackupManager.shared.cannotRunScheduledAutoBackups
                     }
@@ -132,8 +89,60 @@ struct SettingsHeader: View {
     }
 }
 
+struct SettingsCell: View {
+    @EnvironmentObject var hostingSplitView: HostingSettingsSplitView
+    var isSelected: Bool {
+        hostingSplitView.selectedCell == cell
+    }
+
+    var selectedColor: Color {
+        if hostingSplitView.isSplit {
+            return Color(UIColor(named: "SplitViewCellSelection")!)
+        } else {
+            return .clear
+        }
+    }
+
+    var cellBackground: Color {
+        isSelected ? selectedColor : Color.clear
+    }
+
+    var cellLabelColor: Color {
+        isSelected && hostingSplitView.isSplit ? .white : Color(.label)
+    }
+
+    let cell: SettingsSelection
+    let title: String
+    let imageName: String
+    let imageBackgroundColor: Color
+    let badge: Bool
+
+    init(_ cell: SettingsSelection, title: String, imageName: String, color: Color, badge: Bool = false) {
+        self.cell = cell
+        self.title = title
+        self.imageName = imageName
+        self.imageBackgroundColor = color
+        self.badge = badge
+    }
+
+    var body: some View {
+        IconCell(
+            title,
+            imageName: imageName,
+            backgroundColor: imageBackgroundColor,
+            withChevron: !hostingSplitView.isSplit,
+            withBadge: badge ? "1" : nil,
+            textForegroundColor: cellLabelColor
+        )
+        .onTapGesture {
+            hostingSplitView.selectedCell = cell
+        }
+        .listRowBackground(cellBackground.edgesIgnoringSafeArea([.horizontal]))
+    }
+}
+
 struct Settings_Previews: PreviewProvider {
     static var previews: some View {
-        Settings { _ in }.environmentObject(HostingSplitView())
+        Settings().environmentObject(HostingSettingsSplitView())
     }
 }

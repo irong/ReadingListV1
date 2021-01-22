@@ -1,15 +1,18 @@
 import Foundation
 import SwiftUI
 
-struct Sort: View {
-    @State var addBooksToTop = GeneralSettings.addBooksToTopOfCustom {
+class SortSettings: ObservableObject {
+    @Published var addBooksToTop: Bool = GeneralSettings.addBooksToTopOfCustom {
         didSet {
             GeneralSettings.addBooksToTopOfCustom = addBooksToTop
         }
     }
+}
 
-    @EnvironmentObject var hostingSplitView: HostingSplitView
-    
+struct Sort: View {
+    @EnvironmentObject var hostingSplitView: HostingSettingsSplitView
+    @ObservedObject var settings = SortSettings()
+
     var body: some View {
         SwiftUI.List {
             Section(
@@ -20,7 +23,7 @@ struct Sort: View {
                     """, inset: hostingSplitView.isSplit
                 )
             ) {
-                Toggle(isOn: $addBooksToTop) {
+                Toggle(isOn: $settings.addBooksToTop) {
                     Text("Add Books to Top")
                 }
             }

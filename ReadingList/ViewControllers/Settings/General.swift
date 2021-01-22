@@ -39,12 +39,12 @@ struct General: View {
 
     @State var crashReportsAlertDisplated = false
     @State var analyticsAlertDisplayed = false
-    @EnvironmentObject var hostingSplitView: HostingSplitView
+    @EnvironmentObject var hostingSplitView: HostingSettingsSplitView
 
     private var inset: Bool {
         hostingSplitView.isSplit
     }
-    
+
     private let languageOptions = [LanguageSelection.none] + LanguageIso639_1.allCases.filter { $0.canFilterGoogleSearchResults }.map { .some($0) }
 
     var body: some View {
@@ -195,7 +195,7 @@ extension LanguageSelection: Identifiable {
 struct GeneralNew_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
-            General().environmentObject(HostingSplitView())
+            General().environmentObject(HostingSettingsSplitView())
         }
     }
 }

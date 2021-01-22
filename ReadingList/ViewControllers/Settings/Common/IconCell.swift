@@ -6,16 +6,18 @@ struct IconCell<T>: View where T: View {
     let image: T
     let withChevron: Bool
     let withBadge: String?
+    let textForegroundColor: Color
 
-    init(_ text: String, image: T, withChevron: Bool = false, withBadge: String? = nil) {
+    init(_ text: String, image: T, withChevron: Bool = false, withBadge: String? = nil, textForegroundColor: Color = Color(.label)) {
         self.text = text
         self.image = image
         self.withChevron = withChevron
         self.withBadge = withBadge
+        self.textForegroundColor = textForegroundColor
     }
 
-    init(_ text: String, imageName systemImageName: String, backgroundColor: Color, withChevron: Bool = false, withBadge: String? = nil) where T == SystemSettingsIcon {
-        self.init(text, image: SystemSettingsIcon(systemImageName: systemImageName, backgroundColor: backgroundColor), withChevron: withChevron, withBadge: withBadge)
+    init(_ text: String, imageName systemImageName: String, backgroundColor: Color, withChevron: Bool = false, withBadge: String? = nil, textForegroundColor: Color = Color(.label)) where T == SystemSettingsIcon {
+        self.init(text, image: SystemSettingsIcon(systemImageName: systemImageName, backgroundColor: backgroundColor), withChevron: withChevron, withBadge: withBadge, textForegroundColor: textForegroundColor)
     }
 
     var body: some View {
@@ -25,7 +27,7 @@ struct IconCell<T>: View where T: View {
                 image
                 Text(text)
                     .font(.body)
-                    .foregroundColor(Color(.label))
+                    .foregroundColor(textForegroundColor)
                 Spacer()
                 if let withBadge = withBadge {
                     ZStack {

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="17156" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="R7D-Jc-uwA">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="17506" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="R7D-Jc-uwA">
     <device id="ipad11_0rounded" orientation="portrait" layout="fullscreen" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="17126"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="17505"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -399,10 +399,6 @@ Import data from a CSV file, to move books between devices or services.</string>
                             </connections>
                         </barButtonItem>
                     </navigationItem>
-                    <connections>
-                        <outletCollection property="labels" destination="PRS-i2-Kid" collectionClass="NSMutableArray" id="e9F-j6-LlE"/>
-                        <outletCollection property="labels" destination="vX4-WI-FxR" collectionClass="NSMutableArray" id="TCp-S9-CZc"/>
-                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="rSX-61-QoC" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
@@ -546,10 +542,6 @@ Import data from a CSV file, to move books between devices or services.</string>
                             </connections>
                         </barButtonItem>
                     </navigationItem>
-                    <connections>
-                        <outletCollection property="labels" destination="vbb-4G-JHo" collectionClass="NSMutableArray" id="j6f-eI-av0"/>
-                        <outletCollection property="labels" destination="pZs-3b-uNx" collectionClass="NSMutableArray" id="P6a-JV-zyX"/>
-                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkU-jr-8vp" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>

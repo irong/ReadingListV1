@@ -6,14 +6,14 @@ struct HeaderText: View {
         self.text = text
         self.inset = inset
     }
-    
+
     let text: String
     let inset: Bool
-    
+
     var topPaddedText: some View {
         Text(text.uppercased()).padding(.top, 20)
     }
-    
+
     var body: some View {
         if #available(iOS 14.0, *) {
             topPaddedText.padding(.horizontal, inset ? 22 : 0)
@@ -31,7 +31,7 @@ struct FooterText: View {
 
     let text: String
     let inset: Bool
-    
+
     var body: some View {
         if #available(iOS 14.0, *) {
             Text(text).padding(.horizontal, inset ? 22 : 0)

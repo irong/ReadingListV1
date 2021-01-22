@@ -44,11 +44,11 @@ class SplitViewController: UISplitViewController, UISplitViewControllerDelegate 
             self.masterNavigationController.popViewController(animated: false)
         }
     }
-    
+
     func splitViewControllerDidExpand(_ svc: UISplitViewController) {
         hostingSplitView?.isSplit = !isCollapsed
     }
-    
+
     func splitViewControllerDidCollapse(_ svc: UISplitViewController) {
         hostingSplitView?.isSplit = !isCollapsed
     }
@@ -58,6 +58,6 @@ class SplitViewController: UISplitViewController, UISplitViewControllerDelegate 
     }
 }
 
-class HostingSplitView: ObservableObject {
-    @Published var isSplit = false
+protocol HostingSplitView {
+    var isSplit: Bool { get set }
 }

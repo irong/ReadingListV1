@@ -9,7 +9,7 @@ struct About: View {
     @State var isShowingMailAlert = false
     @State var isShowingMailView = false
     @State var isShowingFaq = false
-    @EnvironmentObject var hostingSplitView: HostingSplitView
+    @EnvironmentObject var hostingSplitView: HostingSettingsSplitView
 
     var body: some View {
         SwiftUI.List {
@@ -49,7 +49,9 @@ struct About: View {
                 IconCell("Attributions",
                          imageName: "heart.fill",
                          backgroundColor: .green
-                ).navigating(to: Attributions())
+                         // Re-provide the environment object, otherwise we seem to get trouble
+                         // when the containing hosting VC gets removed from the window
+                ).navigating(to: Attributions().environmentObject(hostingSplitView))
 
                 if changeListProvider.thisVersionChangeList() != nil {
                     IconCell("Recent Changes",

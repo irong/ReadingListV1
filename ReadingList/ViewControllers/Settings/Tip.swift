@@ -194,7 +194,7 @@ struct TipButtonView: View {
                     showingFailedPurchaseAlert = false
                 }
             )
-        }
+                }
     }
 
     func purchase() {
