@@ -13,7 +13,7 @@ struct About: View {
 
     var body: some View {
         SwiftUI.List {
-            Section(footer: AboutFooter()) {
+            Section(header: AboutHeader(), footer: AboutFooter()) {
                 IconCell("Website",
                          imageName: "house.fill",
                          backgroundColor: .blue,
@@ -30,21 +30,22 @@ struct About: View {
                          withChevron: true
                 ).presentingSafari(URL(string: "https://twitter.com/ReadingListApp")!)
 
-                IconCell("Email",
+                IconCell("Email Developer",
                          imageName: "envelope.fill",
                          backgroundColor: .paleEmailBlue
                 ).onTapGesture {
-                    isShowingMailAlert.toggle()
+                    if #available(iOS 14.0, *) {
+                        isShowingMailAlert = true
+                    } else {
+                        // Action sheet anchors are messed up on iOS 13;
+                        // go straight to the Email view, skipping the sheet
+                        isShowingMailView = true
+                    }
                 }.actionSheet(isPresented: $isShowingMailAlert) {
                     mailAlert
                 }.sheet(isPresented: $isShowingMailView) {
                     mailView
                 }
-
-                IconCell("Source Code",
-                         image: GitHubIcon(),
-                         withChevron: true
-                ).presentingSafari(URL(string: "https://github.com/AndrewBennet/ReadingList")!)
 
                 IconCell("Attributions",
                          imageName: "heart.fill",
@@ -121,11 +122,43 @@ struct About: View {
     }
 }
 
+struct AboutHeader: View {
+    var innerBody: some View {
+        (Text("Reading List ").bold() +
+        Text("""
+            is developed by single developer – me, Andrew 👋 I've loved building this app to help users around the world track their reading. I hope you enjoy using it 😊
+
+            If you value the app, please consider leaving a review, tweeting about it, sharing it with friends, or leaving a donation.
+
+            Happy reading!
+            """
+        )).font(.subheadline)
+        .foregroundColor(Color(.label))
+        .padding(.bottom, 20)
+        .padding(.top, 10)
+    }
+
+    var body: some View {
+        if #available(iOS 14.0, *) {
+            innerBody
+                .textCase(nil)
+                .padding(.horizontal, 12)
+        } else {
+            innerBody
+        }
+    }
+}
+
 struct AboutFooter: View {
     var body: some View {
-        Text("v\(BuildInfo.thisBuild.version.description) (\(BuildInfo.thisBuild.buildNumber))")
-            .frame(maxWidth: .infinity, alignment: .center)
-            .font(.caption)
+        VStack(alignment: .center, spacing: 4) {
+            Text("v\(BuildInfo.thisBuild.version.description) (\(BuildInfo.thisBuild.buildNumber))")
+            Text("© Andrew Bennet 2021")
+        }
+        .frame(maxWidth: .infinity, alignment: .center)
+        .font(.caption)
+        .foregroundColor(Color(.label))
+        .padding(.top, 10)
     }
 }
 
@@ -165,18 +198,10 @@ struct TwitterIcon: View {
     }
 }
 
-struct GitHubIcon: View {
-    var body: some View {
-        SettingsIcon(color: .black) {
-            Image("github")
-                .iconTemplate()
-                .frame(width: 22, height: 22, alignment: .center)
-        }
-    }
-}
-
 struct AboutNew_Previews: PreviewProvider {
     static var previews: some View {
-        About()
+        NavigationView {
+            About().environmentObject(HostingSettingsSplitView())
+        }
     }
 }

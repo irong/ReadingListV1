@@ -45,7 +45,7 @@ struct Settings: View {
                 SettingsCell(.general, title: "General", imageName: "gear", color: .gray)
                 SettingsCell(.sort, title: "Sort", imageName: "chevron.up.chevron.down", color: .blue)
                 SettingsCell(.importExport, title: "Import / Export", imageName: "doc.fill", color: .green)
-                SettingsCell(.backup, title: "Backup & Restore", imageName: "icloud.fill", color: .blue, badge: badgeOnBackupRow)
+                SettingsCell(.backup, title: "Backup & Restore", imageName: "icloud.fill", color: .icloudBlue, badge: badgeOnBackupRow)
                     .onReceive(NotificationCenter.default.publisher(for: .autoBackupEnabledOrDisabled)) { _ in
                         badgeOnBackupRow = AutoBackupManager.shared.cannotRunScheduledAutoBackups
                     }
@@ -56,6 +56,16 @@ struct Settings: View {
         }.listStyle(GroupedListStyle())
         .navigationBarTitle("Settings")
     }
+}
+
+extension Color {
+    static let icloudBlue = Color(
+        .sRGB,
+        red: 62 / 255,
+        green: 149 / 255,
+        blue: 236 / 255,
+        opacity: 1
+    )
 }
 
 struct SettingsHeader: View {

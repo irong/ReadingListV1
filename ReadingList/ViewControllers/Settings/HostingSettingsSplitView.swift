@@ -1,5 +1,5 @@
 import Foundation
-import SwiftUI
+import Combine
 
 enum SettingsSelection {
     case about

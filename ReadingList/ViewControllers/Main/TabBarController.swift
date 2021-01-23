@@ -147,11 +147,8 @@ final class TabBarController: UITabBarController {
         settingsSplitVC.popDetailOrMasterToRoot(animated: false)
 
         // Select the Import Export row to ensure it is highlighted
-//        guard let settingsVC = settingsSplitVC.masterNavigationController.viewControllers.first as? Settings else {
-//            fatalError("Missing Settings view controller")
-//        }
-//        settingsVC.tableView.selectRow(at: Settings.importExportIndexPath, animated: false, scrollPosition: .none)
-//
+        hostingSettingsSplitView?.selectedCell = .importExport
+
         // Instantiate the stack of view controllers leading up to the Import view controller
         guard let navigation = UIStoryboard.ImportExport.instantiateViewController(withIdentifier: "Navigation") as? UINavigationController else {
             fatalError("Missing Navigation view controller")
@@ -186,23 +183,20 @@ final class TabBarController: UITabBarController {
         settingsSplitVC.popDetailOrMasterToRoot(animated: false)
 
         // Select the Backup row to ensure it is highlighted
-//        guard let settingsVC = settingsSplitVC.masterNavigationController.viewControllers.first as? Settings else {
-//            fatalError("Unexpected view controller type in settings master navigation controller")
-//        }
-//        settingsVC.tableView.selectRow(at: Settings.backupIndexPath, animated: false, scrollPosition: .none)
-//
-//        // Instantiate the destination view controller
-//        guard let backupVC = UIStoryboard.Backup.instantiateViewController(withIdentifier: "Backup") as? Backup else {
-//            fatalError("Missing Backup view controller")
-//        }
-//
-//        // Instantiate the navigation view controller leading up to the Backup view controller
-//        guard let navigation = UIStoryboard.Backup.instantiateViewController(withIdentifier: "Navigation") as? UINavigationController else {
-//            fatalError("Missing Navigation view controller")
-//        }
-//        navigation.setViewControllers([backupVC], animated: false)
-//
-//        // Put them on the screen
-//        settingsSplitVC.showDetailViewController(navigation, sender: self)
+        hostingSettingsSplitView?.selectedCell = .backup
+
+        // Instantiate the destination view controller
+        guard let backupVC = UIStoryboard.Backup.instantiateViewController(withIdentifier: "Backup") as? Backup else {
+            fatalError("Missing Backup view controller")
+        }
+
+        // Instantiate the navigation view controller leading up to the Backup view controller
+        guard let navigation = UIStoryboard.Backup.instantiateViewController(withIdentifier: "Navigation") as? UINavigationController else {
+            fatalError("Missing Navigation view controller")
+        }
+        navigation.setViewControllers([backupVC], animated: false)
+
+        // Put them on the screen
+        settingsSplitVC.showDetailViewController(navigation, sender: self)
     }
 }

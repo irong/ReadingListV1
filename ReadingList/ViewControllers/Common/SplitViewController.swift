@@ -1,5 +1,4 @@
 import UIKit
-import SwiftUI
 import os.log
 
 class SplitViewController: UISplitViewController, UISplitViewControllerDelegate {
@@ -45,16 +44,27 @@ class SplitViewController: UISplitViewController, UISplitViewControllerDelegate 
         }
     }
 
+    @available(iOS 14.0, *)
     func splitViewControllerDidExpand(_ svc: UISplitViewController) {
         hostingSplitView?.isSplit = !isCollapsed
     }
 
+    @available(iOS 14.0, *)
     func splitViewControllerDidCollapse(_ svc: UISplitViewController) {
         hostingSplitView?.isSplit = !isCollapsed
     }
 
     func splitViewController(_ splitViewController: UISplitViewController, collapseSecondary secondaryViewController: UIViewController, onto primaryViewController: UIViewController) -> Bool {
+        if #available(iOS 14.0, *) { } else {
+            hostingSplitView?.isSplit = false
+        }
         return true
+    }
+
+    func splitViewController(_ svc: UISplitViewController, willChangeTo displayMode: UISplitViewController.DisplayMode) {
+        if #available(iOS 14.0, *) { } else {
+            hostingSplitView?.isSplit = !isCollapsed
+        }
     }
 }
 

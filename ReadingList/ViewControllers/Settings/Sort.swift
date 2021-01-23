@@ -28,5 +28,6 @@ struct Sort: View {
                 }
             }
         }.possiblyInsetGroupedListStyle(inset: hostingSplitView.isSplit)
+        .navigationBarTitle("Sort")
     }
 }
