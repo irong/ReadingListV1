@@ -4,10 +4,13 @@ import Combine
 enum SettingsSelection {
     case about
     case general
+    case appearance
+    case appIcon
     case tip
     case sort
     case importExport
     case backup
+    case privacy
 }
 
 class HostingSettingsSplitView: ObservableObject, HostingSplitView {

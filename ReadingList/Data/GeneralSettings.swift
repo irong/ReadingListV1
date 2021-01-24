@@ -21,4 +21,7 @@ struct GeneralSettings {
 
     @Persisted("showAmazonLinks", defaultValue: true)
     static var showAmazonLinks: Bool
+
+    @Persisted("darkModeOverride")
+    static var darkModeOverride: Bool?
 }

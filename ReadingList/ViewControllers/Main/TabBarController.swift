@@ -67,11 +67,14 @@ final class TabBarController: UITabBarController {
             let destination: UIViewController
             switch type {
             case .about: destination = aboutVc
+            case .appearance: destination = UIHostingController(rootView: Appearance().environmentObject(hostingSplitView)).inNavigationController()
+            case .appIcon: destination = UIHostingController(rootView: AppIcon().environmentObject(hostingSplitView)).inNavigationController()
             case .general: destination = UIHostingController(rootView: General().environmentObject(hostingSplitView)).inNavigationController()
             case .sort: destination = UIHostingController(rootView: Sort().environmentObject(hostingSplitView)).inNavigationController()
             case .tip: destination = UIHostingController(rootView: Tip().environmentObject(hostingSplitView)).inNavigationController()
             case .importExport: destination = UIStoryboard.ImportExport.instantiateRoot()
             case .backup: destination = UIStoryboard.Backup.instantiateRoot()
+            case .privacy: destination = UIHostingController(rootView: Privacy().environmentObject(hostingSplitView)).inNavigationController()
             case .none: destination = UIViewController()
             }
             settings.showDetailViewController(destination, sender: settings)

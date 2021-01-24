@@ -2,6 +2,26 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <key>CFBundleIcons</key>
+    <dict>
+        <key>CFBundleAlternateIcons</key>
+        <dict>
+            <key>ClassicWhite</key>
+            <dict>
+                <key>CFBundleIconFiles</key>
+                <array>
+                    <string>ClassicWhite</string>
+                </array>
+            </dict>
+        </dict>
+        <key>CFBundlePrimaryIcon</key>
+        <dict>
+            <key>CFBundleIconFiles</key>
+            <array/>
+            <key>UIPrerenderedIcon</key>
+            <false/>
+        </dict>
+    </dict>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>com.andrewbennet.books.backup</string>

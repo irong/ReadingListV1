@@ -33,6 +33,7 @@ struct Settings: View {
     var body: some View {
         SwiftUI.List {
             Section(header: header) {
+                
                 SettingsCell(.about, title: "About", imageName: "info", color: .blue)
                 IconCell("Rate", imageName: "star.fill", backgroundColor: .orange)
                     .onTapGesture {
@@ -43,8 +44,16 @@ struct Settings: View {
             }
             Section {
                 SettingsCell(.general, title: "General", imageName: "gear", color: .gray)
+                SettingsCell(.appearance, title: "Appearance", imageName: "textformat.size", color: Color(.systemIndigo))
+                if UIApplication.shared.supportsAlternateIcons {
+                    SettingsCell(.appIcon, title: "App Icon", image: Image("AppIconRounded")
+                            .resizable()
+                            .frame(width: 30, height: 30, alignment: .center)
+                            .cornerRadius(8)
+                    )
+                }
                 SettingsCell(.sort, title: "Sort", imageName: "chevron.up.chevron.down", color: .blue)
-                SettingsCell(.importExport, title: "Import / Export", imageName: "doc.fill", color: .green)
+                SettingsCell(.importExport, title: "Import & Export", imageName: "doc.fill", color: .green)
                 SettingsCell(.backup, title: "Backup & Restore", imageName: "icloud.fill", color: .icloudBlue, badge: badgeOnBackupRow)
                     .onReceive(NotificationCenter.default.publisher(for: .autoBackupEnabledOrDisabled)) { _ in
                         badgeOnBackupRow = AutoBackupManager.shared.cannotRunScheduledAutoBackups
@@ -52,6 +61,7 @@ struct Settings: View {
                     .onReceive(NotificationCenter.default.publisher(for: UIApplication.backgroundRefreshStatusDidChangeNotification)) { _ in
                         badgeOnBackupRow = AutoBackupManager.shared.cannotRunScheduledAutoBackups
                     }
+                SettingsCell(.privacy, title: "Privacy", imageName: "lock.fill", color: Color(.darkGray))
             }
         }.listStyle(GroupedListStyle())
         .navigationBarTitle("Settings")
@@ -99,7 +109,7 @@ struct SettingsHeader: View {
     }
 }
 
-struct SettingsCell: View {
+struct SettingsCell<T>: View where T: View {
     @EnvironmentObject var hostingSplitView: HostingSettingsSplitView
     var isSelected: Bool {
         hostingSplitView.selectedCell == cell
@@ -123,23 +133,27 @@ struct SettingsCell: View {
 
     let cell: SettingsSelection
     let title: String
-    let imageName: String
-    let imageBackgroundColor: Color
+    let image: T
     let badge: Bool
 
-    init(_ cell: SettingsSelection, title: String, imageName: String, color: Color, badge: Bool = false) {
+    init(_ cell: SettingsSelection, title: String, image: T, badge: Bool = false) {
         self.cell = cell
         self.title = title
-        self.imageName = imageName
-        self.imageBackgroundColor = color
+        self.image = image
+        self.badge = badge
+    }
+
+    init(_ cell: SettingsSelection, title: String, imageName: String, color: Color, badge: Bool = false) where T == SystemSettingsIcon {
+        self.cell = cell
+        self.title = title
+        self.image = SystemSettingsIcon(systemImageName: imageName, backgroundColor: color)
         self.badge = badge
     }
 
     var body: some View {
         IconCell(
             title,
-            imageName: imageName,
-            backgroundColor: imageBackgroundColor,
+            image: image,
             withChevron: !hostingSplitView.isSplit,
             withBadge: badge ? "1" : nil,
             textForegroundColor: cellLabelColor

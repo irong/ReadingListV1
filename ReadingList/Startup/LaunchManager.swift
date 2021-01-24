@@ -160,6 +160,10 @@ class LaunchManager {
         let rootViewController = TabBarController()
         window.rootViewController = rootViewController
 
+        if let darkModeOverride = GeneralSettings.darkModeOverride {
+            window.overrideUserInterfaceStyle = darkModeOverride ? .dark : .light
+        }
+
         if #available(iOS 14.0, *) {
             BookDataSharer.instance.inititialise(persistentContainer: PersistentStoreManager.container)
             if AppLaunchHistory.lastLaunchedBuildInfo?.buildNumber != BuildInfo.thisBuild.buildNumber || BuildInfo.thisBuild.type == .debug {
