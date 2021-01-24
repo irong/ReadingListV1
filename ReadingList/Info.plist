@@ -13,6 +13,13 @@
                     <string>ClassicWhite</string>
                 </array>
             </dict>
+            <key>Classic</key>
+            <dict>
+                <key>CFBundleIconFiles</key>
+                <array>
+                    <string>Classic</string>
+                </array>
+            </dict>
         </dict>
         <key>CFBundlePrimaryIcon</key>
         <dict>
