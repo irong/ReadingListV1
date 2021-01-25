@@ -104,3 +104,9 @@ struct CheckmarkCellRow: View {
         }.contentShape(Rectangle())
     }
 }
+
+struct Appearance_Previews: PreviewProvider {
+    static var previews: some View {
+        Appearance().environmentObject(HostingSettingsSplitView())
+    }
+}

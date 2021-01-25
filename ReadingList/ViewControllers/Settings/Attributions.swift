@@ -83,7 +83,7 @@ enum License: CustomStringConvertible {
     }
 }
 
-struct AttributionsNew_Previews: PreviewProvider {
+struct Attributions_Previews: PreviewProvider {
     static var previews: some View {
         Attributions()
     }

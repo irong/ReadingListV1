@@ -198,7 +198,7 @@ struct TwitterIcon: View {
     }
 }
 
-struct AboutNew_Previews: PreviewProvider {
+struct About_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
             About().environmentObject(HostingSettingsSplitView())

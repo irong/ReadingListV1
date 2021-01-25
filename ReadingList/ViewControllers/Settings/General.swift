@@ -105,7 +105,7 @@ extension LanguageSelection: Identifiable {
     }
 }
 
-struct GeneralNew_Previews: PreviewProvider {
+struct General_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
             General().environmentObject(HostingSettingsSplitView())
