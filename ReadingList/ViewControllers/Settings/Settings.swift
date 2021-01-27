@@ -49,7 +49,6 @@ struct Settings: View {
                     SettingsCell(.appIcon, title: "App Icon", image: CurrentIconImage()
                     )
                 }
-                SettingsCell(.sort, title: "Sort", imageName: "chevron.up.chevron.down", color: .blue)
                 SettingsCell(.importExport, title: "Import & Export", imageName: "doc.fill", color: .green)
                 SettingsCell(.backup, title: "Backup & Restore", imageName: "icloud.fill", color: .icloudBlue, badge: badgeOnBackupRow)
                     .onReceive(NotificationCenter.default.publisher(for: .autoBackupEnabledOrDisabled)) { _ in

@@ -2,6 +2,12 @@ import SwiftUI
 import ReadingList_Foundation
 
 class GeneralSettingsObservable: ObservableObject {
+    @Published var addBooksToTop: Bool = GeneralSettings.addBooksToTopOfCustom {
+        didSet {
+            GeneralSettings.addBooksToTopOfCustom = addBooksToTop
+        }
+    }
+
     @Published var progressType = GeneralSettings.defaultProgressType {
         didSet { GeneralSettings.defaultProgressType = progressType }
     }
@@ -42,6 +48,18 @@ struct General: View {
 
     var body: some View {
         SwiftUI.List {
+            Section(
+                header: HeaderText("Sort Options", inset: hostingSplitView.isSplit),
+                footer: FooterText("""
+                    Configure whether newly added books get added to the top or the bottom of the \
+                    reading list when Custom ordering is used.
+                    """, inset: hostingSplitView.isSplit
+                )
+            ) {
+                Toggle(isOn: $settings.addBooksToTop) {
+                    Text("Add Books to Top")
+                }
+            }
             Section(
                 header: HeaderText("Progress", inset: inset),
                 footer: FooterText("Choose whether to default to Page Number or Percentage when setting progress.", inset: inset)

@@ -64,17 +64,20 @@ final class TabBarController: UITabBarController {
         hostingSplitView.isSplit = !settings.isCollapsed
 
         settingsSplitViewObserver = hostingSplitView.$selectedCell.sink { type in
+            func hostingDetail<T>(_ view: T) -> UIViewController where T: View {
+                UIHostingController(rootView: view.environmentObject(hostingSplitView)).inNavigationController()
+            }
+
             let destination: UIViewController
             switch type {
             case .about: destination = aboutVc
-            case .appearance: destination = UIHostingController(rootView: Appearance().environmentObject(hostingSplitView)).inNavigationController()
-            case .appIcon: destination = UIHostingController(rootView: AppIcon().environmentObject(hostingSplitView)).inNavigationController()
-            case .general: destination = UIHostingController(rootView: General().environmentObject(hostingSplitView)).inNavigationController()
-            case .sort: destination = UIHostingController(rootView: Sort().environmentObject(hostingSplitView)).inNavigationController()
-            case .tip: destination = UIHostingController(rootView: Tip().environmentObject(hostingSplitView)).inNavigationController()
+            case .appearance: destination = hostingDetail(Appearance())
+            case .appIcon: destination = hostingDetail(AppIcon())
+            case .general: destination = hostingDetail(General())
+            case .tip: destination = hostingDetail(Tip())
             case .importExport: destination = UIStoryboard.ImportExport.instantiateRoot()
             case .backup: destination = UIStoryboard.Backup.instantiateRoot()
-            case .privacy: destination = UIHostingController(rootView: Privacy().environmentObject(hostingSplitView)).inNavigationController()
+            case .privacy: destination = hostingDetail(Privacy())
             case .none: destination = UIViewController()
             }
             settings.showDetailViewController(destination, sender: settings)
