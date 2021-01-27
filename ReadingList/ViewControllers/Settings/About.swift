@@ -126,11 +126,11 @@ struct AboutHeader: View {
     var innerBody: some View {
         (Text("Reading List ").bold() +
         Text("""
-            is developed by single developer – me, Andrew 👋 I've loved building this app to help users around the world track their reading. I hope you enjoy using it 😊
+            is developed by single developer – me, Andrew 👋 I hope you are enjoying using the app 😊
 
-            If you value the app, please consider leaving a review, tweeting about it, sharing it with friends, or leaving a donation.
+            If you value the app, please consider leaving a review, tweeting about it, sharing, or leaving a tip.
 
-            Happy reading!
+            Happy Reading! 📚
             """
         )).font(.subheadline)
         .foregroundColor(Color(.label))

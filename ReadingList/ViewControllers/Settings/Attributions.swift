@@ -21,19 +21,20 @@ struct Attributions: View {
         SwiftUI.List {
             Section(header: HeaderText("Attributions", inset: hostingSplitView.isSplit)) {
                 Group {
-                    AttributionView("CHCSVParser", url: "https://github.com/davedelong/CHCSVParser", copyright: "2014 Dave DeLong", license: .mit)
-                    AttributionView("Cosmos", url: "https://github.com/evgenyneu/Cosmos", copyright: "2015 Evgenii Neumerzhitckii", license: .mit)
-                    AttributionView("Eureka", url: "https://github.com/xmartlabs/Eureka", copyright: "2015 XMARTLABS", license: .mit)
-                    AttributionView("Icons8", url: "https://icons8.com", copyright: "Icons8", license: .ccByNd3)
-                    AttributionView("PersistedPropertyWrapper", url: "https://github.com/AndrewBennet/PersistedPropertyWrapper", copyright: "2020 Andrew Bennet", license: .mit)
-                    AttributionView("Promises", url: "https://github.com/google/promises", copyright: "2018 Google Inc", license: .apache2)
-                    AttributionView("Regex", url: "https://github.com/sharplet/Regex", copyright: "2015 Adam Sharp", license: .mit)
-                    AttributionView("SwiftyStoreKit", url: "https://github.com/bizz84/SwiftyStoreKit", copyright: "2015-2017 Andrea Bizzotto", license: .mit)
-                    AttributionView("SVProgressHUD", url: "https://github.com/SVProgressHUD/SVProgressHUD", copyright: "2011-2018 Sam Vermette, Tobias Tiemerding and contributors", license: .mit)
-                    AttributionView("WhatsNewKit", url: "https://github.com/SvenTiigi/WhatsNewKit", copyright: "2020 Sven Tiigi", license: .mit)
+                    AttributionView(title: "Reading List App Icon", url: URL(string: "http://www.pixelresort.com/")!, text: ["PixelResort", "Designed by Michael Flarup"])
+                    AttributionLicenceView("CHCSVParser", url: "https://github.com/davedelong/CHCSVParser", copyright: "2014 Dave DeLong", license: .mit)
+                    AttributionLicenceView("Cosmos", url: "https://github.com/evgenyneu/Cosmos", copyright: "2015 Evgenii Neumerzhitckii", license: .mit)
+                    AttributionLicenceView("Eureka", url: "https://github.com/xmartlabs/Eureka", copyright: "2015 XMARTLABS", license: .mit)
+                    AttributionLicenceView("Icons8", url: "https://icons8.com", copyright: "Icons8", license: .ccByNd3)
+                    AttributionLicenceView("PersistedPropertyWrapper", url: "https://github.com/AndrewBennet/PersistedPropertyWrapper", copyright: "2020 Andrew Bennet", license: .mit)
+                    AttributionLicenceView("Promises", url: "https://github.com/google/promises", copyright: "2018 Google Inc", license: .apache2)
+                    AttributionLicenceView("Regex", url: "https://github.com/sharplet/Regex", copyright: "2015 Adam Sharp", license: .mit)
+                    AttributionLicenceView("SwiftyStoreKit", url: "https://github.com/bizz84/SwiftyStoreKit", copyright: "2015-2017 Andrea Bizzotto", license: .mit)
+                    AttributionLicenceView("SVProgressHUD", url: "https://github.com/SVProgressHUD/SVProgressHUD", copyright: "2011-2018 Sam Vermette, Tobias Tiemerding and contributors", license: .mit)
                 }
                 Group {
-                    AttributionView("ZIPFoundation", url: "https://github.com/weichsel/ZIPFoundation", copyright: "2017-2020 Thomas Zoechling", license: .mit)
+                    AttributionLicenceView("WhatsNewKit", url: "https://github.com/SvenTiigi/WhatsNewKit", copyright: "2020 Sven Tiigi", license: .mit)
+                    AttributionLicenceView("ZIPFoundation", url: "https://github.com/weichsel/ZIPFoundation", copyright: "2017-2020 Thomas Zoechling", license: .mit)
                 }
             }
             Section(header: HeaderText("MIT Licence", inset: hostingSplitView.isSplit)) {
@@ -47,7 +48,7 @@ struct Attributions: View {
     }
 }
 
-struct AttributionView: View {
+struct AttributionLicenceView: View {
     let url: URL
     let title: String
     let copyright: String
@@ -61,10 +62,24 @@ struct AttributionView: View {
     }
 
     var body: some View {
+        AttributionView(title: title, url: url, text: [
+            "Copyright © \(copyright)",
+            "Provided under the \(license.description) License"
+        ])
+    }
+}
+
+struct AttributionView: View {
+    let title: String
+    let url: URL
+    let text: [String]
+
+    var body: some View {
         VStack(alignment: .leading) {
             Text(title).font(.body)
-            Text("Copyright © \(copyright)").font(.caption)
-            Text("Provided under the \(license.description) License").font(.caption)
+            ForEach(text, id: \.self) {
+                Text($0).font(.caption)
+            }
         }.presentingSafari(url)
     }
 }
