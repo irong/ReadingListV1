@@ -68,7 +68,7 @@ struct Privacy: View {
         }.possiblyInsetGroupedListStyle(inset: inset)
         .navigationBarTitle("Privacy")
     }
-    
+
     var crashReportsAlert: Alert {
         Alert(
             title: Text("Turn Off Crash Reports?"),
@@ -104,4 +104,3 @@ struct Privacy: View {
         )
     }
 }
-

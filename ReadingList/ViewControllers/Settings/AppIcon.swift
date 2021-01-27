@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import UIKit
 
 struct AppIcon: View {
     @EnvironmentObject var hostingSplitView: HostingSettingsSplitView
@@ -15,6 +16,10 @@ struct AppIcon: View {
     }
 }
 
+extension Notification.Name {
+    static let appIconChanged = Notification.Name(rawValue: "appIconChanged")
+}
+
 struct AppIconCellRow: View {
     let alternateIconName: String?
     let name: String
@@ -22,7 +27,7 @@ struct AppIconCellRow: View {
 
     var body: some View {
         HStack {
-            Image(uiImage: UIImage(imageLiteralResourceName: alternateIconName ?? "AppIcon"))
+            Image(uiImage: UIImage(imageLiteralResourceName: alternateIconName ?? "AppIcon_Default_80"))
                 .resizable()
                 .frame(width: 50, height: 50, alignment: .center)
                 .cornerRadius(10)
@@ -39,6 +44,7 @@ struct AppIconCellRow: View {
                     print(error.localizedDescription)
                 } else {
                     selectedIconName = alternateIconName
+                    NotificationCenter.default.post(name: .appIconChanged, object: nil)
                 }
             }
         }

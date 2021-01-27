@@ -63,7 +63,7 @@ struct SettingsIcon<Image>: View where Image: View {
         ZStack {
             RoundedRectangle(cornerRadius: 4).foregroundColor(backgroundColor)
             image
-        }.frame(width: 30, height: 30, alignment: .center)
+        }.frame(width: 29, height: 29, alignment: .center)
         .cornerRadius(8)
     }
 }

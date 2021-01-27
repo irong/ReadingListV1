@@ -13,7 +13,7 @@ class AppearanceSettings: ObservableObject {
             GeneralSettings.showAmazonLinks = showAmazonLinks
         }
     }
-    
+
     @Published var darkModeOverride: Bool? = GeneralSettings.darkModeOverride {
         didSet {
             GeneralSettings.darkModeOverride = darkModeOverride
@@ -28,7 +28,7 @@ struct Appearance: View {
     var inset: Bool {
         hostingSplitView.isSplit
     }
-    
+
     func updateWindowInterfaceStyle() {
         if let darkModeOverride = settings.darkModeOverride {
             AppDelegate.shared.window?.overrideUserInterfaceStyle = darkModeOverride ? .dark : .light
@@ -36,7 +36,7 @@ struct Appearance: View {
             AppDelegate.shared.window?.overrideUserInterfaceStyle = .unspecified
         }
     }
-    
+
     var darkModeSystemSettingToggle: Binding<Bool> {
         Binding(
             get: { settings.darkModeOverride == nil },
@@ -88,12 +88,12 @@ struct Appearance: View {
 struct CheckmarkCellRow: View {
     let text: String
     let checkmark: Bool
-    
+
     init(_ text: String, checkmark: Bool) {
         self.text = text
         self.checkmark = checkmark
     }
-    
+
     var body: some View {
         HStack {
             Text(text)

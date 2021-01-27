@@ -33,7 +33,7 @@ struct Settings: View {
     var body: some View {
         SwiftUI.List {
             Section(header: header) {
-                
+
                 SettingsCell(.about, title: "About", imageName: "info", color: .blue)
                 IconCell("Rate", imageName: "star.fill", backgroundColor: .orange)
                     .onTapGesture {
@@ -46,10 +46,7 @@ struct Settings: View {
                 SettingsCell(.general, title: "General", imageName: "gear", color: .gray)
                 SettingsCell(.appearance, title: "Appearance", imageName: "textformat.size", color: Color(.systemIndigo))
                 if UIApplication.shared.supportsAlternateIcons {
-                    SettingsCell(.appIcon, title: "App Icon", image: Image("AppIconRounded")
-                            .resizable()
-                            .frame(width: 30, height: 30, alignment: .center)
-                            .cornerRadius(8)
+                    SettingsCell(.appIcon, title: "App Icon", image: CurrentIconImage()
                     )
                 }
                 SettingsCell(.sort, title: "Sort", imageName: "chevron.up.chevron.down", color: .blue)
@@ -65,6 +62,18 @@ struct Settings: View {
             }
         }.listStyle(GroupedListStyle())
         .navigationBarTitle("Settings")
+    }
+}
+
+struct CurrentIconImage: View {
+    @State var currentIconName = UIApplication.shared.alternateIconName
+
+    var body: some View {
+        Image("AppIcon_\(currentIconName ?? "Default")_29")
+                .cornerRadius(8)
+            .onReceive(NotificationCenter.default.publisher(for: .appIconChanged)) { _ in
+            currentIconName = UIApplication.shared.alternateIconName
+            }
     }
 }
 
@@ -84,12 +93,21 @@ struct SettingsHeader: View {
     }
 
     @State var isShowingDebugMenu = false
+    @State var iconName = UIApplication.shared.alternateIconName
+
+    var imageName: String {
+        guard let iconName = iconName else { return "AppIcon_Default_80" }
+        if iconName == "Classic" {
+            return "AppIcon_ClassicWhite_80"
+        } else {
+            return "AppIcon_\(iconName)_80"
+        }
+    }
 
     var body: some View {
         HStack(alignment: .center, spacing: 16) {
-            Image("AppIconOnWhiteRounded")
-                .resizable()
-                .frame(width: 80, height: 80, alignment: .leading)
+            Image(imageName)
+                .cornerRadius(18)
                 .onLongPressGesture {
                     isShowingDebugMenu.toggle()
                 }.sheet(isPresented: $isShowingDebugMenu) {
@@ -105,6 +123,8 @@ struct SettingsHeader: View {
                 Text("by Andrew Bennet")
                     .font(.footnote)
             }
+        }.onReceive(NotificationCenter.default.publisher(for: .appIconChanged)) { _ in
+            iconName = UIApplication.shared.alternateIconName
         }
     }
 }
