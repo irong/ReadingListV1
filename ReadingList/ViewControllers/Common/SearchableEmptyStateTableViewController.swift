@@ -12,9 +12,9 @@ class UITableViewSearchableEmptyStateManager: UITableViewEmptyStateManager {
     let initialLargeTitleDisplayMode: UINavigationItem.LargeTitleDisplayMode
     let initialPrefersLargeTitles: Bool
 
-    let emptyStateTitleFont = UIFont.gillSans(forTextStyle: .title1)
-    let emptyStateDescriptionFont = UIFont.gillSans(forTextStyle: .title2)
-    let emptyStateDescriptionBoldFont = UIFont.gillSansSemiBold(forTextStyle: .title2)
+    let emptyStateTitleFont = UIFont.systemFont(ofSize: 30, weight: .medium)
+    let emptyStateDescriptionFont = UIFont.systemFont(ofSize: 20)
+    let emptyStateDescriptionBoldFont = UIFont.systemFont(ofSize: 20, weight: .semibold)
 
     init(_ tableView: UITableView, navigationBar: UINavigationBar?, navigationItem: UINavigationItem, searchController: UISearchController) {
         self.searchController = searchController
