@@ -249,7 +249,7 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
 
     override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         let book = dataSource.object(at: indexPath)
-        let previewProvider = { BookDetails.instantiate(withBook: book) }
+        let previewProvider = { BookDetailsHostingController(book) }
         return UIContextMenuConfiguration(identifier: book.objectID, previewProvider: previewProvider) { _ in
             // Fist set up the set of menu items which are always returned
             var menuItems: [UIMenuElement] = [
@@ -333,11 +333,11 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
         // currently presented, we should just update the book on that controller. We don't expect the displayed controller - if
         // present - to be anything other than the BookDetails controller
         if splitViewController.detailIsPresented {
-            guard let objectId = configuration.identifier as? NSManagedObjectID, let bookDetailsVc = splitViewController.displayedDetailViewController as? BookDetails else {
+            guard let objectId = configuration.identifier as? NSManagedObjectID, let bookDetailsVc = splitViewController.displayedDetailViewController as? BookDetailsHostingController else {
                 return
             }
             let book = PersistentStoreManager.container.viewContext.object(with: objectId) as! Book
-            bookDetailsVc.book = book
+            bookDetailsVc.setBook(book)
 
             // To ensure that the relevant row is highlighted once the detail display is updated, find its index path and select the row
             if let indexPath = dataSource.indexPath(for: book) {
@@ -462,7 +462,7 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
 
         // If there is a detail view presented, update the book
         if splitViewController.detailIsPresented {
-            (splitViewController.displayedDetailViewController as? BookDetails)?.book = book
+            (splitViewController.displayedDetailViewController as? BookDetailsHostingController)?.setBook(book)
         } else {
             // Segue to the details view, with the cell corresponding to the book as the sender.
             performSegue(withIdentifier: "showDetail", sender: book)
@@ -480,13 +480,13 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         guard let navController = segue.destination as? UINavigationController,
-            let detailsViewController = navController.topViewController as? BookDetails else { return }
+            let detailsViewController = navController.topViewController as? BookDetailsHostingController else { return }
 
         if let cell = sender as? UITableViewCell, let selectedIndex = tableView.indexPath(for: cell) {
-            detailsViewController.book = self.dataSource.object(at: selectedIndex)
+            detailsViewController.setBook(self.dataSource.object(at: selectedIndex))
         } else if let book = sender as? Book {
             // When a simulated selection triggers a segue, the sender is the Book
-            detailsViewController.book = book
+            detailsViewController.setBook(book)
         } else {
             assertionFailure("Unexpected sender type of segue to book details page")
         }

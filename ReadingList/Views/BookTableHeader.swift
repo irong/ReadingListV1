@@ -20,10 +20,14 @@ class BookTableHeader: UITableViewHeaderFooterView {
     static let height: CGFloat = 50
     @IBOutlet private weak var label: UILabel!
     @IBOutlet private weak var sortButton: UIButton!
+    @IBOutlet private weak var numberBadgeLabel: UILabel!
 
     override func awakeFromNib() {
         super.awakeFromNib()
-        sortButton.setImage(UIImage(systemName: "arrow.up.arrow.down.circle"), for: .normal)
+        if let descriptor = label.font.fontDescriptor.withDesign(.rounded) {
+            label.font = UIFont(descriptor: descriptor, size: label.font.pointSize)
+        }
+        numberBadgeLabel.font = .rounded(ofSize: numberBadgeLabel.font.pointSize, weight: .semibold)
     }
 
     @IBAction private func sortButtonTapped(_ sender: UIButton) {
@@ -37,9 +41,15 @@ class BookTableHeader: UITableViewHeaderFooterView {
         presenter?.present(alert, animated: true, completion: nil)
     }
 
-    func configure(labelText: String, enableSort: Bool) {
+    func configure(labelText: String, badgeNumber: Int?, enableSort: Bool) {
         label.text = labelText
         sortButton.isEnabled = enableSort
+        if let badgeNumber = badgeNumber {
+            numberBadgeLabel.superview!.isHidden = false
+            numberBadgeLabel.text = "\(badgeNumber)"
+        } else {
+            numberBadgeLabel.superview!.isHidden = true
+        }
     }
 
     private func buildBookSortAlertOrMenu() -> AlertOrMenu {
@@ -60,13 +70,13 @@ class BookTableHeader: UITableViewHeaderFooterView {
     }
 
     func configure(readState: BookReadState, bookCount: Int, enableSort: Bool) {
-        configure(labelText: "\(readState.description.uppercased()) (\(bookCount))", enableSort: enableSort)
+        configure(labelText: "\(readState.description)", badgeNumber: bookCount, enableSort: enableSort)
         orderable = .book(readState)
         alertOrMenu = buildBookSortAlertOrMenu()
     }
 
     func configure(list: List, bookCount: Int, enableSort: Bool) {
-        configure(labelText: "\(bookCount) BOOK\(bookCount == 1 ? "" : "S")", enableSort: enableSort)
+        configure(labelText: "\(bookCount) book\(bookCount == 1 ? "" : "s")", badgeNumber: nil, enableSort: enableSort)
         orderable = .list(list)
         alertOrMenu = buildBookSortAlertOrMenu()
     }

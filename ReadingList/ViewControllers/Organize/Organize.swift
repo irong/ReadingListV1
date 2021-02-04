@@ -218,7 +218,7 @@ final class Organize: UITableViewController {
 extension Organize: HeaderConfigurable {
     func configureHeader(_ header: UITableViewHeaderFooterView, at index: Int) {
         guard let header = header as? BookTableHeader else { preconditionFailure() }
-        header.configure(labelText: "YOUR LISTS", enableSort: !isEditing && !searchController.isActive)
+        header.configure(labelText: "Your Lists", badgeNumber: nil, enableSort: !isEditing && !searchController.isActive)
     }
 }
 

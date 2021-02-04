@@ -18,10 +18,6 @@ extension UIStoryboard {
          return UIStoryboard(name: "BookTable", bundle: .main)
     }
 
-    static var BookDetails: UIStoryboard {
-         return UIStoryboard(name: "BookDetails", bundle: .main)
-    }
-
     static var Organize: UIStoryboard {
          return UIStoryboard(name: "Organize", bundle: .main)
     }

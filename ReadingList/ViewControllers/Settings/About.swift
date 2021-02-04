@@ -23,7 +23,7 @@ struct About: View {
                 IconCell("Share",
                          imageName: "paperplane.fill",
                          backgroundColor: .orange
-                ).modal(ActivityView(activityItems: [URL(string: "https://\(Settings.appStoreAddress)")!], applicationActivities: nil))
+                ).modal(ActivityView(activityItems: [URL(string: "https://\(Settings.appStoreAddress)")!], applicationActivities: nil, excludedActivityTypes: nil))
 
                 IconCell("Twitter",
                          image: TwitterIcon(),

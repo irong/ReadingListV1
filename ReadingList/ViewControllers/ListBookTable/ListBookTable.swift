@@ -208,10 +208,10 @@ final class ListBookTable: UITableViewController {
     }
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if let detailsViewController = (segue.destination as? UINavigationController)?.topViewController as? BookDetails {
+        if let detailsViewController = (segue.destination as? UINavigationController)?.topViewController as? BookDetailsHostingController {
             guard let senderIndex = sender as? IndexPath else { preconditionFailure() }
             let book = dataSource.getBook(at: senderIndex)
-            detailsViewController.book = book
+            detailsViewController.setBook(book)
         }
     }
 }
