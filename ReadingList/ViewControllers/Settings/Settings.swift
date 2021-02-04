@@ -108,9 +108,15 @@ struct SettingsHeader: View {
             Image(imageName)
                 .cornerRadius(18)
                 .onLongPressGesture {
-                    isShowingDebugMenu.toggle()
+                    #if DEBUG
+                    isShowingDebugMenu = true
+                    #endif
                 }.sheet(isPresented: $isShowingDebugMenu) {
+                    #if DEBUG
                     DebugSettings(isPresented: $isShowingDebugMenu)
+                    #else
+                    EmptyView()
+                    #endif
                 }
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .center) {

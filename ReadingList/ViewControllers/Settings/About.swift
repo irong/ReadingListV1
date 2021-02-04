@@ -150,9 +150,17 @@ struct AboutHeader: View {
 }
 
 struct AboutFooter: View {
+    static let numberFormatter: NumberFormatter = {
+        var formatter = NumberFormatter()
+        formatter.usesGroupingSeparator = false
+        return formatter
+    }()
+
+    var buildNumber = numberFormatter.string(from: BuildInfo.thisBuild.buildNumber as NSNumber) ?? "0"
+
     var body: some View {
         VStack(alignment: .center, spacing: 4) {
-            Text("v\(BuildInfo.thisBuild.version.description) (\(BuildInfo.thisBuild.buildNumber))")
+            Text("v\(BuildInfo.thisBuild.version.description) (\(buildNumber))")
             Text("© Andrew Bennet 2021")
         }
         .frame(maxWidth: .infinity, alignment: .center)

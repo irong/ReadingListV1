@@ -41,7 +41,7 @@ struct AppIconCellRow: View {
         .onTapGesture {
             UIApplication.shared.setAlternateIconName(alternateIconName) { error in
                 if let error = error {
-                    print(error.localizedDescription)
+                    UserEngagement.logError(error)
                 } else {
                     selectedIconName = alternateIconName
                     NotificationCenter.default.post(name: .appIconChanged, object: nil)

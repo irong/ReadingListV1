@@ -29,9 +29,9 @@ struct FirstOpenScreenProvider {
                 image: UIImage(largeSystemImageNamed: "tray.full")
             ),
             WhatsNew.Item(
-                title: "Free & Open Source",
-                subtitle: "No ads, subscriptions or limits, and fully private",
-                image: UIImage(largeSystemImageNamed: "lock.open")
+                title: "Privacy Focused",
+                subtitle: "All data is kept fully private",
+                image: UIImage(largeSystemImageNamed: "lock.fill")
             )
         ])
 

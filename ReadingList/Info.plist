@@ -29,6 +29,33 @@
             <false/>
         </dict>
     </dict>
+    <key>CFBundleIcons~ipad</key>
+    <dict>
+        <key>CFBundleAlternateIcons</key>
+        <dict>
+            <key>ClassicWhite</key>
+            <dict>
+                <key>CFBundleIconFiles</key>
+                <array>
+                    <string>ClassicWhite</string>
+                </array>
+            </dict>
+            <key>Classic</key>
+            <dict>
+                <key>CFBundleIconFiles</key>
+                <array>
+                    <string>Classic</string>
+                </array>
+            </dict>
+        </dict>
+        <key>CFBundlePrimaryIcon</key>
+        <dict>
+            <key>CFBundleIconFiles</key>
+            <array/>
+            <key>UIPrerenderedIcon</key>
+            <false/>
+        </dict>
+    </dict>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>com.andrewbennet.books.backup</string>
@@ -113,8 +140,8 @@
 	<key>UIApplicationShortcutItems</key>
 	<array>
 		<dict>
-			<key>UIApplicationShortcutItemIconFile</key>
-			<string>Barcode</string>
+			<key>UIApplicationShortcutItemIconSymbolName</key>
+			<string>barcode</string>
 			<key>UIApplicationShortcutItemTitle</key>
 			<string>Scan Barcode</string>
 			<key>UIApplicationShortcutItemType</key>
