@@ -1,7 +1,6 @@
 import Foundation
 import SwiftUI
 import CoreData
-import ReadingList_Foundation
 
 struct BookDetails: View {
     @ObservedObject var book: Book

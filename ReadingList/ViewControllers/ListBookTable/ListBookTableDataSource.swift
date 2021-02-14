@@ -1,7 +1,6 @@
 import Foundation
 import CoreData
 import UIKit
-import ReadingList_Foundation
 
 protocol ListBookDataSource: class, UITableViewEmptyDetectingDataSource {
     func updateData(animate: Bool)

@@ -3,7 +3,6 @@ import SwiftyStoreKit
 import SVProgressHUD
 import os.log
 import CoreData
-import ReadingList_Foundation
 import PersistedPropertyWrapper
 
 class LaunchManager {

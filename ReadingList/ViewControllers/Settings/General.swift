@@ -1,5 +1,4 @@
 import SwiftUI
-import ReadingList_Foundation
 
 class GeneralSettingsObservable: ObservableObject {
     @Published var addBooksToTop: Bool = GeneralSettings.addBooksToTopOfCustom {

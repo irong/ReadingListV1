@@ -2,12 +2,11 @@
   "default": {
     "title": {
       "color": "#444",
-      "font": "./GillSans.ttc",
+      "font": "./SF-Pro-Text-Medium.otf",
       "font_size": 145
-      
     },
     "background": "./background.jpg",
-    "padding": 100
+    "padding": 50
   },
   "data": [
     {

@@ -1,6 +1,5 @@
 import Foundation
 import XCTest
-import ReadingList_Foundation
 
 class IsbnTests: XCTestCase {
     func testIsbnValidation() {
