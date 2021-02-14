@@ -103,7 +103,6 @@ struct General: View {
             }
         }
         .possiblyInsetGroupedListStyle(inset: hostingSplitView.isSplit)
-        .navigationBarTitle("General", displayMode: .inline)
     }
 }
 

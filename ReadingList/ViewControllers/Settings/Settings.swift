@@ -57,7 +57,6 @@ struct Settings: View {
                     .onReceive(NotificationCenter.default.publisher(for: UIApplication.backgroundRefreshStatusDidChangeNotification)) { _ in
                         badgeOnBackupRow = AutoBackupManager.shared.cannotRunScheduledAutoBackups
                     }
-                SettingsCell(.privacy, title: "Privacy", imageName: "lock.fill", color: Color(.darkGray))
             }
         }.listStyle(GroupedListStyle())
         .navigationBarTitle("Settings")
