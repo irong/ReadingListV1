@@ -356,7 +356,7 @@ struct BookReadingLog: View {
                 EmptyView()
             } else {
                 TitledSection("Reading Log", headerButton: ModalPresentingButton("Update", presented: EditBookReadStateRepresentable(bookID: book.objectID))) {
-                    DetailsTableRow("Read State", book.readState.description)
+                    DetailsTableRow("Status", book.readState.description)
                     if let started = book.startedReading {
                         DetailsTableRow("Started", started.toPrettyString(short: false))
                     }
