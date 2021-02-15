@@ -1,4 +1,5 @@
 import Foundation
+@testable import ReadingList
 import XCTest
 
 class IsbnTests: XCTestCase {
