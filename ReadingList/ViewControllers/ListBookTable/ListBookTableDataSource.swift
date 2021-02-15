@@ -2,7 +2,7 @@ import Foundation
 import CoreData
 import UIKit
 
-protocol ListBookDataSource: class, UITableViewEmptyDetectingDataSource {
+protocol ListBookDataSource: AnyObject, UITableViewEmptyDetectingDataSource {
     func updateData(animate: Bool)
     var controller: NSFetchedResultsController<ListItem> { get set }
     var list: List { get }
