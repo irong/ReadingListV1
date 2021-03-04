@@ -14,7 +14,6 @@ In order to assess the comparative usage of different app features, a service is
 - Scanning a barcode
 - Adding a book manually
 - Updating book metadata manually
-- Changing the theme
 - Changing the book sort order
 - Exporting data to CSV
 - Importing data from CSV
