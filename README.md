@@ -3,7 +3,10 @@
 [![codebeat badge](https://codebeat.co/badges/3f7723a7-8967-436e-b5e9-549e0261603c)](https://codebeat.co/projects/github-com-andrewbennet-readinglist)
 [![Twitter URL](https://img.shields.io/twitter/url?label=%40ReadingListApp&style=social&url=https%3A%2F%2Ftwitter.com%2Freadinglistapp)](https://twitter.com/ReadingListApp)
 
-[Reading List](https://www.readinglist.app) is a free, open source iOS app for iPhone and iPad. Reading List allows users to track and catalog the books they read.
+[Reading List](https://www.readinglist.app) is an iOS app for iPhone and iPad which helps users track and catalog the books they read.
+
+## Reading List v2
+As of version 2.0, Reading List is no longer open source. The app is instead supported by some select premium features which require a one-time payment to unlock. The codebase here is as it existed in v1.16.1.
 
 <img src="./media/iPhone%20X-0_ToReadList_framed.png" width="280"></img>
 
