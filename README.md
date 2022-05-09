@@ -14,10 +14,6 @@ As of version 2.0, Reading List is no longer open source. The app is instead sup
   <img src="https://linkmaker.itunes.apple.com/assets/shared/badges/en-us/appstore-lrg.svg" style="height: 60px;"/>
 </a>
 
-<a href="https://testflight.apple.com/join/kBS5mVao">
-  <img src="https://developer.apple.com/assets/elements/icons/testflight/testflight-64x64_2x.png" height="45px" />
-</a>
-
 ## Requirements
  - Xcode 12.4
 
