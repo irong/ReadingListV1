@@ -38,9 +38,20 @@ class SplitViewController: UISplitViewController, UISplitViewControllerDelegate 
         // and the detail view controllers to be visible initially). When this happens, we pop the master navigation
         // controller to return the master root controller to visibility.
         if hasAppeared { return }
-        if !isSplit && detailIsPresented {
+        if !isSplit && secondaryIsPresented {
             os_log("UISplitViewController becoming visible, but with the detail view controller presented when not in split mode. Attempting to fix the problem by popping the master navigation view controller.", type: .default)
-            self.masterNavigationController.popViewController(animated: false)
+            self.primaryNavigationController.popViewController(animated: false)
+        }
+    }
+
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        
+        // If we are transitioning to a non-split mode and we have a detail view controller presented, we need to pop it
+        if !isSplit && secondaryIsPresented {
+            coordinator.animate(alongsideTransition: { _ in
+                self.primaryNavigationController.popViewController(animated: false)
+            })
         }
     }
 

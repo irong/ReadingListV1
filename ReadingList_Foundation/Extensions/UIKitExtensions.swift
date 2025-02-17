@@ -117,35 +117,35 @@ public extension UIViewController {
 
 public extension UISplitViewController {
 
-    var masterNavigationController: UINavigationController {
+    var primaryNavigationController: UINavigationController {
         return viewControllers[0] as! UINavigationController
     }
 
-    var detailNavigationController: UINavigationController? {
+    var secondaryNavigationController: UINavigationController? {
         return viewControllers[safe: 1] as? UINavigationController
     }
 
-    var masterNavigationRoot: UIViewController {
-        return masterNavigationController.viewControllers.first!
+    var primaryNavigationRoot: UIViewController {
+        return primaryNavigationController.viewControllers.first!
     }
 
-    var detailIsPresented: Bool {
-        return isSplit || masterNavigationController.viewControllers.count >= 2
+    var secondaryIsPresented: Bool {
+        return isSplit || primaryNavigationController.viewControllers.count >= 2
     }
 
     var isSplit: Bool {
         return viewControllers.count >= 2
     }
 
-    var displayedDetailViewController: UIViewController? {
-        // If the master and detail are separate, the detail will be the second item in viewControllers
-        if isSplit, let detailNavController = detailNavigationController {
-            return detailNavController.viewControllers.first
+    var displayedSecondaryViewController: UIViewController? {
+        // If the primary and secondary are separate, the secondary will be the second item in viewControllers
+        if isSplit, let secondaryNavController = secondaryNavigationController {
+            return secondaryNavController.viewControllers.first
         }
 
         // Otherwise, navigate to where the Details view controller should be (if it is displayed)
-        if masterNavigationController.viewControllers.count >= 2,
-            let previewNavController = masterNavigationController.viewControllers[1] as? UINavigationController {
+        if primaryNavigationController.viewControllers.count >= 2,
+            let previewNavController = primaryNavigationController.viewControllers[1] as? UINavigationController {
             return previewNavController.viewControllers.first
         }
 
@@ -153,11 +153,11 @@ public extension UISplitViewController {
         return nil
     }
 
-    func popDetailOrMasterToRoot(animated: Bool) {
-        if let detailNav = detailNavigationController {
-            detailNav.popToRootViewController(animated: animated)
+    func popSecondaryOrPrimaryToRoot(animated: Bool) {
+        if let secondaryNav = secondaryNavigationController {
+            secondaryNav.popToRootViewController(animated: animated)
         } else {
-            masterNavigationController.popToRootViewController(animated: animated)
+            primaryNavigationController.popToRootViewController(animated: animated)
         }
     }
 }

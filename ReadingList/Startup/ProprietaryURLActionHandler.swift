@@ -93,13 +93,17 @@ struct ProprietaryURLActionHandler {
             assertionFailure()
             return
         }
-        tabBarController.selectedTab = .toRead
+        tabBarController.currentTab = .toRead
 
         // Dismiss any modal views before presenting
-        let navController = tabBarController.selectedSplitViewController!.masterNavigationController
+        guard let navController = tabBarController.selectedSplitViewController?.primaryNavigationController,
+              let presentingViewController = navController.viewControllers.first else {
+            assertionFailure()
+            return
+        }
         navController.dismissAndPopToRoot()
 
         let viewController = EditBookMetadata(bookToCreateReadState: .toRead).inNavigationController()
-        navController.viewControllers.first!.present(viewController, animated: true, completion: nil)
+        presentingViewController.present(viewController, animated: true)
     }
 }

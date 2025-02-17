@@ -1,13 +1,18 @@
 excluded:
   - Pods
   - ReadingList_UITests/SnapshotHelper.swift
+  - .build
+  - DerivedData
+
 identifier_name:
   excluded:
     - id
     - at
+
 line_length:
-  - 200
-  - 300
+  warning: 200
+  error: 300
+
 opt_in_rules:
   - array_init
   - closure_end_indentation
@@ -38,20 +43,13 @@ opt_in_rules:
   - untyped_error_in_catch
   - vertical_parameter_alignment_on_call
   - yoda_condition
+
 disabled_rules:
   # Force casts and trys are used a bit in the CodeData code...
   - force_cast
   - force_try
-
-  # There are too many long things; in due course, these could be reduced
   - line_length
   - file_length
   - function_body_length
   - type_body_length
-
-  # These are a bit opinionated...  
-  - nesting 
-  - multiple_closures_with_trailing_closure
-
-  # Implicit returns are not always better
-  - implicit_return
+  - trailing_whitespace

@@ -15,6 +15,12 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
     private let allReadStatesSearchBarScopeIndex = 1
 
     override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        if let selectedIndexPath = self.tableView.indexPathForSelectedRow, !splitViewController!.secondaryIsPresented {
+            self.tableView.deselectRow(at: selectedIndexPath, animated: false)
+        }
+
         // Register the headers and cells we use for this table
         tableView.register(BookTableHeader.self)
         tableView.register(BookTableViewCell.self)
@@ -67,14 +73,13 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
         dataSource.updateData(animate: false)
         configureNavigationBarButtons()
 
-        super.viewDidLoad()
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
 
         // Deselect selected rows, so they don't stay highlighted, but only when in non-split mode
-        if let selectedIndexPath = self.tableView.indexPathForSelectedRow, !splitViewController!.detailIsPresented {
+        if let selectedIndexPath = self.tableView.indexPathForSelectedRow, !splitViewController!.secondaryIsPresented {
             self.tableView.deselectRow(at: selectedIndexPath, animated: animated)
         }
     }
@@ -331,8 +336,8 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
         // Called when a preview is tapped, commiting the previewed action. If we are in split mode with the book details controller
         // currently presented, we should just update the book on that controller. We don't expect the displayed controller - if
         // present - to be anything other than the BookDetails controller
-        if splitViewController.detailIsPresented {
-            guard let objectId = configuration.identifier as? NSManagedObjectID, let bookDetailsVc = splitViewController.displayedDetailViewController as? BookDetailsHostingController else {
+        if splitViewController.secondaryIsPresented {
+            guard let objectId = configuration.identifier as? NSManagedObjectID, let bookDetailsVc = splitViewController.displayedSecondaryViewController as? BookDetailsHostingController else {
                 return
             }
             let book = PersistentStoreManager.container.viewContext.object(with: objectId) as! Book
@@ -453,15 +458,15 @@ final class BookTable: UITableViewController { //swiftlint:disable:this type_bod
 
         // allowTableObscuring determines whether the book details page should actually be shown, if showing it will obscure this table
         guard let splitViewController = splitViewController else { preconditionFailure("Missing SplitViewController") }
-        guard allowTableObscuring || splitViewController.isSplit else { return }
+        guard allowTableObscuring || splitViewController.secondaryIsPresented else { return }
 
         if let indexPathOfSelectedBook = indexPathOfSelectedBook {
             tableView.selectRow(at: indexPathOfSelectedBook, animated: true, scrollPosition: .none)
         }
 
         // If there is a detail view presented, update the book
-        if splitViewController.detailIsPresented {
-            (splitViewController.displayedDetailViewController as? BookDetailsHostingController)?.setBook(book)
+        if splitViewController.secondaryIsPresented {
+            (splitViewController.displayedSecondaryViewController as? BookDetailsHostingController)?.setBook(book)
         } else {
             // Segue to the details view, with the cell corresponding to the book as the sender.
             performSegue(withIdentifier: "showDetail", sender: book)

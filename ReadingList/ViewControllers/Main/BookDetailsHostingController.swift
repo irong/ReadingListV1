@@ -26,7 +26,7 @@ class BookDetailsHostingController: UIHostingController<BookDetailsContainer> {
         guard let userInfo = notification.userInfo, let deletedObjects = userInfo[NSDeletedObjectsKey] as? NSSet else { return }
         if let book = self.bookContainer.book, deletedObjects.contains(book) {
             self.bookContainer.book = nil
-            self.splitViewController?.masterNavigationController.popViewController(animated: false)
+            self.splitViewController?.primaryNavigationController.popViewController(animated: false)
             self.configureNavigationItem()
         }
     }
@@ -47,6 +47,17 @@ class BookDetailsHostingController: UIHostingController<BookDetailsContainer> {
     override func viewDidLoad() {
         super.viewDidLoad()
         configureNavigationItem()
+    }
+
+    override func willMove(toParent parent: UIViewController?) {
+        super.willMove(toParent: parent)
+        if parent == nil {
+            // If we are being removed from our parent, pop back to the root view controller in the master navigation controller
+            // if we are not in split mode
+            if let splitViewController = splitViewController, !splitViewController.isSplit {
+                self.splitViewController?.primaryNavigationController.popViewController(animated: false)
+            }
+        }
     }
 
     @objc private func shareButtonTapped() {

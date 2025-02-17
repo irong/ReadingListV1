@@ -35,7 +35,7 @@ packages:
     minorVersion: 2.1.1
   Firebase:
     url: https://github.com/firebase/firebase-ios-sdk.git
-    minorVersion: 7.2.0
+    minorVersion: 10.0.0
   Promises:
     url: https://github.com/google/promises.git
     minorVersion: 1.2.0
@@ -102,21 +102,29 @@ targets:
     preBuildScripts:
       - name: SwiftLint
         script: |
-                if [[ -z $CI ]]; then
-                  "/usr/local/bin/swiftlint" --path "${PROJECT_DIR}"
-                fi
+          if [ -f "/opt/homebrew/bin/swiftlint" ]; then
+            /opt/homebrew/bin/swiftlint
+          else
+            echo "warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint"
+          fi
     postBuildScripts:
       - name: "Copy Debug Files"
         script: |
-                BUILD_APP_DIR=${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}
-                if [ "$CONFIGURATION" == "Debug" ]; then
-                  cp "$SRCROOT/Debug/examplebooks.csv" "$BUILD_APP_DIR/examplebooks.csv"
-                  cp "$SRCROOT/Debug/example_barcode.jpg" "$BUILD_APP_DIR/example_barcode.jpg"
-                fi
+          BUILD_APP_DIR=${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}
+          if [ "$CONFIGURATION" == "Debug" ]; then
+            if [ -f "$SRCROOT/Debug/examplebooks.csv" ]; then
+              cp "$SRCROOT/Debug/examplebooks.csv" "$BUILD_APP_DIR/examplebooks.csv"
+            fi
+            if [ -f "$SRCROOT/Debug/example_barcode.jpg" ]; then
+              cp "$SRCROOT/Debug/example_barcode.jpg" "$BUILD_APP_DIR/example_barcode.jpg"
+            fi
+          fi
       - name: Run Crashlytics Script
         inputFiles: [$(BUILT_PRODUCTS_DIR)/$(INFOPLIST_PATH)]
         script: |
-                "${BUILD_DIR%Build/*}SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run"
+          if [ -f "${BUILD_DIR%Build/*}SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run" ]; then
+            "${BUILD_DIR%Build/*}SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run"
+          fi
     settings:
       base:
         CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED: YES
@@ -180,11 +188,11 @@ targets:
     postBuildScripts:
       - name: "Copy Debug Files"
         script: |
-                BUILD_APP_DIR=${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}
-                if [ "$CONFIGURATION" == "Debug" ]; then
-                  cp "$SRCROOT/Debug/shared_current-books.json" "$BUILD_APP_DIR/shared_current-books.json"
-                  cp "$SRCROOT/Debug/shared_finished-books.json" "$BUILD_APP_DIR/shared_finished-books.json"
-                fi
+          BUILD_APP_DIR=${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}
+          if [ "$CONFIGURATION" == "Debug" ]; then
+            cp "$SRCROOT/Debug/shared_current-books.json" "$BUILD_APP_DIR/shared_current-books.json"
+            cp "$SRCROOT/Debug/shared_finished-books.json" "$BUILD_APP_DIR/shared_finished-books.json"
+          fi
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.andrewbennet.books.ReadingListWidget
@@ -197,4 +205,3 @@ targets:
           CODE_SIGN_STYLE: Manual
           PROVISIONING_PROFILE_SPECIFIER: match AppStore com.andrewbennet.books.ReadingListWidget
           CODE_SIGN_IDENTITY[sdk=iphoneos*]: "Apple Distribution: Andrew Bennet (YPDEV2E775)"
-
