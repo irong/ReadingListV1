@@ -1,6 +1,7 @@
 xcuserdata
 *.xcuserstate
 *.xcodeproj/*
+!*.xcodeproj/project.pbxproj
 .DS_Store
 screenshots.html
 fastlane/report.xml
